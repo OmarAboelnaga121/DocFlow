@@ -1,0 +1,158 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  extensions = [vector]
+}
+
+enum IngestionStatus {
+  PENDING
+  CLONING
+  EMBEDDING
+  COMPLETED
+  FAILED
+}
+
+enum MessageRole {
+  USER
+  AI
+}
+
+enum AuthProvider {
+  GITHUB
+  CREDENTIALS
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+model User {
+  id           String       @id @default(cuid())
+  username     String?      @unique
+  name         String?
+  email        String       @unique
+  password     String?
+  userRole     UserRole     @default(USER)
+  authProvider AuthProvider @default(CREDENTIALS)
+  avatar       String?
+  chats        Chat[]
+  repos        Repo[]
+  providerId   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Repo {
+  id               String          @id @default(cuid())
+  name             String
+  userId           String
+  url              String
+  branch           String          @default("main")
+  latestCommitHash String?
+  status           IngestionStatus @default(PENDING)
+
+  user  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  files File[]
+  apis  ApiEndpoint[]
+  pages PageRoute[]
+  chats Chat[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model File {
+  id          String  @id @default(cuid())
+  repoId      String
+  path        String
+  language    String?
+  contentHash String?
+
+  repo   Repo          @relation(fields: [repoId], references: [id], onDelete: Cascade)
+  chunks CodeChunk[]
+  apis   ApiEndpoint[]
+  pages  PageRoute[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ApiEndpoint {
+  id           String @id @default(cuid())
+  repoId       String
+  fileId       String
+  path         String
+  method       String
+  inputSchema  Json?
+  outputSchema Json?
+
+  repo Repo @relation(fields: [repoId], references: [id], onDelete: Cascade)
+  file File @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PageRoute {
+  id           String @id @default(cuid())
+  repoId       String
+  fileId       String
+  routePath    String
+  dependencies Json?
+
+  repo Repo @relation(fields: [repoId], references: [id], onDelete: Cascade)
+  file File @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CodeChunk {
+  id        String                 @id @default(cuid())
+  fileId    String
+  content   String
+  embedding Unsupported("vector")?
+  startLine Int
+  endLine   Int
+  metadata  Json?
+
+  file File @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Chat {
+  id     String  @id @default(cuid())
+  title  String?
+  userId String
+  repoId String
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  repo     Repo      @relation(fields: [repoId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Message {
+  id      String      @id @default(cuid())
+  chatId  String
+  role    MessageRole
+  content String
+  context Json?
+
+  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
