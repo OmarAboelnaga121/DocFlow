@@ -30,8 +30,9 @@ enum AuthProvider {
 }
 
 enum UserRole {
+  DEVELOPER
+  BUSINESS
   USER
-  ADMIN
 }
 
 model User {

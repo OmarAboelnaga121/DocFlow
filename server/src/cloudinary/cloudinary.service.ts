@@ -34,4 +34,21 @@ export class CloudinaryService {
       uploadStream.end(file.buffer);
     });
   }
+
+  async deleteImage(publicIdOrUrl: string): Promise<any> {
+    try {
+      let publicId = publicIdOrUrl;
+      if (publicIdOrUrl.startsWith('http://') || publicIdOrUrl.startsWith('https://')) {
+        const splitUrl = publicIdOrUrl.split('/upload/');
+        if (splitUrl.length > 1) {
+          const pathAfterUpload = splitUrl[1];
+          const withoutVersion = pathAfterUpload.replace(/^v\d+\//, '');
+          publicId = withoutVersion.substring(0, withoutVersion.lastIndexOf('.')) || withoutVersion;
+        }
+      }
+      return await cloudinary.uploader.destroy(publicId);
+    } catch (error) {
+      this.logger.error(`Failed to delete image from Cloudinary: ${publicIdOrUrl}`, error);
+    }
+  }
 }

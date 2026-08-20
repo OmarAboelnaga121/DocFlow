@@ -2,12 +2,12 @@ import {
   Controller,
   Get,
   Post,
-  Req,
   Body,
   UseGuards,
   UseInterceptors,
   UploadedFile,
 } from '@nestjs/common';
+import { CurrentUser } from './decorators/current-user.decorator';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -40,8 +40,8 @@ export class AuthController {
   @UseInterceptors(AuthCookieInterceptor)
   @ApiBody({ type: LoginDto })
   @ApiOperation({ summary: 'Login with email and password' })
-  async login(@Req() req: any) {
-    return this.authService.login(req.user);
+  async login(@CurrentUser() user: any) {
+    return this.authService.login(user);
   }
 
   @Get('github')
@@ -55,8 +55,8 @@ export class AuthController {
   @UseGuards(AuthGuard('github'))
   @UseInterceptors(AuthCookieInterceptor)
   @ApiOperation({ summary: 'GitHub OAuth callback handler' })
-  async githubAuthCallback(@Req() req: any) {
-    return this.authService.validateGithubUser(req.user);
+  async githubAuthCallback(@CurrentUser() user: any) {
+    return this.authService.validateGithubUser(user);
   }
 
   @Post('logout')
