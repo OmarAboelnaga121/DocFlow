@@ -2,6 +2,9 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { PrismaModule } from './prisma/prisma.module';
+import { AuthModule } from './auth/auth.module';
+import { UserModule } from './user/user/user.module';
 
 @Module({
   imports: [
@@ -14,6 +17,9 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
         limit: 10,   // max 10 requests per ttl per IP
       },
     ]),
+    PrismaModule,
+    AuthModule,
+    UserModule,
   ],
   controllers: [],
   providers: [

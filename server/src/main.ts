@@ -5,11 +5,22 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 
+import cookieParser from 'cookie-parser';
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // 1. Helmet Security Middleware
+  // 1. Cookie Parser Middleware
+  app.use(cookieParser());
+
+  // 2. Helmet Security Middleware
   app.use(helmet());
+
+  // Enable CORS with credentials for cookies
+  app.enableCors({
+    origin: true,
+    credentials: true,
+  });
 
   // 2. Class Validator & Class Transformer Global Pipe
   app.useGlobalPipes(
@@ -28,7 +39,7 @@ async function bootstrap() {
     .setTitle('DocFlow API')
     .setDescription('DocFlow Backend API documentation')
     .setVersion('1.0')
-    .addBearerAuth()
+    .addCookieAuth('token')
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, documentFactory);
