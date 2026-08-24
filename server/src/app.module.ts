@@ -6,6 +6,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { RepositoryModule } from './repository/repository.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { RepositoryModule } from './repository/repository.module';
     AuthModule,
     UserModule,
     RepositoryModule,
+    ChatModule,
   ],
   controllers: [],
   providers: [
@@ -31,5 +33,5 @@ import { RepositoryModule } from './repository/repository.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }
 

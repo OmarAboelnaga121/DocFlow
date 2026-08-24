@@ -148,28 +148,34 @@ export class RepositoryService {
     private async getEmbedding(text: string): Promise<number[]> {
         const apiKey = process.env.OPENAI_API_KEY;
         if (!apiKey || apiKey === 'mock-key') {
-            // Fallback: Generate mock 1536-dimensional vector for development
             return Array.from({ length: 1536 }, () => Math.random() - 0.5);
         }
 
         try {
             const response = await this.openai.embeddings.create({
-                model: process.env.EMBEDDING_MODEL || 'text-embedding-3-small',
+                model: process.env.EMBEDDING_MODEL || 'text-embedding-v3',
                 input: text,
             });
             return response.data[0].embedding;
         } catch (error) {
-            console.warn(`OpenAI embedding failed, falling back to mock: ${error.message}`);
+            console.warn(`Embedding generation failed, falling back to mock: ${error.message}`);
             return Array.from({ length: 1536 }, () => Math.random() - 0.5);
         }
     }
 
     private getAllFiles(dirPath: string, arrayOfFiles: string[] = []): string[] {
+        const IGNORED_DIRECTORIES = new Set([
+            'node_modules', 'dist', 'build', '.next', '.git', 'coverage', '.turbo'
+        ]);
+        const IGNORED_FILES = new Set([
+            'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'bun.lockb'
+        ]);
+
         const files = fs.readdirSync(dirPath);
 
         for (const file of files) {
-            // Skip hidden folders (.git, .github) and dependencies
-            if (file.startsWith('.') || file === 'node_modules') continue;
+            if (file.startsWith('.') || IGNORED_DIRECTORIES.has(file)) continue;
+            if (IGNORED_FILES.has(file)) continue;
 
             const filePath = path.join(dirPath, file);
             try {
@@ -282,4 +288,33 @@ export class RepositoryService {
         }
         return chunks;
     }
+
+
+    // GET repoById - get a repo with it's files
+    async getRepoById(repoId: string) {
+        return this.prisma.repo.findUnique({
+            where: { id: repoId },
+            include: {
+                files: true,
+            },
+        });
+    }
+
+    // GET all repos for a user
+    async getAllReposForUser(userId: string) {
+        return this.prisma.repo.findMany({
+            where: { userId },
+            include: {
+                files: true,
+            },
+        });
+    }
+
+    // DELETE REPO
+    async deleteRepo(repoId: string) {
+        return this.prisma.repo.delete({
+            where: { id: repoId },
+        });
+    }
+
 }
