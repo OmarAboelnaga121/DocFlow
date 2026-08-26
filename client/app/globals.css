@@ -1,26 +1,164 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ──────────────────────────────────────────────
+   DocFlow Design Tokens — Tailwind v4 theme
+   ────────────────────────────────────────────── */
+@theme {
+  /* ── Colors actually used ── */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  /* Brand */
+  --color-primary: #4edea3;          /* text-primary, token-keyword */
+  --color-primary-container: #10b981; /* CTA buttons */
+
+  /* Surfaces */
+  --color-background: #0b1326;               /* body bg */
+  --color-surface: #1e293b;                  /* feature cards */
+  --color-surface-variant: #2d3449;          /* code pane bg tint */
+  --color-surface-container: #171f33;        /* chat bubbles */
+  --color-surface-container-low: #131b2e;    /* pane headers */
+  --color-surface-container-lowest: #060e20; /* darkest bg */
+  --color-surface-bright: #31394d;           /* CTA banner */
+
+  /* Text */
+  --color-on-background: #dae2fd;      /* body text, body style */
+  --color-on-surface: #dae2fd;         /* card text */
+  --color-on-surface-variant: #bbcabf; /* muted text, token-comment */
+  --color-text-primary: #f8fafc;       /* headings */
+  --color-text-secondary: #94a3b8;     /* sub-copy */
+
+  /* Accent */
+  --color-secondary: #4cd7f6;          /* token-string */
+  --color-secondary-container: #03b5d3; /* token-function */
+
+  /* Semantic */
+  --color-error: #ffb4ab;              /* problem card text */
+  --color-error-container: #93000a;    /* problem card bg */
+
+  /* Utility */
+  --color-border-hairline: rgba(255, 255, 255, 0.08); /* border-hairline */
+  --color-outline-variant: #3c4a42;    /* outline-variant */
+
+  /* Border Radius */
+  --radius-DEFAULT: 0.125rem;
+  --radius-lg: 0.25rem;
+  --radius-xl: 0.5rem;
+  --radius-full: 0.75rem;
+
+  /* Fonts */
   --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-mono: "JetBrains Mono", monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ──────────────────────────────────────────────
+   Base Styles
+   ────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-background);
+  color: var(--color-on-background);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+}
+
+/* ──────────────────────────────────────────────
+   Material Symbols (Google Icons)
+   ────────────────────────────────────────────── */
+.material-symbols-outlined {
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+/* ──────────────────────────────────────────────
+   Code token colors (syntax highlighting)
+   ────────────────────────────────────────────── */
+.token-keyword {
+  color: var(--color-primary);
+}
+.token-string {
+  color: var(--color-secondary);
+}
+.token-function {
+  color: var(--color-secondary-container);
+}
+.token-comment {
+  color: var(--color-on-surface-variant);
+}
+
+/* ──────────────────────────────────────────────
+   Animations
+   ────────────────────────────────────────────── */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+@keyframes marquee-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes marquee-right {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.animate-marquee-left {
+  display: flex;
+  width: max-content;
+  animation: marquee-left 32s linear infinite;
+}
+
+.animate-marquee-right {
+  display: flex;
+  width: max-content;
+  animation: marquee-right 32s linear infinite;
+}
+
+.animate-marquee-left:hover,
+.animate-marquee-right:hover {
+  animation-play-state: paused;
 }
