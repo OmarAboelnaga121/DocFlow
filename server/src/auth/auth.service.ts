@@ -22,6 +22,8 @@ export class AuthService {
 
   async register(registerDto: RegisterDto, file?: Express.Multer.File) {
     const { email, password, username, name } = registerDto;
+    const cleanUsername = username.trim();
+    const cleanName = name?.trim();
 
     // 1. Check if email already in use
     const existingUserByEmail = await this.prisma.user.findUnique({
@@ -33,14 +35,12 @@ export class AuthService {
     }
 
     // 2. Check if username already in use
-    if (username) {
-      const existingUserByUsername = await this.prisma.user.findUnique({
-        where: { username },
-      });
+    const existingUserByUsername = await this.prisma.user.findUnique({
+      where: { username: cleanUsername },
+    });
 
-      if (existingUserByUsername) {
-        throw new ConflictException('Username is already taken');
-      }
+    if (existingUserByUsername) {
+      throw new ConflictException('Username is already taken');
     }
 
     // 3. Upload avatar to Cloudinary if provided
@@ -63,8 +63,8 @@ export class AuthService {
       data: {
         email,
         password: hashedPassword,
-        username: username,
-        name: name,
+        username: cleanUsername,
+        name: cleanName,
         avatar: avatarUrl,
         authProvider: AuthProvider.CREDENTIALS,
       },

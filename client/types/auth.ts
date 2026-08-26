@@ -8,7 +8,10 @@ export interface RegisterData {
   password: string;
   username?: string;
   name?: string;
+  avatar?: File | null;
 }
+
+export type UserRole = "DEVELOPER" | "BUSINESS" | "USER";
 
 export interface User {
   id: string;
@@ -16,7 +19,8 @@ export interface User {
   username?: string | null;
   name?: string | null;
   avatar?: string | null;
-  role?: string;
+  userRole?: UserRole | string;
+  role?: UserRole | string;
   authProvider?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -27,3 +31,4 @@ export interface AuthResponse {
   accessToken: string;
   user: User;
 }
+

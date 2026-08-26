@@ -3,14 +3,38 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { loginUser } from "@/lib/api";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // UI-only form handler
+    setError(null);
+
+    if (!email.trim() || !password.trim()) {
+      setError("Please enter both email and password.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      console.log("[DocFlow Auth] Attempting login for:", email);
+      const res = await loginUser({ email, password });
+      console.log("[DocFlow Auth] Login successful:", res);
+      router.push("/dashboard");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Login failed. Please try again.";
+      console.error("[DocFlow Auth] Login error:", err);
+      setError(message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -27,32 +51,35 @@ export default function LoginPage() {
           style={{ background: "#4cd7f6" }}
         />
 
-        {/* Top Logo */}
-        <div className="relative z-10">
-          <Link href="/" className="inline-flex items-center -ml-2">
-            <Image
-              src="/docflowtransparent.png"
-              alt="DocFlow Logo"
-              width={220}
-              height={80}
-              className="h-35 w-auto object-contain"
-              priority
-            />
-          </Link>
-        </div>
+        {/* Top Section: Logo + Welcome Copy */}
+        <div className="relative z-10 flex flex-col">
+          {/* Top Logo */}
+          <div>
+            <Link href="/" className="inline-flex items-center -ml-2">
+              <Image
+                src="/docflowtransparent.png"
+                alt="DocFlow Logo"
+                width={220}
+                height={80}
+                className="object-contain"
+                priority
+              />
+            </Link>
+          </div>
 
-        {/* Center Welcome Copy */}
-        <div className="relative z-10 my-16 lg:my-0 max-w-lg">
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-[#f8fafc] tracking-tight leading-tight mb-4">
-            Welcome back to your workspace.
-          </h1>
-          <p className="text-base sm:text-lg text-[#94a3b8] leading-relaxed">
-            Pick up where you left off and keep your documentation in sync.
-          </p>
+          {/* Welcome Copy */}
+          <div className="mt-2 sm:mt-4 max-w-lg">
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-[#f8fafc] tracking-tight leading-tight mb-4">
+              Welcome back to your workspace.
+            </h1>
+            <p className="text-base sm:text-lg text-[#94a3b8] leading-relaxed">
+              Pick up where you left off and keep your documentation in sync.
+            </p>
+          </div>
         </div>
 
         {/* Bottom Copyright */}
-        <div className="relative z-10">
+        <div className="relative z-10 pt-8">
           <p className="font-mono text-xs text-[#94a3b8]/70">
             © {new Date().getFullYear()} DocFlow Inc. All rights reserved.
           </p>
@@ -100,6 +127,19 @@ export default function LoginPage() {
             <div className="border-t border-white/[0.1] w-full" />
           </div>
 
+          {/* Error Alert Box */}
+          {error && (
+            <div
+              className="p-3 mb-2 rounded-md flex items-center justify-center gap-2.5 text-xs text-[#ffb4ab] border border-[#ffb4ab]/30"
+              style={{ background: "rgba(147, 0, 10, 0.25)" }}
+            >
+              <span className="material-symbols-outlined text-base leading-none">
+                error
+              </span>
+              <span className="leading-none">{error}</span>
+            </div>
+          )}
+
           {/* Form */}
           <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-2">
             {/* Email Field */}
@@ -146,19 +186,23 @@ export default function LoginPage() {
             <button
               type="submit"
               id="login-submit-btn"
-              className="mt-3 w-full h-11 rounded-md font-semibold text-sm transition-all duration-200 cursor-pointer flex items-center justify-center"
+              disabled={isLoading}
+              className="mt-3 w-full h-11 rounded-md font-semibold text-sm transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
               style={{
                 background: "#10b981",
                 color: "#060e20",
               }}
               onMouseEnter={(e) =>
-                (e.currentTarget.style.background = "#4edea3")
+                !isLoading && (e.currentTarget.style.background = "#4edea3")
               }
               onMouseLeave={(e) =>
                 (e.currentTarget.style.background = "#10b981")
               }
             >
-              Log In
+              {isLoading && (
+                <span className="w-4 h-4 border-2 border-[#060e20] border-t-transparent rounded-full animate-spin" />
+              )}
+              <span>{isLoading ? "Logging in…" : "Log In"}</span>
             </button>
           </form>
 

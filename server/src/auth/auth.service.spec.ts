@@ -108,6 +108,34 @@ describe('AuthService', () => {
       expect(result.user).not.toHaveProperty('password');
     });
 
+    it('should register successfully when optional name is undefined', async () => {
+      const dtoWithoutName: RegisterDto = {
+        email: 'noname@example.com',
+        password: 'password123',
+        username: 'nonameuser',
+      };
+
+      mockPrismaService.user.findUnique.mockResolvedValueOnce(null);
+      mockPrismaService.user.findUnique.mockResolvedValueOnce(null);
+      mockPrismaService.user.create.mockResolvedValue({
+        ...mockUser,
+        email: dtoWithoutName.email,
+        username: dtoWithoutName.username,
+        name: null,
+      });
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
+
+      const result = await service.register(dtoWithoutName);
+
+      expect(mockPrismaService.user.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          username: 'nonameuser',
+          name: undefined,
+        }),
+      });
+      expect(result.message).toBe('User registered successfully');
+    });
+
     it('should upload avatar to Cloudinary when a file is provided', async () => {
       mockPrismaService.user.findUnique.mockResolvedValueOnce(null);
       mockPrismaService.user.findUnique.mockResolvedValueOnce(null);
@@ -164,22 +192,30 @@ describe('AuthService', () => {
       expect(mockPrismaService.user.create).not.toHaveBeenCalled();
     });
 
-    it('should skip username uniqueness check when no username is provided', async () => {
-      const dtoWithoutUsername: RegisterDto = {
+    it('should trim username and name when registering', async () => {
+      const dtoWithWhitespace: RegisterDto = {
         email: 'jane@example.com',
         password: 'password123',
-        username: undefined as any,
-        name: 'Jane Doe',
+        username: '  janedoe  ',
+        name: '  Jane Doe  ',
       };
 
-      mockPrismaService.user.findUnique.mockResolvedValueOnce(null); // email check only
-      mockPrismaService.user.create.mockResolvedValue({ ...mockUser, username: undefined });
+      mockPrismaService.user.findUnique.mockResolvedValueOnce(null); // email check
+      mockPrismaService.user.findUnique.mockResolvedValueOnce(null); // username check
+      mockPrismaService.user.create.mockResolvedValue({ ...mockUser, username: 'janedoe', name: 'Jane Doe' });
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
 
-      await service.register(dtoWithoutUsername);
+      await service.register(dtoWithWhitespace);
 
-      // findUnique should only be called once (for email)
-      expect(mockPrismaService.user.findUnique).toHaveBeenCalledTimes(1);
+      expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({
+        where: { username: 'janedoe' },
+      });
+      expect(mockPrismaService.user.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          username: 'janedoe',
+          name: 'Jane Doe',
+        }),
+      });
     });
 
     it('should exclude password from the returned user object', async () => {
