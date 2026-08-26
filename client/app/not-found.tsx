@@ -5,7 +5,6 @@ import Footer from "@/components/Footer";
 export default function NotFound() {
   return (
     <>
-      <Navbar />
 
       <main className="min-h-[calc(100vh-140px)] pt-24 pb-16 px-6 md:px-8 flex items-center justify-center relative overflow-hidden">
         {/* Background radial glow */}

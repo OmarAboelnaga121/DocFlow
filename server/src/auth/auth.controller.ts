@@ -6,11 +6,14 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
+  Res,
 } from '@nestjs/common';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ConfigService } from '@nestjs/config';
+import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './DTO/register.dto';
 import { LoginDto } from './DTO/login.dto';
@@ -22,7 +25,10 @@ import {
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Post('register')
   @UseInterceptors(FileInterceptor('avatar'), AuthCookieInterceptor)
@@ -53,10 +59,24 @@ export class AuthController {
 
   @Get('github/callback')
   @UseGuards(AuthGuard('github'))
-  @UseInterceptors(AuthCookieInterceptor)
   @ApiOperation({ summary: 'GitHub OAuth callback handler' })
-  async githubAuthCallback(@CurrentUser() user: any) {
-    return this.authService.validateGithubUser(user);
+  async githubAuthCallback(
+    @CurrentUser() user: any,
+    @Res() res: Response,
+  ) {
+    const authData = await this.authService.validateGithubUser(user);
+
+    res.cookie('token', authData.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    const frontendUrl =
+      this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3001';
+
+    return res.redirect(`${frontendUrl}/dashboard`);
   }
 
   @Post('logout')
