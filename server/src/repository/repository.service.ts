@@ -290,12 +290,22 @@ export class RepositoryService {
     }
 
 
-    // GET repoById - get a repo with it's files
+    // GET repoById - get a repo with it's files, chats, and analysis
     async getRepoById(repoId: string) {
         return this.prisma.repo.findUnique({
             where: { id: repoId },
             include: {
                 files: true,
+                chats: {
+                    include: {
+                        messages: {
+                            take: 1,
+                            orderBy: { createdAt: 'desc' },
+                        },
+                    },
+                    orderBy: { updatedAt: 'desc' },
+                },
+                analysis: true,
             },
         });
     }

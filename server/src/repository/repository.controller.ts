@@ -32,6 +32,15 @@ export class RepositoryController {
     return this.repositoryService.getAllReposForUser(userId);
   }
 
+  @Get(':id')
+  @ApiOperation({ summary: 'Get a specific repository by ID' })
+  @ApiResponse({ status: 200, description: 'Repository retrieved successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Repository not found' })
+  async getRepoById(@Param('id') id: string) {
+    return this.repositoryService.getRepoById(id);
+  }
+
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a repository by ID' })
   @ApiResponse({ status: 200, description: 'Repository deleted successfully' })

@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './DTO/register.dto';
@@ -20,6 +21,10 @@ const mockAuthService = {
   validateGithubUser: jest.fn(),
 };
 
+const mockConfigService = {
+  get: jest.fn(),
+};
+
 // ---------------------------------------------------------------------------
 // Test suite
 // ---------------------------------------------------------------------------
@@ -30,7 +35,10 @@ describe('AuthController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
-      providers: [{ provide: AuthService, useValue: mockAuthService }],
+      providers: [
+        { provide: AuthService, useValue: mockAuthService },
+        { provide: ConfigService, useValue: mockConfigService },
+      ],
     }).compile();
 
     controller = module.get<AuthController>(AuthController);
@@ -110,7 +118,7 @@ describe('AuthController', () => {
   // =========================================================================
 
   describe('githubAuthCallback()', () => {
-    it('should delegate to authService.validateGithubUser() with github user data and return the result', async () => {
+    it('should validate github user, set auth cookie, and redirect to dashboard', async () => {
       const githubUser: GithubUserData = {
         providerId: 'github-123',
         username: 'gh-johndoe',
@@ -120,11 +128,45 @@ describe('AuthController', () => {
         accessToken: 'github-access-token',
       };
       mockAuthService.validateGithubUser.mockResolvedValue(mockAuthResponse);
+      mockConfigService.get.mockReturnValue('http://localhost:3000');
 
-      const result = await controller.githubAuthCallback(githubUser);
+      const mockResponse: any = {
+        cookie: jest.fn(),
+        redirect: jest.fn(),
+      };
+
+      await controller.githubAuthCallback(githubUser, mockResponse);
 
       expect(mockAuthService.validateGithubUser).toHaveBeenCalledWith(githubUser);
-      expect(result).toEqual(mockAuthResponse);
+      expect(mockResponse.cookie).toHaveBeenCalledWith('token', mockAuthResponse.accessToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+      expect(mockResponse.redirect).toHaveBeenCalledWith('http://localhost:3000/dashboard');
+    });
+
+    it('should fallback to default frontend url if FRONTEND_URL is not configured', async () => {
+      const githubUser: GithubUserData = {
+        providerId: 'github-123',
+        username: 'gh-johndoe',
+        name: 'John GitHub',
+        email: 'john@github.com',
+        avatar: 'https://avatars.githubusercontent.com/u/1',
+        accessToken: 'github-access-token',
+      };
+      mockAuthService.validateGithubUser.mockResolvedValue(mockAuthResponse);
+      mockConfigService.get.mockReturnValue(undefined);
+
+      const mockResponse: any = {
+        cookie: jest.fn(),
+        redirect: jest.fn(),
+      };
+
+      await controller.githubAuthCallback(githubUser, mockResponse);
+
+      expect(mockResponse.redirect).toHaveBeenCalledWith('http://localhost:3000/dashboard');
     });
   });
 

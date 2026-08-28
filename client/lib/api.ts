@@ -1,4 +1,13 @@
-import { LoginData, RegisterData, AuthResponse, User, UserRole } from "@/types";
+import {
+  LoginData,
+  RegisterData,
+  AuthResponse,
+  User,
+  UserRole,
+  Repo,
+  CreateRepoData,
+  Chat,
+} from "@/types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
@@ -91,4 +100,125 @@ export async function getUserProfile(): Promise<User> {
 
   return result;
 }
+
+export async function createRepository(data: CreateRepoData): Promise<Repo> {
+  const res = await fetch(`${API_URL}/repository`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(data),
+  });
+
+  const result = await res.json();
+
+  if (!res.ok) {
+    const errorMsg = Array.isArray(result.message)
+      ? result.message.join(", ")
+      : result.message || "Failed to import repository";
+    throw new Error(errorMsg);
+  }
+
+  return result;
+}
+
+export async function getUserRepositories(): Promise<Repo[]> {
+  const res = await fetch(`${API_URL}/repository`, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  const result = await res.json();
+
+  if (!res.ok) {
+    const errorMsg = Array.isArray(result.message)
+      ? result.message.join(", ")
+      : result.message || "Failed to fetch repositories";
+    throw new Error(errorMsg);
+  }
+
+  return result;
+}
+
+export async function deleteRepository(id: string): Promise<Repo> {
+  const res = await fetch(`${API_URL}/repository/${id}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+
+  const result = await res.json();
+
+  if (!res.ok) {
+    const errorMsg = Array.isArray(result.message)
+      ? result.message.join(", ")
+      : result.message || "Failed to delete repository";
+    throw new Error(errorMsg);
+  }
+
+  return result;
+}
+
+export async function getRepositoryById(id: string): Promise<Repo> {
+  const res = await fetch(`${API_URL}/repository/${id}`, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  const result = await res.json();
+
+  if (!res.ok) {
+    const errorMsg = Array.isArray(result.message)
+      ? result.message.join(", ")
+      : result.message || "Failed to fetch repository";
+    throw new Error(errorMsg);
+  }
+
+  return result;
+}
+
+export async function getRepositoryChats(repoId: string): Promise<Chat[]> {
+  const res = await fetch(`${API_URL}/repository/${repoId}`, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  const result = await res.json();
+
+  if (!res.ok) {
+    const errorMsg = Array.isArray(result.message)
+      ? result.message.join(", ")
+      : result.message || "Failed to fetch repository chats";
+    throw new Error(errorMsg);
+  }
+
+  return result;
+}
+
+export async function createChat(data: {
+  repoId: string;
+  title?: string;
+}): Promise<Chat> {
+  const res = await fetch(`${API_URL}/chat`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(data),
+  });
+
+  const result = await res.json();
+
+  if (!res.ok) {
+    const errorMsg = Array.isArray(result.message)
+      ? result.message.join(", ")
+      : result.message || "Failed to create chat session";
+    throw new Error(errorMsg);
+  }
+
+  return result;
+}
+
+
 
