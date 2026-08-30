@@ -7,6 +7,7 @@ import {
   Repo,
   CreateRepoData,
   Chat,
+  ChatMessage,
 } from "@/types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
@@ -238,10 +239,28 @@ export async function getChatById(id: string): Promise<Chat> {
   return result;
 }
 
+export async function getChatMessages(chatId: string): Promise<ChatMessage[]> {
+  const res = await fetch(`${API_URL}/chat/${chatId}/messages`, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  const result = await res.json();
+
+  if (!res.ok) {
+    const errorMsg = Array.isArray(result.message)
+      ? result.message.join(", ")
+      : result.message || "Failed to fetch chat messages";
+    throw new Error(errorMsg);
+  }
+
+  return result;
+}
+
 export async function sendMessage(
   chatId: string,
   content: string
-): Promise<{ userMessage: any; aiMessage: any }> {
+): Promise<ChatMessage> {
   const res = await fetch(`${API_URL}/chat/${chatId}/messages`, {
     method: "POST",
     headers: {

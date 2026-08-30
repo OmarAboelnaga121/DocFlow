@@ -1,13 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getUserProfile, getChatById, getRepositoryById, createChat } from "@/lib/api";
-import { User, Repo, Chat, ApiItem, PageItem } from "@/types";
+import {
+  getUserProfile,
+  getChatById,
+  getRepositoryById,
+  createChat,
+  sendMessage,
+} from "@/lib/api";
+import { User, Repo, Chat, ChatMessage, ApiItem, PageItem } from "@/types";
 import Image from "next/image";
+import FormattedMessage from "@/components/FormattedMessage";
 
-type TabType = "chat" | "apis" | "pages" | "code";
+type TabType = "chat" | "apis" | "pages";
 
 interface TabItem {
   id: TabType;
@@ -19,7 +26,6 @@ const TABS: TabItem[] = [
   { id: "chat", label: "Chat", icon: "chat_bubble" },
   { id: "apis", label: "APIs", icon: "api" },
   { id: "pages", label: "Pages", icon: "description" },
-  { id: "code", label: "Code", icon: "code" },
 ];
 
 export default function ChatWorkspacePage() {
@@ -35,10 +41,26 @@ export default function ChatWorkspacePage() {
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>("chat");
 
+  // Chat conversation state
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [inputMessage, setInputMessage] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
+  const [expandedCitations, setExpandedCitations] = useState<Record<string, boolean>>({});
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
   // Filters for APIs & Pages
   const [apiSearch, setApiSearch] = useState("");
   const [apiMethodFilter, setApiMethodFilter] = useState<string>("ALL");
   const [pageSearch, setPageSearch] = useState("");
+
+  const starterPrompts = [
+    "Explain overall architecture and stack",
+    "List all API endpoints and models",
+    "How does authentication and authorization work?",
+    "Generate summary documentation of key modules",
+  ];
 
   useEffect(() => {
     let isMounted = true;
@@ -71,6 +93,9 @@ export default function ChatWorkspacePage() {
           const chatData = await getChatById(chatId as string);
           if (isMounted && chatData) {
             setChat(chatData);
+            if (Array.isArray(chatData.messages)) {
+              setMessages(chatData.messages);
+            }
 
             // Fetch repository details, analysis (apis/pages), and sibling chats
             if (chatData.repoId) {
@@ -100,22 +125,52 @@ export default function ChatWorkspacePage() {
     };
   }, [chatId, router]);
 
-  const handleCreateNewChat = async () => {
-    if (!chat?.repoId || isCreatingChat) return;
-    setIsCreatingChat(true);
-    try {
-      const newChat = await createChat({
-        repoId: chat.repoId,
-        title: "New Discussion",
-      });
-      if (newChat && newChat.id) {
-        router.push(`/dashboard/chats/chat/${newChat.id}`);
-      }
-    } catch {
-      // Fallback
-    } finally {
-      setIsCreatingChat(false);
+  // Scroll to bottom whenever new messages arrive
+  useEffect(() => {
+    if (activeTab === "chat") {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
+  }, [messages, isSending, activeTab]);
+
+  const handleSendMessage = async (textToSend?: string) => {
+    const text = (textToSend || inputMessage).trim();
+    if (!text || !chatId || isSending) return;
+
+    setSendError(null);
+    setInputMessage("");
+
+    // Optimistic User Message
+    const tempUserMsg: ChatMessage = {
+      id: `temp-${Date.now()}`,
+      chatId: chatId as string,
+      role: "USER",
+      content: text,
+      createdAt: new Date().toISOString(),
+    };
+
+    setMessages((prev) => [...prev, tempUserMsg]);
+    setIsSending(true);
+
+    try {
+      const aiResponse = await sendMessage(chatId as string, text);
+      if (aiResponse) {
+        setMessages((prev) => [...prev, aiResponse]);
+      }
+    } catch (err: any) {
+      setSendError(err.message || "Failed to get AI response. Please try again.");
+    } finally {
+      setIsSending(false);
+      if (textareaRef.current) {
+        textareaRef.current.style.height = "auto";
+      }
+    }
+  };
+
+  const toggleCitation = (msgId: string) => {
+    setExpandedCitations((prev) => ({
+      ...prev,
+      [msgId]: !prev[msgId],
+    }));
   };
 
   // Extracted APIs list from repo analysis
@@ -219,12 +274,13 @@ export default function ChatWorkspacePage() {
           {/* New Analysis / New Chat Action Button */}
           <button
             type="button"
-            onClick={handleCreateNewChat}
-            disabled={isCreatingChat}
+            onClick={() => {
+              router.push(`/dashboard/chats/${chat?.repoId}`);
+            }}
             className="w-full mt-5 bg-[#e2e8f0] hover:bg-white text-[#0f172a] font-mono font-medium text-xs py-2 px-4 rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-sm active:scale-[0.99] cursor-pointer disabled:opacity-50"
           >
             <span className="text-sm font-bold leading-none">+</span>
-            <span>{isCreatingChat ? "Creating..." : "New Analysis"}</span>
+            <span>New Chat</span>
           </button>
 
           {/* Recent Chats Section */}
@@ -353,28 +409,242 @@ export default function ChatWorkspacePage() {
         </header>
 
         {/* Tab Content Container */}
-        <section className="flex-1 overflow-y-auto p-6 flex flex-col">
+        <section className="flex-1 overflow-hidden flex flex-col">
           {/* ── CHAT TAB ── */}
           {activeTab === "chat" && (
-            <div
-              id="tab-content-chat"
-              className="flex-1 flex flex-col justify-center items-center rounded-xl border border-white/[0.06] border-dashed p-8 bg-[#131b2e]/20"
-            >
-              <div className="w-12 h-12 rounded-2xl bg-[#131b2e] border border-white/[0.08] flex items-center justify-center mb-3">
-                <span className="material-symbols-outlined text-[#4edea3] text-2xl">
-                  chat_bubble
-                </span>
+            <div id="tab-content-chat" className="flex-1 flex flex-col h-full overflow-hidden">
+              {/* Messages Stream */}
+              <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
+                {messages.length === 0 ? (
+                  /* Welcome & Starter Prompts */
+                  <div className="h-full flex flex-col items-center justify-center text-center p-6 max-w-xl mx-auto">
+                    <div className="w-12 h-12 rounded-2xl bg-[#10b981]/15 border border-[#10b981]/25 flex items-center justify-center mb-4">
+                      <span className="material-symbols-outlined text-[#4edea3] text-2xl">
+                        auto_awesome
+                      </span>
+                    </div>
+
+                    <h2 className="text-xl font-bold text-white tracking-tight">
+                      Chat with {repo?.name || "Codebase"}
+                    </h2>
+                    <p className="text-xs text-[#94a3b8] mt-1.5 max-w-md leading-relaxed">
+                      Ask questions, analyze REST endpoints, trace architecture, or examine system components with AI grounded in your repository.
+                    </p>
+
+                    {/* Starter Suggested Prompts */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-8 w-full">
+                      {starterPrompts.map((prompt, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => handleSendMessage(prompt)}
+                          className="text-left text-xs text-[#dae2fd] bg-[#131b2e]/80 hover:bg-[#162138] border border-white/[0.08] hover:border-[#4edea3]/40 rounded-xl p-3.5 transition-all shadow-sm cursor-pointer group"
+                        >
+                          <span className="flex items-center gap-1.5 font-mono text-[11px] text-[#4edea3] mb-1">
+                            <span className="material-symbols-outlined text-sm">bolt</span>
+                            Prompt
+                          </span>
+                          <span className="line-clamp-2 leading-relaxed text-[#94a3b8] group-hover:text-white transition-colors">
+                            {prompt}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  /* Message Bubbles */
+                  messages.map((msg, idx) => {
+                    const isUser = msg.role === "USER";
+                    const isExpanded = !!expandedCitations[msg.id];
+                    const citations = Array.isArray(msg.context) ? msg.context : [];
+
+                    return (
+                      <div
+                        key={`msg-${msg.id || idx}-${idx}`}
+                        className={`flex gap-3 max-w-4xl ${
+                          isUser ? "ml-auto flex-row-reverse" : "mr-auto"
+                        }`}
+                      >
+                        {/* Avatar */}
+                        <div
+                          className={`w-8 h-8 rounded-lg shrink-0 flex items-center justify-center text-xs font-bold ${
+                            isUser
+                              ? "bg-[#3b82f6]/20 text-[#60a5fa] border border-[#3b82f6]/30"
+                              : "bg-[#10b981]/20 text-[#4edea3] border border-[#10b981]/30"
+                          }`}
+                        >
+                          {isUser ? (
+                            <span className="material-symbols-outlined text-base">person</span>
+                          ) : (
+                            <span className="material-symbols-outlined text-base">smart_toy</span>
+                          )}
+                        </div>
+
+                        {/* Content Box */}
+                        <div
+                          className={`flex flex-col gap-2 max-w-[85%] md:max-w-[78%] rounded-2xl p-4 text-xs shadow-sm ${
+                            isUser
+                              ? "bg-[#1e293b] text-[#f8fafc] border border-white/[0.08] rounded-tr-xs"
+                              : "bg-[#131b2e] text-[#dae2fd] border border-white/[0.08] rounded-tl-xs"
+                          }`}
+                        >
+                          {/* Role Tag & Timestamp */}
+                          <div className="flex items-center justify-between gap-3 text-[10px] font-mono text-[#64748b] pb-1 border-b border-white/[0.04]">
+                            <span className="font-semibold text-[#94a3b8]">
+                              {isUser ? "You" : "DocFlow AI"}
+                            </span>
+                            <span>
+                              {msg.createdAt
+                                ? new Date(msg.createdAt).toLocaleTimeString([], {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })
+                                : ""}
+                            </span>
+                          </div>
+
+                          {/* Message Body with Rich Markdown & Tables */}
+                          <div className="text-xs leading-relaxed text-[#dae2fd]">
+                            <FormattedMessage content={msg.content} />
+                          </div>
+
+                          {/* Citations / Retrieved Context Accordion */}
+                          {!isUser && citations.length > 0 && (
+                            <div className="mt-2 pt-2 border-t border-white/[0.06]">
+                              <button
+                                type="button"
+                                onClick={() => toggleCitation(msg.id)}
+                                className="flex items-center gap-1.5 text-[11px] font-mono text-[#4cd7f6] hover:text-[#4edea3] transition-colors cursor-pointer"
+                              >
+                                <span className="material-symbols-outlined text-sm">
+                                  {isExpanded ? "expand_less" : "expand_more"}
+                                </span>
+                                <span>
+                                  {citations.length} Source Context{" "}
+                                  {citations.length === 1 ? "Chunk" : "Chunks"}
+                                </span>
+                              </button>
+
+                              {isExpanded && (
+                                <div className="mt-2 space-y-2 max-h-56 overflow-y-auto pr-1">
+                                  {citations.map((chunk: any, cIdx: number) => (
+                                    <div
+                                      key={cIdx}
+                                      className="p-2.5 rounded-lg bg-[#060e20] border border-white/[0.08] text-[11px] font-mono"
+                                    >
+                                      <div className="flex items-center justify-between text-[#4edea3] mb-1.5">
+                                        <span className="truncate">
+                                          {chunk.filePath || chunk.file?.path || "Source File"}
+                                        </span>
+                                        {chunk.startLine && (
+                                          <span className="text-[10px] text-[#64748b]">
+                                            L{chunk.startLine}-{chunk.endLine}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <pre className="text-[#94a3b8] text-[10px] overflow-x-auto whitespace-pre-wrap leading-tight max-h-24">
+                                        {chunk.content}
+                                      </pre>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+
+                {/* AI Thinking / Streaming Indicator */}
+                {isSending && (
+                  <div className="flex gap-3 mr-auto max-w-4xl animate-fade-in">
+                    <div className="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center text-xs font-bold bg-[#10b981]/20 text-[#4edea3] border border-[#10b981]/30">
+                      <span className="material-symbols-outlined text-base">smart_toy</span>
+                    </div>
+
+                    <div className="bg-[#131b2e] border border-white/[0.08] rounded-2xl rounded-tl-xs p-4 flex items-center gap-3 text-xs text-[#94a3b8] font-mono">
+                      <span className="inline-block w-4 h-4 border-2 border-[#4edea3] border-t-transparent rounded-full animate-spin" />
+                      <span>Synthesizing repository context and reasoning...</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Send Error Toast */}
+                {sendError && (
+                  <div className="p-3 rounded-xl bg-[#93000a]/30 border border-[#ffb4ab]/30 text-[#ffb4ab] text-xs flex items-center justify-between gap-2 max-w-4xl mx-auto">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-sm">error</span>
+                      <span>{sendError}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSendError(null)}
+                      className="text-[#ffb4ab] hover:text-white"
+                    >
+                      <span className="material-symbols-outlined text-xs">close</span>
+                    </button>
+                  </div>
+                )}
+
+                <div ref={messagesEndRef} />
               </div>
-              <h3 className="text-sm font-semibold text-white font-mono">Chat Tab</h3>
-              <p className="text-xs text-[#64748b] mt-1 font-mono text-center max-w-sm">
-                Chat conversation and messages container placeholder.
-              </p>
+
+              {/* Chat Input Box (Sticky at bottom) */}
+              <div className="p-4 bg-[#0e121e] border-t border-white/[0.08] shrink-0">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }}
+                  className="max-w-4xl mx-auto flex flex-col gap-2"
+                >
+                  <div className="bg-[#131b2e] border border-white/[0.1] focus-within:border-[#4edea3]/70 focus-within:ring-1 focus-within:ring-[#4edea3]/30 rounded-xl p-2 flex items-end gap-2 transition-all">
+                    <textarea
+                      ref={textareaRef}
+                      value={inputMessage}
+                      onChange={(e) => {
+                        setInputMessage(e.target.value);
+                        e.target.style.height = "auto";
+                        e.target.style.height = `${Math.min(e.target.scrollHeight, 140)}px`;
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSendMessage();
+                        }
+                      }}
+                      placeholder={`Ask about ${repo?.name || "architecture, routes, logic..."} (Enter to send, Shift+Enter for new line)`}
+                      rows={1}
+                      disabled={isSending}
+                      className="w-full bg-transparent text-xs text-[#f8fafc] placeholder-[#64748b] outline-none font-sans resize-none py-1 px-2 max-h-36 leading-relaxed"
+                    />
+
+                    <button
+                      type="submit"
+                      disabled={!inputMessage.trim() || isSending}
+                      className="shrink-0 bg-[#10b981] hover:bg-[#4edea3] text-[#060e20] disabled:opacity-30 disabled:cursor-not-allowed w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-base">send</span>
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[11px] font-mono text-[#64748b] px-1">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] animate-pulse" />
+                      RAG Vector Search Active
+                    </span>
+                    <span>{repo?.branch ? `Branch: ${repo.branch}` : ""}</span>
+                  </div>
+                </form>
+              </div>
             </div>
           )}
 
           {/* ── APIS TAB ── */}
           {activeTab === "apis" && (
-            <div id="tab-content-apis" className="flex-1 flex flex-col">
+            <div id="tab-content-apis" className="flex-1 flex flex-col overflow-y-auto p-6">
               {/* Header Controls */}
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-white/[0.08] mb-6">
                 <div>
@@ -508,7 +778,7 @@ export default function ChatWorkspacePage() {
 
           {/* ── PAGES TAB ── */}
           {activeTab === "pages" && (
-            <div id="tab-content-pages" className="flex-1 flex flex-col">
+            <div id="tab-content-pages" className="flex-1 flex flex-col overflow-y-auto p-6">
               {/* Header Controls */}
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-white/[0.08] mb-6">
                 <div>
@@ -612,24 +882,6 @@ export default function ChatWorkspacePage() {
                   ))}
                 </div>
               )}
-            </div>
-          )}
-
-          {/* ── CODE TAB ── */}
-          {activeTab === "code" && (
-            <div
-              id="tab-content-code"
-              className="flex-1 flex flex-col justify-center items-center rounded-xl border border-white/[0.06] border-dashed p-8 bg-[#131b2e]/20"
-            >
-              <div className="w-12 h-12 rounded-2xl bg-[#131b2e] border border-white/[0.08] flex items-center justify-center mb-3">
-                <span className="material-symbols-outlined text-[#bbcabf] text-2xl">
-                  code
-                </span>
-              </div>
-              <h3 className="text-sm font-semibold text-white font-mono">Code Tab</h3>
-              <p className="text-xs text-[#64748b] mt-1 font-mono text-center max-w-sm">
-                Code explorer and file tree container placeholder.
-              </p>
             </div>
           )}
         </section>

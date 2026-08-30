@@ -111,7 +111,7 @@ export default function ChatsPage() {
       }
 
       if (newChat && newChat.id) {
-        router.push(`/dashboard/chats/${repoId}/${newChat.id}`);
+        router.push(`/dashboard/chats/chat/${newChat.id}`);
       }
     } catch (err: any) {
       setErrorMessage(
