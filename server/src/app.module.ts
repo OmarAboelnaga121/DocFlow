@@ -16,7 +16,7 @@ import { ChatModule } from './chat/chat.module';
     ThrottlerModule.forRoot([
       {
         ttl: 60000, // 60 seconds
-        limit: 10,   // max 10 requests per ttl per IP
+        limit: 120,  // max 120 requests per ttl per IP
       },
     ]),
     PrismaModule,

@@ -220,5 +220,45 @@ export async function createChat(data: {
   return result;
 }
 
+export async function getChatById(id: string): Promise<Chat> {
+  const res = await fetch(`${API_URL}/chat/${id}`, {
+    method: "GET",
+    credentials: "include",
+  });
 
+  const result = await res.json();
 
+  if (!res.ok) {
+    const errorMsg = Array.isArray(result.message)
+      ? result.message.join(", ")
+      : result.message || "Failed to fetch chat session";
+    throw new Error(errorMsg);
+  }
+
+  return result;
+}
+
+export async function sendMessage(
+  chatId: string,
+  content: string
+): Promise<{ userMessage: any; aiMessage: any }> {
+  const res = await fetch(`${API_URL}/chat/${chatId}/messages`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify({ content }),
+  });
+
+  const result = await res.json();
+
+  if (!res.ok) {
+    const errorMsg = Array.isArray(result.message)
+      ? result.message.join(", ")
+      : result.message || "Failed to send message";
+    throw new Error(errorMsg);
+  }
+
+  return result;
+}

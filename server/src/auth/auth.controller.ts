@@ -21,8 +21,10 @@ import {
   AuthCookieInterceptor,
   ClearCookieInterceptor,
 } from './interceptors/auth-cookie.interceptor';
+import { SkipThrottle } from '@nestjs/throttler';
 
 @ApiTags('Auth')
+@SkipThrottle()
 @Controller('auth')
 export class AuthController {
   constructor(

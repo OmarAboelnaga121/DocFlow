@@ -30,16 +30,30 @@ export interface Chat {
   title?: string | null;
   userId: string;
   repoId: string;
+  repo: Repo;
   messages?: ChatMessage[];
   createdAt: string;
   updatedAt: string;
 }
 
+export interface ApiItem {
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "ALL" | string;
+  endpoint: string;
+  description: string;
+  file: string;
+}
+
+export interface PageItem {
+  route: string;
+  description: string;
+  file: string;
+}
+
 export interface RepoAnalysis {
   id: string;
   repoId: string;
-  apis?: any;
-  pages?: any;
+  apis?: ApiItem[];
+  pages?: PageItem[];
   createdAt: string;
   updatedAt: string;
 }
