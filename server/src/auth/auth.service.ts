@@ -43,14 +43,14 @@ export class AuthService {
       throw new ConflictException('Username is already taken');
     }
 
-    // 3. Upload avatar to Cloudinary if provided
-    let avatarUrl: string | undefined;
-    if (file) {
+    // 3. Upload avatar to Cloudinary if provided, or assign default avatar URL
+    let avatarUrl: string = this.cloudinaryService.getDefaultAvatarUrl(cleanName || cleanUsername || email);
+    if (file && file.buffer) {
       try {
         const uploadResult = await this.cloudinaryService.uploadAvatar(file);
         avatarUrl = uploadResult.secure_url;
       } catch (error) {
-        throw new BadRequestException('Avatar upload to Cloudinary failed');
+        throw new BadRequestException(error.message || 'Avatar upload failed');
       }
     }
 

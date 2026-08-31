@@ -36,17 +36,25 @@ export class RepositoryController {
   @ApiOperation({ summary: 'Get a specific repository by ID' })
   @ApiResponse({ status: 200, description: 'Repository retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Repository not found' })
-  async getRepoById(@Param('id') id: string) {
-    return this.repositoryService.getRepoById(id);
+  async getRepoById(
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+  ) {
+    return this.repositoryService.getRepoById(id, userId);
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete a repository by ID' })
+  @ApiOperation({ summary: 'Delete a repository and all related data' })
   @ApiResponse({ status: 200, description: 'Repository deleted successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Repository not found' })
-  async deleteRepo(@Param('id') id: string) {
-    return this.repositoryService.deleteRepo(id);
+  async deleteRepo(
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+  ) {
+    return this.repositoryService.deleteRepo(id, userId);
   }
 }

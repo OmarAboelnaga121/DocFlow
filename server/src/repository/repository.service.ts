@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { CreateRepoDto } from './dto/create-repo.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import simpleGit from 'simple-git';
@@ -291,8 +291,8 @@ export class RepositoryService {
 
 
     // GET repoById - get a repo with it's files, chats, and analysis
-    async getRepoById(repoId: string) {
-        return this.prisma.repo.findUnique({
+    async getRepoById(repoId: string, userId?: string) {
+        const repo = await this.prisma.repo.findUnique({
             where: { id: repoId },
             include: {
                 files: true,
@@ -308,6 +308,16 @@ export class RepositoryService {
                 analysis: true,
             },
         });
+
+        if (!repo) {
+            throw new NotFoundException('Repository not found');
+        }
+
+        if (userId && repo.userId !== userId) {
+            throw new ForbiddenException('You do not have permission to access this repository');
+        }
+
+        return repo;
     }
 
     // GET all repos for a user
@@ -320,11 +330,80 @@ export class RepositoryService {
         });
     }
 
-    // DELETE REPO
-    async deleteRepo(repoId: string) {
-        return this.prisma.repo.delete({
+    // DELETE REPO (Cascading deletion of all related entities and assets)
+    async deleteRepo(repoId: string, userId?: string) {
+        const repo = await this.prisma.repo.findUnique({
             where: { id: repoId },
         });
+
+        if (!repo) {
+            throw new NotFoundException('Repository not found');
+        }
+
+        if (userId && repo.userId !== userId) {
+            throw new ForbiddenException('You do not have permission to delete this repository');
+        }
+
+        // Atomically delete all related entities in dependency order
+        const deletedRepo = await this.prisma.$transaction(async (tx) => {
+            // 1. Delete all chat messages for all chats under this repo
+            await tx.message.deleteMany({
+                where: {
+                    chat: {
+                        repoId: repoId,
+                    },
+                },
+            });
+
+            // 2. Delete all chats under this repo
+            await tx.chat.deleteMany({
+                where: { repoId },
+            });
+
+            // 3. Delete analysis data
+            await tx.repoAnalysis.deleteMany({
+                where: { repoId },
+            });
+
+            // 4. Delete API endpoints & Page routes
+            await tx.apiEndpoint.deleteMany({
+                where: { repoId },
+            });
+            await tx.pageRoute.deleteMany({
+                where: { repoId },
+            });
+
+            // 5. Delete Code chunks (embeddings) for all files in this repo
+            await tx.codeChunk.deleteMany({
+                where: {
+                    file: {
+                        repoId: repoId,
+                    },
+                },
+            });
+
+            // 6. Delete Files
+            await tx.file.deleteMany({
+                where: { repoId },
+            });
+
+            // 7. Delete the Repository itself
+            return tx.repo.delete({
+                where: { id: repoId },
+            });
+        });
+
+        // 8. Clean up local cloned repository directory if still present
+        const clonePath = path.join(os.tmpdir(), `docflow-clone-${repoId}`);
+        if (fs.existsSync(clonePath)) {
+            try {
+                fs.rmSync(clonePath, { recursive: true, force: true });
+            } catch (err) {
+                console.warn(`Failed to clean up temp clone directory ${clonePath}:`, err);
+            }
+        }
+
+        return deletedRepo;
     }
 
 }

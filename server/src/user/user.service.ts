@@ -55,20 +55,19 @@ export class UserService {
     // 3. verify that the name or username is not empty string if they are empty it ignore it
     const trimmedName = dto.name?.trim();
 
-    // 4. if file is provided upload it to cloudinary
-    // 5. delete old image from cloudinary if exists
+    // 4. if file is provided upload it to cloudinary, else retain existing avatar or fallback
     let avatarUrl = user.avatar;
-    if (file) {
+    if (file && file.buffer) {
       try {
         const uploadResult = await this.cloudinaryService.uploadAvatar(file);
         avatarUrl = uploadResult.secure_url;
 
         // Delete old image from cloudinary if it exists
-        if (user.avatar) {
+        if (user.avatar && user.avatar.includes('cloudinary')) {
           await this.cloudinaryService.deleteImage(user.avatar);
         }
       } catch (error) {
-        throw new BadRequestException('Avatar upload to Cloudinary failed');
+        throw new BadRequestException(error.message || 'Avatar upload to Cloudinary failed');
       }
     }
 

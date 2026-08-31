@@ -7,6 +7,7 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
+  ForbiddenException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -63,9 +64,13 @@ export class UserController {
   @ApiBody({ type: UpdateRoleDto })
   @ApiOperation({ summary: 'Update specific user role by user ID' })
   async updateUserRole(
+    @CurrentUser('id') currentUserId: string,
     @Param('id') id: string,
     @Body() updateRoleDto: UpdateRoleDto,
   ) {
+    if (id !== currentUserId) {
+      throw new ForbiddenException('You can only update your own user role');
+    }
     return this.userService.updateRole(id, updateRoleDto.role);
   }
 }

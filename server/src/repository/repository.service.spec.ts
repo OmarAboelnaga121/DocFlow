@@ -68,13 +68,33 @@ const mockPrismaService = {
   repo: {
     create: jest.fn(),
     update: jest.fn(),
+    findUnique: jest.fn(),
+    delete: jest.fn(),
   },
   file: {
     create: jest.fn(),
+    deleteMany: jest.fn(),
   },
   codeChunk: {
     create: jest.fn(),
+    deleteMany: jest.fn(),
   },
+  chat: {
+    deleteMany: jest.fn(),
+  },
+  message: {
+    deleteMany: jest.fn(),
+  },
+  repoAnalysis: {
+    deleteMany: jest.fn(),
+  },
+  apiEndpoint: {
+    deleteMany: jest.fn(),
+  },
+  pageRoute: {
+    deleteMany: jest.fn(),
+  },
+  $transaction: jest.fn((cb) => (typeof cb === 'function' ? cb(mockPrismaService) : Promise.resolve(cb))),
   $executeRawUnsafe: jest.fn(),
 };
 
@@ -495,6 +515,93 @@ describe('RepositoryService', () => {
           .some((l) => firstLinesOfSecond.includes(l));
         expect(hasOverlap).toBe(true);
       }
+    });
+  });
+
+  // =========================================================================
+  // deleteRepo()
+  // =========================================================================
+
+  describe('deleteRepo()', () => {
+    it('should throw NotFoundException if repository does not exist', async () => {
+      mockPrismaService.repo.findUnique.mockResolvedValue(null);
+
+      await expect(service.deleteRepo('non-existent-id')).rejects.toThrow(
+        'Repository not found',
+      );
+    });
+
+    it('should throw ForbiddenException if userId does not match repo owner', async () => {
+      mockPrismaService.repo.findUnique.mockResolvedValue(mockRepo);
+
+      await expect(
+        service.deleteRepo('repo-id-1', 'different-user-id'),
+      ).rejects.toThrow('You do not have permission to delete this repository');
+    });
+
+    it('should atomically delete all related entities and clean filesystem clone', async () => {
+      mockPrismaService.repo.findUnique.mockResolvedValue(mockRepo);
+      mockPrismaService.repo.delete.mockResolvedValue(mockRepo);
+      mockFsExistsSync.mockReturnValue(true);
+
+      const result = await service.deleteRepo('repo-id-1', 'user-id-1');
+
+      expect(mockPrismaService.$transaction).toHaveBeenCalled();
+      expect(mockPrismaService.message.deleteMany).toHaveBeenCalledWith({
+        where: { chat: { repoId: 'repo-id-1' } },
+      });
+      expect(mockPrismaService.chat.deleteMany).toHaveBeenCalledWith({
+        where: { repoId: 'repo-id-1' },
+      });
+      expect(mockPrismaService.repoAnalysis.deleteMany).toHaveBeenCalledWith({
+        where: { repoId: 'repo-id-1' },
+      });
+      expect(mockPrismaService.apiEndpoint.deleteMany).toHaveBeenCalledWith({
+        where: { repoId: 'repo-id-1' },
+      });
+      expect(mockPrismaService.pageRoute.deleteMany).toHaveBeenCalledWith({
+        where: { repoId: 'repo-id-1' },
+      });
+      expect(mockPrismaService.codeChunk.deleteMany).toHaveBeenCalledWith({
+        where: { file: { repoId: 'repo-id-1' } },
+      });
+      expect(mockPrismaService.file.deleteMany).toHaveBeenCalledWith({
+        where: { repoId: 'repo-id-1' },
+      });
+      expect(mockPrismaService.repo.delete).toHaveBeenCalledWith({
+        where: { id: 'repo-id-1' },
+      });
+      expect(mockFsRmSync).toHaveBeenCalled();
+      expect(result).toEqual(mockRepo);
+    });
+  });
+
+  // =========================================================================
+  // getRepoById()
+  // =========================================================================
+
+  describe('getRepoById()', () => {
+    it('should throw NotFoundException if repository does not exist', async () => {
+      mockPrismaService.repo.findUnique.mockResolvedValue(null);
+
+      await expect(service.getRepoById('non-existent-id')).rejects.toThrow(
+        'Repository not found',
+      );
+    });
+
+    it('should throw ForbiddenException if userId does not match repo owner', async () => {
+      mockPrismaService.repo.findUnique.mockResolvedValue(mockRepo);
+
+      await expect(
+        service.getRepoById('repo-id-1', 'different-user-id'),
+      ).rejects.toThrow('You do not have permission to access this repository');
+    });
+
+    it('should return repository details if user owns it', async () => {
+      mockPrismaService.repo.findUnique.mockResolvedValue(mockRepo);
+
+      const result = await service.getRepoById('repo-id-1', 'user-id-1');
+      expect(result).toEqual(mockRepo);
     });
   });
 });

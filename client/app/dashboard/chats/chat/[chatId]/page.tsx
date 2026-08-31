@@ -258,18 +258,18 @@ export default function ChatWorkspacePage() {
       {/* ───────────────────────────────────────────────────────────
           1. LEFT SECTION (Sidebar)
           ─────────────────────────────────────────────────────────── */}
-      <aside className="w-64 md:w-72 shrink-0 bg-[#0e121e] border-r border-white/[0.08] flex flex-col justify-between h-full p-4 select-none">
-        {/* Top Section */}
-        <div className="flex flex-col">
+      <aside className="w-64 md:w-72 shrink-0 bg-[#0e121e] border-r border-white/[0.08] flex flex-col h-full select-none overflow-hidden">
+        {/* Top Fixed Section */}
+        <div className="p-4 pb-2 shrink-0 flex flex-col">
           {/* Brand Header */}
-          <div className="flex items-center gap-3 px-1 py-1">
-            <div className="w-9 h-9 rounded-full bg-[#5b5bd6] text-white flex items-center justify-center font-bold text-xs tracking-tight shadow-md shrink-0">
-              <Image src="/docflowtransparent.png" alt="DocFlow" width={24} height={24} />
-            </div>
-            <div className="flex flex-col leading-tight">
-              <span className="text-sm font-bold text-white tracking-tight">DocFlow AI</span>
-            </div>
-          </div>
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center px-1 py-1 hover:opacity-80 transition-opacity"
+          >
+            <span className="text-lg font-bold text-[#4edea3] tracking-tight font-sans">
+              DocFlow
+            </span>
+          </Link>
 
           {/* New Analysis / New Chat Action Button */}
           <button
@@ -277,58 +277,58 @@ export default function ChatWorkspacePage() {
             onClick={() => {
               router.push(`/dashboard/chats/${chat?.repoId}`);
             }}
-            className="w-full mt-5 bg-[#e2e8f0] hover:bg-white text-[#0f172a] font-mono font-medium text-xs py-2 px-4 rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-sm active:scale-[0.99] cursor-pointer disabled:opacity-50"
+            className="w-full mt-3 bg-[#e2e8f0] hover:bg-white text-[#0f172a] font-mono font-medium text-xs py-2 px-4 rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-sm active:scale-[0.99] cursor-pointer disabled:opacity-50"
           >
             <span className="text-sm font-bold leading-none">+</span>
             <span>New Chat</span>
           </button>
-
-          {/* Recent Chats Section */}
-          <div className="mt-7">
-            <h2 className="text-[11px] font-mono tracking-wider text-[#64748b] uppercase px-1 mb-2">
-              Recent Chats
-            </h2>
-
-            <nav className="flex flex-col gap-1 mt-1">
-              {displayChats.length > 0 ? (
-                displayChats.map((c) => {
-                  const isCurrentChat = c.id === chatId;
-                  const titleText = c.title || "Untitled Discussion";
-
-                  return (
-                    <Link
-                      key={c.id}
-                      href={`/dashboard/chats/chat/${c.id}`}
-                      className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-mono transition-all group ${
-                        isCurrentChat
-                          ? "bg-white/[0.08] text-white font-medium border border-white/[0.06]"
-                          : "text-[#94a3b8] hover:text-white hover:bg-white/[0.04]"
-                      }`}
-                    >
-                      <span
-                        className={`material-symbols-outlined text-[16px] shrink-0 transition-colors ${
-                          isCurrentChat
-                            ? "text-[#4edea3]"
-                            : "text-[#64748b] group-hover:text-[#4edea3]"
-                        }`}
-                      >
-                        chat_bubble_outline
-                      </span>
-                      <span className="truncate">{titleText}</span>
-                    </Link>
-                  );
-                })
-              ) : (
-                <div className="px-2.5 py-3 text-[11px] font-mono text-[#64748b] italic">
-                  No chats yet
-                </div>
-              )}
-            </nav>
-          </div>
         </div>
 
-        {/* Bottom Section (Settings & Support) */}
-        <div className="flex flex-col pt-3 border-t border-white/[0.08]">
+        {/* Scrollable Middle Section (Recent Chats) */}
+        <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3">
+          <h2 className="text-[11px] font-mono tracking-wider text-[#64748b] uppercase px-1 mb-2 sticky top-0 bg-[#0e121e]/95 backdrop-blur-xs py-0.5 z-10">
+            Recent Chats
+          </h2>
+
+          <nav className="flex flex-col gap-1 mt-1">
+            {displayChats.length > 0 ? (
+              displayChats.map((c) => {
+                const isCurrentChat = c.id === chatId;
+                const titleText = c.title || "Untitled Discussion";
+
+                return (
+                  <Link
+                    key={c.id}
+                    href={`/dashboard/chats/chat/${c.id}`}
+                    className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-mono transition-all group ${
+                      isCurrentChat
+                        ? "bg-white/[0.08] text-white font-medium border border-white/[0.06]"
+                        : "text-[#94a3b8] hover:text-white hover:bg-white/[0.04]"
+                    }`}
+                  >
+                    <span
+                      className={`material-symbols-outlined text-[16px] shrink-0 transition-colors ${
+                        isCurrentChat
+                          ? "text-[#4edea3]"
+                          : "text-[#64748b] group-hover:text-[#4edea3]"
+                      }`}
+                    >
+                      chat_bubble_outline
+                    </span>
+                    <span className="truncate">{titleText}</span>
+                  </Link>
+                );
+              })
+            ) : (
+              <div className="px-2.5 py-3 text-[11px] font-mono text-[#64748b] italic">
+                No chats yet
+              </div>
+            )}
+          </nav>
+        </div>
+
+        {/* Bottom Fixed Section (Settings & Support) */}
+        <div className="p-4 pt-3 border-t border-white/[0.08] shrink-0 flex flex-col bg-[#0e121e]">
           <Link
             href="/dashboard"
             className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-mono text-[#94a3b8] hover:text-white hover:bg-white/[0.04] transition-all"
@@ -409,15 +409,15 @@ export default function ChatWorkspacePage() {
         </header>
 
         {/* Tab Content Container */}
-        <section className="flex-1 overflow-hidden flex flex-col">
+        <section className="flex-1 min-h-0 overflow-hidden flex flex-col">
           {/* ── CHAT TAB ── */}
           {activeTab === "chat" && (
-            <div id="tab-content-chat" className="flex-1 flex flex-col h-full overflow-hidden">
+            <div id="tab-content-chat" className="flex-1 min-h-0 flex flex-col h-full overflow-hidden">
               {/* Messages Stream */}
-              <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
+              <div className="flex-1 min-h-0 overflow-y-auto p-4 md:p-6 space-y-4">
                 {messages.length === 0 ? (
                   /* Welcome & Starter Prompts */
-                  <div className="h-full flex flex-col items-center justify-center text-center p-6 max-w-xl mx-auto">
+                  <div className="min-h-full flex flex-col items-center justify-center text-center p-6 max-w-xl mx-auto">
                     <div className="w-12 h-12 rounded-2xl bg-[#10b981]/15 border border-[#10b981]/25 flex items-center justify-center mb-4">
                       <span className="material-symbols-outlined text-[#4edea3] text-2xl">
                         auto_awesome
@@ -644,7 +644,7 @@ export default function ChatWorkspacePage() {
 
           {/* ── APIS TAB ── */}
           {activeTab === "apis" && (
-            <div id="tab-content-apis" className="flex-1 flex flex-col overflow-y-auto p-6">
+            <div id="tab-content-apis" className="flex-1 min-h-0 flex flex-col overflow-y-auto p-6">
               {/* Header Controls */}
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-white/[0.08] mb-6">
                 <div>
@@ -778,7 +778,7 @@ export default function ChatWorkspacePage() {
 
           {/* ── PAGES TAB ── */}
           {activeTab === "pages" && (
-            <div id="tab-content-pages" className="flex-1 flex flex-col overflow-y-auto p-6">
+            <div id="tab-content-pages" className="flex-1 min-h-0 flex flex-col overflow-y-auto p-6">
               {/* Header Controls */}
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-white/[0.08] mb-6">
                 <div>

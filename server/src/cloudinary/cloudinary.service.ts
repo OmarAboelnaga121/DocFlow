@@ -1,6 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { v2 as cloudinary, UploadApiResponse, UploadApiErrorResponse } from 'cloudinary';
+
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024; // 2MB
 
 @Injectable()
 export class CloudinaryService {
@@ -14,9 +17,28 @@ export class CloudinaryService {
     });
   }
 
+  getDefaultAvatarUrl(identifier: string = 'User'): string {
+    const encoded = encodeURIComponent(identifier.trim() || 'User');
+    return `https://ui-avatars.com/api/?name=${encoded}&background=10b981&color=060e20&bold=true`;
+  }
+
   async uploadAvatar(
-    file: Express.Multer.File,
+    file?: Express.Multer.File,
   ): Promise<UploadApiResponse | UploadApiErrorResponse> {
+    if (!file || !file.buffer) {
+      throw new BadRequestException('No image file provided');
+    }
+
+    if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+      throw new BadRequestException(
+        `Invalid file type "${file.mimetype}". Allowed types: JPEG, PNG, WEBP, GIF.`,
+      );
+    }
+
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      throw new BadRequestException('Avatar file size exceeds the 2MB limit.');
+    }
+
     return new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
