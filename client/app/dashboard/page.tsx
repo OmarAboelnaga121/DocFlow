@@ -148,10 +148,10 @@ export default function DashboardPage() {
 
   if (isLoadingAuth) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0b1326] text-[#dae2fd]">
+      <div className="min-h-screen flex items-center justify-center bg-background text-on-background">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-[#10b981] border-t-transparent rounded-full animate-spin" />
-          <span className="font-mono text-xs text-[#94a3b8]">Verifying session...</span>
+          <div className="w-8 h-8 border-2 border-primary-container border-t-transparent rounded-full animate-spin" />
+          <span className="font-mono text-xs text-text-secondary">Verifying session...</span>
         </div>
       </div>
     );
@@ -162,7 +162,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0b1326] text-[#dae2fd]">
+    <div className="min-h-screen flex flex-col bg-background text-on-background">
       <Navbar />
 
       <main className="flex-1 pt-28 pb-20 px-6 md:px-8 max-w-5xl mx-auto w-full">
@@ -174,13 +174,13 @@ export default function DashboardPage() {
         </div>
 
         {/* Ingestion Card */}
-        <div className="bg-[#131b2e]/90 backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6 md:p-8 shadow-2xl mb-14 transition-all">
+        <div className="bg-surface-container-low/90 backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6 md:p-8 shadow-2xl mb-14 transition-all">
           {/* URL, Name, and Branch Input Form */}
           <form onSubmit={handleImport} className="flex flex-col gap-3">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
               {/* Repository URL */}
-              <div className="md:col-span-6 bg-[#0b1326] border border-white/[0.1] focus-within:border-[#4edea3]/70 focus-within:ring-1 focus-within:ring-[#4edea3]/30 rounded-xl p-1.5 pl-4 flex items-center gap-3 transition-all">
-                <span className="material-symbols-outlined text-[#94a3b8] text-[22px] shrink-0">
+              <div className="md:col-span-6 bg-background border border-white/[0.1] focus-within:border-primary/70 focus-within:ring-1 focus-within:ring-primary/30 rounded-xl p-1.5 pl-4 flex items-center gap-3 transition-all">
+                <span className="material-symbols-outlined text-text-secondary text-[22px] shrink-0">
                   link
                 </span>
                 <input
@@ -188,15 +188,15 @@ export default function DashboardPage() {
                   value={repoUrl}
                   onChange={(e) => setRepoUrl(e.target.value)}
                   placeholder="Repository URL (e.g. https://github.com/org/repo.git)"
-                  className="w-full bg-transparent text-sm text-[#f8fafc] placeholder-[#64748b] outline-none font-sans"
+                  className="w-full bg-transparent text-sm text-text-primary placeholder-[#64748b] outline-none font-sans"
                   disabled={isImporting}
                   required
                 />
               </div>
 
               {/* Repository Name */}
-              <div className="md:col-span-3 bg-[#0b1326] border border-white/[0.1] focus-within:border-[#4edea3]/70 focus-within:ring-1 focus-within:ring-[#4edea3]/30 rounded-xl p-1.5 pl-3.5 flex items-center gap-2.5 transition-all">
-                <span className="material-symbols-outlined text-[#94a3b8] text-[20px] shrink-0">
+              <div className="md:col-span-3 bg-background border border-white/[0.1] focus-within:border-primary/70 focus-within:ring-1 focus-within:ring-primary/30 rounded-xl p-1.5 pl-3.5 flex items-center gap-2.5 transition-all">
+                <span className="material-symbols-outlined text-text-secondary text-[20px] shrink-0">
                   label
                 </span>
                 <input
@@ -204,15 +204,15 @@ export default function DashboardPage() {
                   value={repoName}
                   onChange={(e) => setRepoName(e.target.value)}
                   placeholder="Repository Name"
-                  className="w-full bg-transparent text-sm text-[#f8fafc] placeholder-[#64748b] outline-none font-sans"
+                  className="w-full bg-transparent text-sm text-text-primary placeholder-[#64748b] outline-none font-sans"
                   disabled={isImporting}
                   required
                 />
               </div>
 
               {/* Branch Name */}
-              <div className="md:col-span-3 bg-[#0b1326] border border-white/[0.1] focus-within:border-[#4edea3]/70 focus-within:ring-1 focus-within:ring-[#4edea3]/30 rounded-xl p-1.5 pl-3.5 flex items-center gap-2.5 transition-all">
-                <span className="material-symbols-outlined text-[#94a3b8] text-[20px] shrink-0">
+              <div className="md:col-span-3 bg-background border border-white/[0.1] focus-within:border-primary/70 focus-within:ring-1 focus-within:ring-primary/30 rounded-xl p-1.5 pl-3.5 flex items-center gap-2.5 transition-all">
+                <span className="material-symbols-outlined text-text-secondary text-[20px] shrink-0">
                   fork_right
                 </span>
                 <input
@@ -220,7 +220,7 @@ export default function DashboardPage() {
                   value={repoBranch}
                   onChange={(e) => setRepoBranch(e.target.value)}
                   placeholder="Branch (e.g. main, master)"
-                  className="w-full bg-transparent text-sm text-[#f8fafc] placeholder-[#64748b] outline-none font-sans"
+                  className="w-full bg-transparent text-sm text-text-primary placeholder-[#64748b] outline-none font-sans"
                   disabled={isImporting}
                   required
                 />
@@ -237,11 +237,11 @@ export default function DashboardPage() {
                   !repoName.trim() ||
                   !repoBranch.trim()
                 }
-                className="bg-[#10b981] hover:bg-[#4edea3] text-[#060e20] font-semibold text-sm px-7 py-2.5 rounded-xl transition-all shadow-sm hover:shadow-[0_0_20px_rgba(78,222,163,0.35)] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto"
+                className="bg-primary-container hover:bg-primary text-surface-container-lowest font-semibold text-sm px-7 py-2.5 rounded-xl transition-all shadow-sm hover:shadow-primary/35 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto"
               >
                 {isImporting ? (
                   <>
-                    <span className="inline-block w-4 h-4 border-2 border-[#060e20] border-t-transparent rounded-full animate-spin" />
+                    <span className="inline-block w-4 h-4 border-2 border-surface-container-lowest border-t-transparent rounded-full animate-spin" />
                     <span>Importing...</span>
                   </>
                 ) : (
@@ -256,14 +256,14 @@ export default function DashboardPage() {
 
           {/* Feedback messages */}
           {errorMessage && (
-            <div className="mt-3 p-3 rounded-lg bg-[#93000a]/20 border border-[#ffb4ab]/30 text-[#ffb4ab] text-xs flex items-center gap-2">
+            <div className="mt-3 p-3 rounded-lg bg-error-container/20 border border-error/30 text-error text-xs flex items-center gap-2">
               <span className="material-symbols-outlined text-sm">error</span>
               <span>{errorMessage}</span>
             </div>
           )}
 
           {successMessage && (
-            <div className="mt-3 p-3 rounded-lg bg-[#10b981]/15 border border-[#4edea3]/30 text-[#4edea3] text-xs flex items-center gap-2">
+            <div className="mt-3 p-3 rounded-lg bg-primary-container/15 border border-primary/30 text-primary text-xs flex items-center gap-2">
               <span className="material-symbols-outlined text-sm">check_circle</span>
               <span>{successMessage}</span>
             </div>
@@ -273,7 +273,7 @@ export default function DashboardPage() {
         {/* Recent Workspaces Section */}
         <section>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-[#f8fafc] tracking-tight">
+            <h2 className="text-xl font-bold text-text-primary tracking-tight">
               Recent Workspaces
             </h2>
           </div>
@@ -284,7 +284,7 @@ export default function DashboardPage() {
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="h-36 rounded-xl bg-[#131b2e]/60 border border-white/[0.06] animate-pulse"
+                  className="h-36 rounded-xl bg-surface-container-low/60 border border-white/[0.06] animate-pulse"
                 />
               ))}
             </div>
@@ -294,10 +294,10 @@ export default function DashboardPage() {
                 <div
                   key={repo.id}
                   onClick={() => router.push(`/dashboard/chats/${repo.id}`)}
-                  className="relative bg-[#131b2e] border border-white/[0.08] hover:border-[#4edea3]/50 hover:bg-[#162138] rounded-xl p-5 transition-all flex flex-col justify-between group shadow-lg cursor-pointer"
+                  className="relative bg-surface-container-low border border-white/[0.08] hover:border-primary/50 hover:bg-surface-variant rounded-xl p-5 transition-all flex flex-col justify-between group shadow-lg cursor-pointer"
                 >
                   <div className="flex items-start justify-between gap-2 mb-3">
-                    <h3 className="font-semibold text-white truncate text-base group-hover:text-[#4edea3] transition-colors">
+                    <h3 className="font-semibold text-white truncate text-base group-hover:text-primary transition-colors">
                       {repo.name}
                     </h3>
 
@@ -311,7 +311,7 @@ export default function DashboardPage() {
                             activeMenuId === repo.id ? null : repo.id
                           );
                         }}
-                        className="p-1 rounded-md text-[#64748b] hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer flex items-center justify-center"
+                        className="p-1 rounded-md text-text-secondary hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer flex items-center justify-center"
                         aria-label="Workspace Options"
                       >
                         <span className="material-symbols-outlined text-lg leading-none">
@@ -323,7 +323,7 @@ export default function DashboardPage() {
                       {activeMenuId === repo.id && (
                         <div
                           onClick={(e) => e.stopPropagation()}
-                          className="absolute right-0 top-8 z-30 w-36 py-1 rounded-lg bg-[#171f33] border border-white/[0.12] shadow-2xl backdrop-blur-md animate-fade-in-up"
+                          className="absolute right-0 top-8 z-30 w-36 py-1 rounded-lg bg-surface-container border border-white/[0.12] shadow-2xl backdrop-blur-md animate-fade-in-up"
                         >
                           <button
                             type="button"
@@ -331,9 +331,9 @@ export default function DashboardPage() {
                             onClick={() =>
                               handleDeleteRepo(repo.id, repo.name)
                             }
-                            className="w-full px-3 py-2 text-xs text-left text-[#ffb4ab] hover:bg-[#93000a]/30 transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50 font-medium"
+                            className="w-full px-3 py-2 text-xs text-left text-error hover:bg-error-container/30 transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50 font-medium"
                           >
-                            <span className="material-symbols-outlined text-base text-[#ffb4ab]">
+                            <span className="material-symbols-outlined text-base text-error">
                               delete
                             </span>
                             <span>
@@ -347,10 +347,10 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                  <div className="text-xs text-[#94a3b8] mb-4">
+                  <div className="text-xs text-text-secondary mb-4">
                     {repo.status === "ANALYZING" || repo.status === "EMBEDDING" || repo.status === "CLONING" ? (
-                      <span className="text-[#4cd7f6] flex items-center gap-1">
-                        <span className="inline-block w-2 h-2 rounded-full bg-[#4cd7f6] animate-pulse" />
+                      <span className="text-secondary flex items-center gap-1">
+                        <span className="inline-block w-2 h-2 rounded-full bg-secondary animate-pulse" />
                         Indexing in progress...
                       </span>
                     ) : (
@@ -362,13 +362,13 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="px-2 py-0.5 rounded bg-white/[0.06] border border-white/[0.08] text-[11px] font-mono text-[#bbcabf] flex items-center gap-1">
+                    <span className="px-2 py-0.5 rounded bg-white/[0.06] border border-white/[0.08] text-[11px] font-mono text-on-surface-variant flex items-center gap-1">
                       <span className="material-symbols-outlined text-[13px]">
                         fork_right
                       </span>
                       {repo.branch || "main"}
                     </span>
-                    <span className="px-2 py-0.5 rounded bg-[#10b981]/10 border border-[#10b981]/30 text-[11px] font-mono text-[#4edea3]">
+                    <span className="px-2 py-0.5 rounded bg-primary-container/10 border border-primary-container/30 text-[11px] font-mono text-primary">
                       {repo.status}
                     </span>
                   </div>
@@ -377,14 +377,14 @@ export default function DashboardPage() {
             </div>
           ) : (
             /* Clean Empty State (no dummy data) */
-            <div className="bg-[#131b2e]/40 border border-white/[0.06] border-dashed rounded-xl p-8 text-center flex flex-col items-center justify-center">
-              <span className="material-symbols-outlined text-3xl text-[#64748b] mb-2">
+            <div className="bg-surface-container-low/40 border border-white/[0.06] border-dashed rounded-xl p-8 text-center flex flex-col items-center justify-center">
+              <span className="material-symbols-outlined text-3xl text-text-secondary mb-2">
                 folder_open
               </span>
-              <p className="text-sm font-medium text-[#dae2fd]">
+              <p className="text-sm font-medium text-on-background">
                 No workspaces yet
               </p>
-              <p className="text-xs text-[#64748b] mt-1 max-w-sm">
+              <p className="text-xs text-text-secondary mt-1 max-w-sm">
                 Paste a repository URL above to create and analyze your first
                 workspace.
               </p>

@@ -49,36 +49,27 @@ const CHANGELOG = [
   },
 ];
 
-const TYPE_STYLES: Record<string, { label: string; color: string; bg: string }> = {
-  new: { label: "New", color: "#4edea3", bg: "rgba(78,222,163,0.12)" },
-  improvement: { label: "Improved", color: "#4cd7f6", bg: "rgba(76,215,246,0.12)" },
-  fix: { label: "Fix", color: "#f97316", bg: "rgba(249,115,22,0.12)" },
+const TYPE_STYLES: Record<string, { label: string; className: string }> = {
+  new: { label: "New", className: "text-primary bg-primary/10 border-primary/25" },
+  improvement: { label: "Improved", className: "text-secondary bg-secondary/10 border-secondary/25" },
+  fix: { label: "Fix", className: "text-orange-400 bg-orange-500/10 border-orange-500/25" },
 };
 
 export default function ChangelogPage() {
   return (
     <>
       <Navbar />
-      <main
-        className="min-h-screen pt-28 pb-20 px-6 md:px-8"
-        style={{ background: "#0b1326", color: "#dae2fd" }}
-      >
+      <main className="min-h-screen pt-28 pb-20 px-6 md:px-8 bg-background text-on-background">
         <div className="max-w-[780px] mx-auto">
           {/* Header */}
           <div className="mb-16">
-            <p
-              className="font-mono text-[11px] font-medium tracking-[0.08em] uppercase mb-4"
-              style={{ color: "#4edea3" }}
-            >
-              [ WHAT'S NEW ]
+            <p className="font-mono text-[11px] font-medium tracking-[0.08em] uppercase mb-4 text-primary">
+              [ WHAT&apos;S NEW ]
             </p>
-            <h1
-              className="text-[40px] md:text-[52px] font-extrabold leading-[1.1] tracking-[-0.02em] mb-4"
-              style={{ color: "#f8fafc" }}
-            >
+            <h1 className="text-[40px] md:text-[52px] font-extrabold leading-[1.1] tracking-[-0.02em] mb-4 text-text-primary">
               Changelog
             </h1>
-            <p className="text-base leading-relaxed" style={{ color: "#94a3b8" }}>
+            <p className="text-base leading-relaxed text-text-secondary">
               A running log of every meaningful change shipped to DocFlow.
             </p>
           </div>
@@ -88,47 +79,39 @@ export default function ChangelogPage() {
             {CHANGELOG.map((entry) => (
               <div
                 key={entry.version}
-                className="flex flex-col gap-6 pb-12"
-                style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}
+                className="flex flex-col gap-6 pb-12 border-b border-white/[0.08]"
               >
                 {/* Version header */}
                 <div className="flex items-center gap-3 flex-wrap">
-                  <h2
-                    className="text-2xl font-bold"
-                    style={{ color: "#f8fafc" }}
-                  >
+                  <h2 className="text-2xl font-bold text-text-primary">
                     {entry.version}
                   </h2>
                   {entry.badge && (
-                    <span
-                      className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full"
-                      style={{ background: "#4edea3", color: "#060e20" }}
-                    >
+                    <span className="font-mono text-[11px] font-semibold uppercase px-2.5 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30">
                       {entry.badge}
                     </span>
                   )}
-                  <span
-                    className="font-mono text-[12px]"
-                    style={{ color: "#94a3b8" }}
-                  >
+                  <span className="text-sm font-mono text-text-secondary">
                     {entry.date}
                   </span>
                 </div>
 
-                {/* Change items */}
+                {/* Changes list */}
                 <ul className="flex flex-col gap-3">
-                  {entry.changes.map((change, i) => {
-                    const style = TYPE_STYLES[change.type];
+                  {entry.changes.map((item, idx) => {
+                    const style = TYPE_STYLES[item.type] ?? {
+                      label: item.type,
+                      className: "text-text-secondary bg-white/[0.06] border-white/10",
+                    };
                     return (
-                      <li key={i} className="flex items-start gap-3">
+                      <li key={idx} className="flex items-start gap-3 text-sm">
                         <span
-                          className="mt-0.5 shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded"
-                          style={{ background: style.bg, color: style.color }}
+                          className={`shrink-0 font-mono text-[10px] font-semibold uppercase px-2 py-0.5 rounded border ${style.className}`}
                         >
                           {style.label}
                         </span>
-                        <span className="text-sm leading-relaxed" style={{ color: "#dae2fd" }}>
-                          {change.text}
+                        <span className="leading-relaxed text-on-background">
+                          {item.text}
                         </span>
                       </li>
                     );
@@ -138,29 +121,19 @@ export default function ChangelogPage() {
             ))}
           </div>
 
-          {/* CTA */}
-          <div className="mt-12 text-center">
-            <p className="text-sm mb-4" style={{ color: "#94a3b8" }}>
-              Want to follow along? Star the project on GitHub.
+          {/* Subscribe CTA */}
+          <div className="mt-16 p-8 rounded-2xl text-center bg-surface border border-white/[0.08]">
+            <h2 className="text-xl font-bold text-text-primary mb-2">
+              Stay up to date
+            </h2>
+            <p className="text-sm text-text-secondary mb-6">
+              Get notified whenever a major version lands.
             </p>
             <Link
-              href="https://github.com/OmarAboelnaga121"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 font-semibold text-sm px-6 py-3 rounded-lg transition-all duration-200"
-              style={{
-                border: "1px solid rgba(255,255,255,0.15)",
-                color: "#f1f5f9",
-              }}
-              onMouseEnter={(e) =>
-                ((e.currentTarget as HTMLAnchorElement).style.background =
-                  "rgba(45,52,73,0.4)")
-              }
-              onMouseLeave={(e) =>
-                ((e.currentTarget as HTMLAnchorElement).style.background = "transparent")
-              }
+              href="/register"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm transition-all duration-200 cursor-pointer shadow-lg hover:shadow-primary/30 bg-primary-container text-surface-container-lowest hover:bg-primary"
             >
-              ⭐ Star on GitHub
+              Join the Beta Free
             </Link>
           </div>
         </div>

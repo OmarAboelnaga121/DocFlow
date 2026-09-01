@@ -40,23 +40,13 @@ export default function TechArchitecture() {
   return (
     <section
       id="architecture"
-      className="py-16 md:py-20 max-w-[1440px] mx-auto text-center overflow-hidden relative"
-      style={{
-        background: "rgba(19, 27, 46, 0.5)",
-        borderBottom: "1px solid rgba(255,255,255,0.08)",
-      }}
+      className="py-16 md:py-20 max-w-[1440px] mx-auto text-center overflow-hidden relative bg-surface-container-low/50 border-b border-white/[0.08]"
     >
       <div className="px-6 md:px-8 mb-10">
-        <h2
-          className="text-2xl md:text-3xl font-bold leading-[1.3] tracking-[-0.01em] mb-3"
-          style={{ color: "#f8fafc" }}
-        >
+        <h2 className="text-2xl md:text-3xl font-bold leading-[1.3] tracking-[-0.01em] mb-3 text-text-primary">
           Built for Any Tech Stack
         </h2>
-        <p
-          className="text-sm md:text-base max-w-2xl mx-auto"
-          style={{ color: "#94a3b8" }}
-        >
+        <p className="text-sm md:text-base max-w-2xl mx-auto text-text-secondary">
           Universal AST parsers and protocol analyzers adapt to your languages,
           frameworks, databases, and infrastructure.
         </p>
@@ -99,10 +89,7 @@ export default function TechArchitecture() {
         </div>
       </div>
 
-      <p
-        className="font-mono text-[11px] font-medium tracking-[0.06em] uppercase flex items-center justify-center gap-1.5 px-6"
-        style={{ color: "rgba(148,163,184,0.6)" }}
-      >
+      <p className="font-mono text-[11px] font-medium tracking-[0.06em] uppercase flex items-center justify-center gap-1.5 px-6 text-text-secondary/60">
         <span className="material-symbols-outlined text-[14px]">lock</span>
         Enterprise-Grade Privacy: Your code never trains public models.
       </p>
@@ -112,26 +99,10 @@ export default function TechArchitecture() {
 
 function TechBadge({ tech }: { tech: TechItem }) {
   return (
-    <div
-      className="cursor-pointer flex items-center gap-3 px-5 py-3 rounded border font-mono text-sm font-medium whitespace-nowrap select-none cursor-default transition-all duration-200 hover:-translate-y-1 hover:border-[#4edea3]/50 hover:bg-[#2d3449]/90 hover:shadow-[0_4px_20px_-4px_rgba(78,222,163,0.2)]"
-      style={{
-        background: "#1e293b",
-        borderColor: "rgba(255, 255, 255, 0.08)",
-        color: "#dae2fd",
-      }}
-    >
-      <span
-        className="w-1.5 h-1.5 rounded-full"
-        style={{ backgroundColor: "#4edea3" }}
-      />
-      <span className="text-[#f8fafc]">{tech.name}</span>
-      <span
-        className="text-[10px] px-1.5 py-0.5 rounded uppercase tracking-wider"
-        style={{
-          background: "rgba(255, 255, 255, 0.06)",
-          color: "#94a3b8",
-        }}
-      >
+    <div className="cursor-pointer flex items-center gap-3 px-5 py-3 rounded border font-mono text-sm font-medium whitespace-nowrap select-none cursor-default transition-all duration-200 hover:-translate-y-1 hover:border-primary/50 hover:bg-surface-variant/90 hover:shadow-[0_4px_20px_-4px_rgba(78,222,163,0.2)] bg-surface border-white/[0.08] text-on-background">
+      <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+      <span className="text-text-primary">{tech.name}</span>
+      <span className="text-[10px] px-1.5 py-0.5 rounded uppercase tracking-wider bg-white/[0.06] text-text-secondary">
         {tech.category}
       </span>
     </div>

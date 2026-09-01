@@ -47,30 +47,18 @@ export default function FeaturesPage() {
   return (
     <>
       <Navbar />
-      <main
-        className="min-h-screen pt-28 pb-20 px-6 md:px-8"
-        style={{ background: "#0b1326", color: "#dae2fd" }}
-      >
+      <main className="min-h-screen pt-28 pb-20 px-6 md:px-8 bg-background text-on-background">
         <div className="max-w-[1100px] mx-auto">
           {/* Header */}
           <div className="text-center mb-16">
-            <p
-              className="font-mono text-[11px] font-medium tracking-[0.08em] uppercase mb-4"
-              style={{ color: "#4edea3" }}
-            >
+            <p className="font-mono text-[11px] font-medium tracking-[0.08em] uppercase mb-4 text-primary">
               [ WHAT DOCFLOW CAN DO ]
             </p>
-            <h1
-              className="text-[40px] md:text-[56px] font-extrabold leading-[1.1] tracking-[-0.02em] mb-6"
-              style={{ color: "#f8fafc" }}
-            >
+            <h1 className="text-[40px] md:text-[56px] font-extrabold leading-[1.1] tracking-[-0.02em] mb-6 text-text-primary">
               Features Built for{" "}
-              <span style={{ color: "#4edea3" }}>Modern Teams</span>
+              <span className="text-primary">Modern Teams</span>
             </h1>
-            <p
-              className="max-w-2xl mx-auto text-base leading-relaxed"
-              style={{ color: "#94a3b8" }}
-            >
+            <p className="max-w-2xl mx-auto text-base leading-relaxed text-text-secondary">
               Everything you need to transform your codebase from a black box into an
               open book — for engineers, product managers, and stakeholders alike.
             </p>
@@ -81,44 +69,32 @@ export default function FeaturesPage() {
             {FEATURES.map((feat) => (
               <div
                 key={feat.title}
-                className="flex flex-col gap-4 p-6 rounded-xl transition-all duration-300"
-                style={{
-                  background: "#1e293b",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLDivElement).style.borderColor =
-                    "rgba(78,222,163,0.35)";
-                  (e.currentTarget as HTMLDivElement).style.background = "#222a3d";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLDivElement).style.borderColor =
-                    "rgba(255,255,255,0.08)";
-                  (e.currentTarget as HTMLDivElement).style.background = "#1e293b";
-                }}
+                className="flex flex-col gap-4 p-6 rounded-xl transition-all duration-300 bg-surface border border-white/[0.08] hover:border-primary/35 hover:bg-surface-variant"
               >
                 <span className="text-3xl">{feat.icon}</span>
-                <h3
-                  className="text-xl font-semibold leading-[1.3] tracking-[-0.01em]"
-                  style={{ color: "#dae2fd" }}
-                >
+                <h2 className="text-xl font-bold tracking-tight text-text-primary">
                   {feat.title}
-                </h3>
-                <p className="text-sm leading-relaxed" style={{ color: "#94a3b8" }}>
+                </h2>
+                <p className="text-sm leading-relaxed text-text-secondary">
                   {feat.description}
                 </p>
               </div>
             ))}
           </div>
 
-          {/* CTA */}
-          <div className="mt-16 text-center">
+          {/* CTA Banner */}
+          <div className="mt-20 p-10 rounded-2xl text-center bg-surface-container-low border border-white/[0.08]">
+            <h2 className="text-2xl md:text-3xl font-extrabold text-text-primary mb-3">
+              Ready to explore your codebase?
+            </h2>
+            <p className="text-text-secondary mb-8 max-w-lg mx-auto text-sm">
+              Connect your first repository in under 2 minutes. No credit card required.
+            </p>
             <Link
               href="/register"
-              className="inline-flex items-center gap-2 font-semibold text-sm px-8 py-3 rounded transition-opacity hover:opacity-90"
-              style={{ background: "#10b981", color: "#060e20" }}
+              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-lg font-semibold text-sm transition-all duration-200 cursor-pointer shadow-lg hover:shadow-primary/30 bg-primary-container text-surface-container-lowest hover:bg-primary"
             >
-              Get Started Free →
+              Get Started Free
             </Link>
           </div>
         </div>

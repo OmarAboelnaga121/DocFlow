@@ -41,8 +41,8 @@ export async function registerUser(data: RegisterData | FormData): Promise<AuthR
     headers: isFormData
       ? undefined
       : {
-          "Content-Type": "application/json",
-        },
+        "Content-Type": "application/json",
+      },
     credentials: "include",
     body: isFormData ? data : JSON.stringify(data),
   });
@@ -101,6 +101,34 @@ export async function getUserProfile(): Promise<User> {
 
   return result;
 }
+
+export async function updateUserProfile(
+  data: { name?: string; username?: string } | FormData
+): Promise<{ message: string; user: User }> {
+  const isFormData = typeof FormData !== "undefined" && data instanceof FormData;
+  const res = await fetch(`${API_URL}/user/profile`, {
+    method: "PATCH",
+    headers: isFormData
+      ? undefined
+      : {
+          "Content-Type": "application/json",
+        },
+    credentials: "include",
+    body: isFormData ? data : JSON.stringify(data),
+  });
+
+  const result = await res.json();
+
+  if (!res.ok) {
+    const errorMsg = Array.isArray(result.message)
+      ? result.message.join(", ")
+      : result.message || "Failed to update profile";
+    throw new Error(errorMsg);
+  }
+
+  return result;
+}
+
 
 export async function createRepository(data: CreateRepoData): Promise<Repo> {
   const res = await fetch(`${API_URL}/repository`, {
@@ -276,6 +304,24 @@ export async function sendMessage(
     const errorMsg = Array.isArray(result.message)
       ? result.message.join(", ")
       : result.message || "Failed to send message";
+    throw new Error(errorMsg);
+  }
+
+  return result;
+}
+
+export async function logoutUser(): Promise<{ message: string }> {
+  const res = await fetch(`${API_URL}/auth/logout`, {
+    method: "POST",
+    credentials: "include",
+  });
+
+  const result = await res.json();
+
+  if (!res.ok) {
+    const errorMsg = Array.isArray(result.message)
+      ? result.message.join(", ")
+      : result.message || "Failed to logout";
     throw new Error(errorMsg);
   }
 

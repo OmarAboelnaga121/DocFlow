@@ -20,13 +20,7 @@ const COMPANY_LINKS: { label: string; href: string }[] = [
 
 export default function Footer() {
   return (
-    <footer
-      className="py-10"
-      style={{
-        background: "#060e20",
-        borderTop: "1px solid rgba(255,255,255,0.08)",
-      }}
-    >
+    <footer className="py-10 bg-surface-container-lowest border-t border-white/[0.08]">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-8 px-6 md:px-8 max-w-[1440px] mx-auto text-sm">
         {/* Brand */}
         <div className="col-span-2 md:col-span-2 flex flex-col gap-4">
@@ -39,7 +33,7 @@ export default function Footer() {
               className="object-contain"
             />
           </Link>
-          <p className="text-sm leading-relaxed max-w-xs" style={{ color: "#94a3b8" }}>
+          <p className="text-sm leading-relaxed max-w-xs text-text-secondary">
             Codebase intelligence for modern product teams. Stop guessing,
             start shipping.
           </p>
@@ -50,10 +44,7 @@ export default function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="GitHub"
-              style={{ color: "#94a3b8" }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "#4edea3")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "#94a3b8")}
-              className="transition-colors"
+              className="text-text-secondary hover:text-primary transition-colors"
             >
               <FontAwesomeIcon icon={faGithub} style={{ width: 20, height: 20 }} />
             </a>
@@ -62,10 +53,7 @@ export default function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="LinkedIn"
-              style={{ color: "#94a3b8" }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "#4edea3")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "#94a3b8")}
-              className="transition-colors"
+              className="text-text-secondary hover:text-primary transition-colors"
             >
               <FontAwesomeIcon icon={faLinkedin} style={{ width: 20, height: 20 }} />
             </a>
@@ -74,20 +62,14 @@ export default function Footer() {
 
         {/* Product */}
         <div className="flex flex-col gap-3 pt-10">
-          <h4
-            className="font-mono text-[11px] font-semibold tracking-wider uppercase mb-1"
-            style={{ color: "#f8fafc" }}
-          >
+          <h4 className="font-mono text-[11px] font-semibold tracking-wider uppercase mb-1 text-text-primary">
             Product
           </h4>
           {PRODUCT_LINKS.map(({ label, href }) => (
             <Link
               key={label}
               href={href}
-              className="transition-colors"
-              style={{ color: "#94a3b8" }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "#4edea3")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "#94a3b8")}
+              className="transition-colors text-text-secondary hover:text-primary"
             >
               {label}
             </Link>
@@ -96,20 +78,14 @@ export default function Footer() {
 
         {/* Company */}
         <div className="flex flex-col gap-3 pt-10">
-          <h4
-            className="font-mono text-[11px] font-semibold tracking-wider uppercase mb-1"
-            style={{ color: "#f8fafc" }}
-          >
+          <h4 className="font-mono text-[11px] font-semibold tracking-wider uppercase mb-1 text-text-primary">
             Company
           </h4>
           {COMPANY_LINKS.map(({ label, href }) => (
             <Link
               key={label}
               href={href}
-              className="transition-colors"
-              style={{ color: "#94a3b8" }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "#4edea3")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "#94a3b8")}
+              className="transition-colors text-text-secondary hover:text-primary"
             >
               {label}
             </Link>
@@ -118,13 +94,7 @@ export default function Footer() {
       </div>
 
       {/* Bottom Bar */}
-      <div
-        className="mt-10 pt-6 px-6 md:px-8 max-w-[1440px] mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 text-xs"
-        style={{
-          borderTop: "1px solid rgba(255,255,255,0.08)",
-          color: "rgba(148,163,184,0.6)",
-        }}
-      >
+      <div className="mt-10 pt-6 px-6 md:px-8 max-w-[1440px] mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 text-xs border-t border-white/[0.08] text-text-secondary/60">
         <p>
           © 2026 DocFlow Inc. Built by{" "}
           <a

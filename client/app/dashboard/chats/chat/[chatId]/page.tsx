@@ -237,10 +237,10 @@ export default function ChatWorkspacePage() {
 
   if (isLoadingAuth) {
     return (
-      <div className="h-screen w-full flex items-center justify-center bg-[#0b1326] text-[#dae2fd]">
+      <div className="h-screen w-full flex items-center justify-center bg-background text-on-background">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-[#10b981] border-t-transparent rounded-full animate-spin" />
-          <span className="font-mono text-xs text-[#94a3b8]">Initializing workspace...</span>
+          <div className="w-8 h-8 border-2 border-primary-container border-t-transparent rounded-full animate-spin" />
+          <span className="font-mono text-xs text-text-secondary">Initializing workspace...</span>
         </div>
       </div>
     );
@@ -254,11 +254,11 @@ export default function ChatWorkspacePage() {
   const displayChats = chats.length > 0 ? chats : chat ? [chat] : [];
 
   return (
-    <div className="h-screen w-full flex bg-[#0b1326] text-[#dae2fd] overflow-hidden font-sans">
+    <div className="h-screen w-full flex bg-background text-on-background overflow-hidden font-sans">
       {/* ───────────────────────────────────────────────────────────
           1. LEFT SECTION (Sidebar)
           ─────────────────────────────────────────────────────────── */}
-      <aside className="w-64 md:w-72 shrink-0 bg-[#0e121e] border-r border-white/[0.08] flex flex-col h-full select-none overflow-hidden">
+      <aside className="w-64 md:w-72 shrink-0 bg-surface-container-lowest border-r border-white/[0.08] flex flex-col h-full select-none overflow-hidden">
         {/* Top Fixed Section */}
         <div className="p-4 pb-2 shrink-0 flex flex-col">
           {/* Brand Header */}
@@ -266,7 +266,7 @@ export default function ChatWorkspacePage() {
             href="/dashboard"
             className="inline-flex items-center px-1 py-1 hover:opacity-80 transition-opacity"
           >
-            <span className="text-lg font-bold text-[#4edea3] tracking-tight font-sans">
+            <span className="text-lg font-bold text-primary tracking-tight font-sans">
               DocFlow
             </span>
           </Link>
@@ -277,7 +277,7 @@ export default function ChatWorkspacePage() {
             onClick={() => {
               router.push(`/dashboard/chats/${chat?.repoId}`);
             }}
-            className="w-full mt-3 bg-[#e2e8f0] hover:bg-white text-[#0f172a] font-mono font-medium text-xs py-2 px-4 rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-sm active:scale-[0.99] cursor-pointer disabled:opacity-50"
+            className="w-full mt-3 bg-text-primary hover:bg-white text-surface-container-lowest font-mono font-medium text-xs py-2 px-4 rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-sm active:scale-[0.99] cursor-pointer disabled:opacity-50"
           >
             <span className="text-sm font-bold leading-none">+</span>
             <span>New Chat</span>
@@ -286,7 +286,7 @@ export default function ChatWorkspacePage() {
 
         {/* Scrollable Middle Section (Recent Chats) */}
         <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3">
-          <h2 className="text-[11px] font-mono tracking-wider text-[#64748b] uppercase px-1 mb-2 sticky top-0 bg-[#0e121e]/95 backdrop-blur-xs py-0.5 z-10">
+          <h2 className="text-[11px] font-mono tracking-wider text-text-secondary uppercase px-1 mb-2 sticky top-0 bg-surface-container-lowest/95 backdrop-blur-xs py-0.5 z-10">
             Recent Chats
           </h2>
 
@@ -303,14 +303,14 @@ export default function ChatWorkspacePage() {
                     className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-mono transition-all group ${
                       isCurrentChat
                         ? "bg-white/[0.08] text-white font-medium border border-white/[0.06]"
-                        : "text-[#94a3b8] hover:text-white hover:bg-white/[0.04]"
+                        : "text-text-secondary hover:text-white hover:bg-white/[0.04]"
                     }`}
                   >
                     <span
                       className={`material-symbols-outlined text-[16px] shrink-0 transition-colors ${
                         isCurrentChat
-                          ? "text-[#4edea3]"
-                          : "text-[#64748b] group-hover:text-[#4edea3]"
+                          ? "text-primary"
+                          : "text-text-secondary group-hover:text-primary"
                       }`}
                     >
                       chat_bubble_outline
@@ -320,7 +320,7 @@ export default function ChatWorkspacePage() {
                 );
               })
             ) : (
-              <div className="px-2.5 py-3 text-[11px] font-mono text-[#64748b] italic">
+              <div className="px-2.5 py-3 text-[11px] font-mono text-text-secondary italic">
                 No chats yet
               </div>
             )}
@@ -328,12 +328,12 @@ export default function ChatWorkspacePage() {
         </div>
 
         {/* Bottom Fixed Section (Settings & Support) */}
-        <div className="p-4 pt-3 border-t border-white/[0.08] shrink-0 flex flex-col bg-[#0e121e]">
+        <div className="p-4 pt-3 border-t border-white/[0.08] shrink-0 flex flex-col bg-surface-container-lowest">
           <Link
-            href="/dashboard"
-            className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-mono text-[#94a3b8] hover:text-white hover:bg-white/[0.04] transition-all"
+            href="/dashboard/user"
+            className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-mono text-text-secondary hover:text-white hover:bg-white/[0.04] transition-all"
           >
-            <span className="material-symbols-outlined text-[17px] text-[#64748b]">
+            <span className="material-symbols-outlined text-[17px] text-text-secondary">
               settings
             </span>
             <span>Settings</span>
@@ -341,9 +341,9 @@ export default function ChatWorkspacePage() {
 
           <Link
             href="mailto:support@docflow.ai"
-            className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-mono text-[#94a3b8] hover:text-white hover:bg-white/[0.04] transition-all mt-0.5"
+            className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-mono text-text-secondary hover:text-white hover:bg-white/[0.04] transition-all mt-0.5"
           >
-            <span className="material-symbols-outlined text-[17px] text-[#64748b]">
+            <span className="material-symbols-outlined text-[17px] text-text-secondary">
               help
             </span>
             <span>Support</span>
@@ -354,10 +354,10 @@ export default function ChatWorkspacePage() {
       {/* ───────────────────────────────────────────────────────────
           2. RIGHT SECTION (Workspace & Tabs)
           ─────────────────────────────────────────────────────────── */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden bg-[#0b1326]">
+      <main className="flex-1 flex flex-col h-full overflow-hidden bg-background">
         {/* Top Tab Navigation Bar */}
-        <header className="h-14 shrink-0 bg-[#0e121e] border-b border-white/[0.08] px-6 flex items-center justify-between">
-          {/* 4 Tabs: [chat, apis, pages, code] */}
+        <header className="h-14 shrink-0 bg-surface-container-lowest border-b border-white/[0.08] px-6 flex items-center justify-between">
+          {/* 3 Tabs: [chat, apis, pages] */}
           <div className="flex items-center gap-2">
             {TABS.map((tab) => {
               const isActive = activeTab === tab.id;
@@ -375,8 +375,8 @@ export default function ChatWorkspacePage() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-mono transition-all cursor-pointer ${
                     isActive
-                      ? "bg-[#131b2e] text-[#4edea3] border border-white/[0.12] shadow-sm"
-                      : "text-[#94a3b8] hover:text-white hover:bg-white/[0.04]"
+                      ? "bg-surface-container-low text-primary border border-white/[0.12] shadow-sm"
+                      : "text-text-secondary hover:text-white hover:bg-white/[0.04]"
                   }`}
                 >
                   <span className="material-symbols-outlined text-[16px]">
@@ -384,7 +384,7 @@ export default function ChatWorkspacePage() {
                   </span>
                   <span>{tab.label}</span>
                   {count !== null && count > 0 && (
-                    <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-white/[0.08] text-[#dae2fd]">
+                    <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-white/[0.08] text-on-background">
                       {count}
                     </span>
                   )}
@@ -394,14 +394,14 @@ export default function ChatWorkspacePage() {
           </div>
 
           {/* Active Context / Chat Info */}
-          <div className="hidden sm:flex items-center gap-2 text-xs font-mono text-[#64748b]">
+          <div className="hidden sm:flex items-center gap-2 text-xs font-mono text-text-secondary">
             {chat?.title && (
-              <span className="text-[#dae2fd] max-w-[200px] truncate">
+              <span className="text-on-background max-w-[200px] truncate">
                 {chat.title}
               </span>
             )}
             {chat?.repo && (
-              <span className="px-2 py-0.5 rounded bg-white/[0.06] border border-white/[0.08] text-[11px] text-[#4edea3]">
+              <span className="px-2 py-0.5 rounded bg-white/[0.06] border border-white/[0.08] text-[11px] text-primary">
                 {chat.repo.name}
               </span>
             )}
@@ -418,8 +418,8 @@ export default function ChatWorkspacePage() {
                 {messages.length === 0 ? (
                   /* Welcome & Starter Prompts */
                   <div className="min-h-full flex flex-col items-center justify-center text-center p-6 max-w-xl mx-auto">
-                    <div className="w-12 h-12 rounded-2xl bg-[#10b981]/15 border border-[#10b981]/25 flex items-center justify-center mb-4">
-                      <span className="material-symbols-outlined text-[#4edea3] text-2xl">
+                    <div className="w-12 h-12 rounded-2xl bg-primary-container/15 border border-primary-container/25 flex items-center justify-center mb-4">
+                      <span className="material-symbols-outlined text-primary text-2xl">
                         auto_awesome
                       </span>
                     </div>
@@ -427,7 +427,7 @@ export default function ChatWorkspacePage() {
                     <h2 className="text-xl font-bold text-white tracking-tight">
                       Chat with {repo?.name || "Codebase"}
                     </h2>
-                    <p className="text-xs text-[#94a3b8] mt-1.5 max-w-md leading-relaxed">
+                    <p className="text-xs text-text-secondary mt-1.5 max-w-md leading-relaxed">
                       Ask questions, analyze REST endpoints, trace architecture, or examine system components with AI grounded in your repository.
                     </p>
 
@@ -438,13 +438,13 @@ export default function ChatWorkspacePage() {
                           key={idx}
                           type="button"
                           onClick={() => handleSendMessage(prompt)}
-                          className="text-left text-xs text-[#dae2fd] bg-[#131b2e]/80 hover:bg-[#162138] border border-white/[0.08] hover:border-[#4edea3]/40 rounded-xl p-3.5 transition-all shadow-sm cursor-pointer group"
+                          className="text-left text-xs text-on-background bg-surface-container-low/80 hover:bg-surface-variant border border-white/[0.08] hover:border-primary/40 rounded-xl p-3.5 transition-all shadow-sm cursor-pointer group"
                         >
-                          <span className="flex items-center gap-1.5 font-mono text-[11px] text-[#4edea3] mb-1">
+                          <span className="flex items-center gap-1.5 font-mono text-[11px] text-primary mb-1">
                             <span className="material-symbols-outlined text-sm">bolt</span>
                             Prompt
                           </span>
-                          <span className="line-clamp-2 leading-relaxed text-[#94a3b8] group-hover:text-white transition-colors">
+                          <span className="line-clamp-2 leading-relaxed text-text-secondary group-hover:text-white transition-colors">
                             {prompt}
                           </span>
                         </button>
@@ -469,8 +469,8 @@ export default function ChatWorkspacePage() {
                         <div
                           className={`w-8 h-8 rounded-lg shrink-0 flex items-center justify-center text-xs font-bold ${
                             isUser
-                              ? "bg-[#3b82f6]/20 text-[#60a5fa] border border-[#3b82f6]/30"
-                              : "bg-[#10b981]/20 text-[#4edea3] border border-[#10b981]/30"
+                              ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                              : "bg-primary-container/20 text-primary border border-primary-container/30"
                           }`}
                         >
                           {isUser ? (
@@ -484,13 +484,13 @@ export default function ChatWorkspacePage() {
                         <div
                           className={`flex flex-col gap-2 max-w-[85%] md:max-w-[78%] rounded-2xl p-4 text-xs shadow-sm ${
                             isUser
-                              ? "bg-[#1e293b] text-[#f8fafc] border border-white/[0.08] rounded-tr-xs"
-                              : "bg-[#131b2e] text-[#dae2fd] border border-white/[0.08] rounded-tl-xs"
+                              ? "bg-surface text-text-primary border border-white/[0.08] rounded-tr-xs"
+                              : "bg-surface-container-low text-on-background border border-white/[0.08] rounded-tl-xs"
                           }`}
                         >
                           {/* Role Tag & Timestamp */}
-                          <div className="flex items-center justify-between gap-3 text-[10px] font-mono text-[#64748b] pb-1 border-b border-white/[0.04]">
-                            <span className="font-semibold text-[#94a3b8]">
+                          <div className="flex items-center justify-between gap-3 text-[10px] font-mono text-text-secondary pb-1 border-b border-white/[0.04]">
+                            <span className="font-semibold text-text-secondary">
                               {isUser ? "You" : "DocFlow AI"}
                             </span>
                             <span>
@@ -504,7 +504,7 @@ export default function ChatWorkspacePage() {
                           </div>
 
                           {/* Message Body with Rich Markdown & Tables */}
-                          <div className="text-xs leading-relaxed text-[#dae2fd]">
+                          <div className="text-xs leading-relaxed text-on-background">
                             <FormattedMessage content={msg.content} />
                           </div>
 
@@ -514,7 +514,7 @@ export default function ChatWorkspacePage() {
                               <button
                                 type="button"
                                 onClick={() => toggleCitation(msg.id)}
-                                className="flex items-center gap-1.5 text-[11px] font-mono text-[#4cd7f6] hover:text-[#4edea3] transition-colors cursor-pointer"
+                                className="flex items-center gap-1.5 text-[11px] font-mono text-secondary hover:text-primary transition-colors cursor-pointer"
                               >
                                 <span className="material-symbols-outlined text-sm">
                                   {isExpanded ? "expand_less" : "expand_more"}
@@ -530,19 +530,19 @@ export default function ChatWorkspacePage() {
                                   {citations.map((chunk: any, cIdx: number) => (
                                     <div
                                       key={cIdx}
-                                      className="p-2.5 rounded-lg bg-[#060e20] border border-white/[0.08] text-[11px] font-mono"
+                                      className="p-2.5 rounded-lg bg-surface-container-lowest border border-white/[0.08] text-[11px] font-mono"
                                     >
-                                      <div className="flex items-center justify-between text-[#4edea3] mb-1.5">
+                                      <div className="flex items-center justify-between text-primary mb-1.5">
                                         <span className="truncate">
                                           {chunk.filePath || chunk.file?.path || "Source File"}
                                         </span>
                                         {chunk.startLine && (
-                                          <span className="text-[10px] text-[#64748b]">
+                                          <span className="text-[10px] text-text-secondary">
                                             L{chunk.startLine}-{chunk.endLine}
                                           </span>
                                         )}
                                       </div>
-                                      <pre className="text-[#94a3b8] text-[10px] overflow-x-auto whitespace-pre-wrap leading-tight max-h-24">
+                                      <pre className="text-text-secondary text-[10px] overflow-x-auto whitespace-pre-wrap leading-tight max-h-24">
                                         {chunk.content}
                                       </pre>
                                     </div>
@@ -560,12 +560,12 @@ export default function ChatWorkspacePage() {
                 {/* AI Thinking / Streaming Indicator */}
                 {isSending && (
                   <div className="flex gap-3 mr-auto max-w-4xl animate-fade-in">
-                    <div className="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center text-xs font-bold bg-[#10b981]/20 text-[#4edea3] border border-[#10b981]/30">
+                    <div className="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center text-xs font-bold bg-primary-container/20 text-primary border border-primary-container/30">
                       <span className="material-symbols-outlined text-base">smart_toy</span>
                     </div>
 
-                    <div className="bg-[#131b2e] border border-white/[0.08] rounded-2xl rounded-tl-xs p-4 flex items-center gap-3 text-xs text-[#94a3b8] font-mono">
-                      <span className="inline-block w-4 h-4 border-2 border-[#4edea3] border-t-transparent rounded-full animate-spin" />
+                    <div className="bg-surface-container-low border border-white/[0.08] rounded-2xl rounded-tl-xs p-4 flex items-center gap-3 text-xs text-text-secondary font-mono">
+                      <span className="inline-block w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                       <span>Synthesizing repository context and reasoning...</span>
                     </div>
                   </div>
@@ -573,7 +573,7 @@ export default function ChatWorkspacePage() {
 
                 {/* Send Error Toast */}
                 {sendError && (
-                  <div className="p-3 rounded-xl bg-[#93000a]/30 border border-[#ffb4ab]/30 text-[#ffb4ab] text-xs flex items-center justify-between gap-2 max-w-4xl mx-auto">
+                  <div className="p-3 rounded-xl bg-error-container/30 border border-error/30 text-error text-xs flex items-center justify-between gap-2 max-w-4xl mx-auto">
                     <div className="flex items-center gap-2">
                       <span className="material-symbols-outlined text-sm">error</span>
                       <span>{sendError}</span>
@@ -581,7 +581,7 @@ export default function ChatWorkspacePage() {
                     <button
                       type="button"
                       onClick={() => setSendError(null)}
-                      className="text-[#ffb4ab] hover:text-white"
+                      className="text-error hover:text-white"
                     >
                       <span className="material-symbols-outlined text-xs">close</span>
                     </button>
@@ -592,7 +592,7 @@ export default function ChatWorkspacePage() {
               </div>
 
               {/* Chat Input Box (Sticky at bottom) */}
-              <div className="p-4 bg-[#0e121e] border-t border-white/[0.08] shrink-0">
+              <div className="p-4 bg-surface-container-lowest border-t border-white/[0.08] shrink-0">
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
@@ -600,7 +600,7 @@ export default function ChatWorkspacePage() {
                   }}
                   className="max-w-4xl mx-auto flex flex-col gap-2"
                 >
-                  <div className="bg-[#131b2e] border border-white/[0.1] focus-within:border-[#4edea3]/70 focus-within:ring-1 focus-within:ring-[#4edea3]/30 rounded-xl p-2 flex items-end gap-2 transition-all">
+                  <div className="bg-surface-container-low border border-white/[0.1] focus-within:border-primary/70 focus-within:ring-1 focus-within:ring-primary/30 rounded-xl p-2 flex items-end gap-2 transition-all">
                     <textarea
                       ref={textareaRef}
                       value={inputMessage}
@@ -618,21 +618,21 @@ export default function ChatWorkspacePage() {
                       placeholder={`Ask about ${repo?.name || "architecture, routes, logic..."} (Enter to send, Shift+Enter for new line)`}
                       rows={1}
                       disabled={isSending}
-                      className="w-full bg-transparent text-xs text-[#f8fafc] placeholder-[#64748b] outline-none font-sans resize-none py-1 px-2 max-h-36 leading-relaxed"
+                      className="w-full bg-transparent text-xs text-text-primary placeholder-[#64748b] outline-none font-sans resize-none py-1 px-2 max-h-36 leading-relaxed"
                     />
 
                     <button
                       type="submit"
                       disabled={!inputMessage.trim() || isSending}
-                      className="shrink-0 bg-[#10b981] hover:bg-[#4edea3] text-[#060e20] disabled:opacity-30 disabled:cursor-not-allowed w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer"
+                      className="shrink-0 bg-primary-container hover:bg-primary text-surface-container-lowest disabled:opacity-30 disabled:cursor-not-allowed w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer"
                     >
                       <span className="material-symbols-outlined text-base">send</span>
                     </button>
                   </div>
 
-                  <div className="flex items-center justify-between text-[11px] font-mono text-[#64748b] px-1">
+                  <div className="flex items-center justify-between text-[11px] font-mono text-text-secondary px-1">
                     <span className="flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] animate-pulse" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary-container animate-pulse" />
                       RAG Vector Search Active
                     </span>
                     <span>{repo?.branch ? `Branch: ${repo.branch}` : ""}</span>
@@ -649,15 +649,15 @@ export default function ChatWorkspacePage() {
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-white/[0.08] mb-6">
                 <div>
                   <h2 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
-                    <span className="material-symbols-outlined text-[#4cd7f6] text-xl">
+                    <span className="material-symbols-outlined text-secondary text-xl">
                       api
                     </span>
                     <span>Backend API Endpoints</span>
-                    <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-white/[0.08] text-[#94a3b8]">
+                    <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-white/[0.08] text-text-secondary">
                       {apis.length} total
                     </span>
                   </h2>
-                  <p className="text-xs text-[#94a3b8] mt-1">
+                  <p className="text-xs text-text-secondary mt-1">
                     Discovered controllers, route handlers, and API endpoints from codebase analysis.
                   </p>
                 </div>
@@ -665,8 +665,8 @@ export default function ChatWorkspacePage() {
                 {/* Filter controls */}
                 <div className="flex flex-wrap items-center gap-2">
                   {/* Search input */}
-                  <div className="bg-[#131b2e] border border-white/[0.08] rounded-lg px-3 py-1.5 flex items-center gap-2 text-xs">
-                    <span className="material-symbols-outlined text-sm text-[#64748b]">
+                  <div className="bg-surface-container-low border border-white/[0.08] rounded-lg px-3 py-1.5 flex items-center gap-2 text-xs">
+                    <span className="material-symbols-outlined text-sm text-text-secondary">
                       search
                     </span>
                     <input
@@ -679,7 +679,7 @@ export default function ChatWorkspacePage() {
                     {apiSearch && (
                       <button
                         onClick={() => setApiSearch("")}
-                        className="text-[#64748b] hover:text-white"
+                        className="text-text-secondary hover:text-white"
                       >
                         <span className="material-symbols-outlined text-xs">close</span>
                       </button>
@@ -687,7 +687,7 @@ export default function ChatWorkspacePage() {
                   </div>
 
                   {/* Method Pills */}
-                  <div className="flex items-center bg-[#131b2e] border border-white/[0.08] rounded-lg p-1 gap-1 text-[11px] font-mono">
+                  <div className="flex items-center bg-surface-container-low border border-white/[0.08] rounded-lg p-1 gap-1 text-[11px] font-mono">
                     {["ALL", "GET", "POST", "PUT", "PATCH", "DELETE"].map((m) => (
                       <button
                         key={m}
@@ -696,7 +696,7 @@ export default function ChatWorkspacePage() {
                         className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
                           apiMethodFilter === m
                             ? "bg-white/[0.12] text-white font-bold shadow-xs"
-                            : "text-[#64748b] hover:text-[#dae2fd]"
+                            : "text-text-secondary hover:text-on-background"
                         }`}
                       >
                         {m}
@@ -708,29 +708,29 @@ export default function ChatWorkspacePage() {
 
               {/* Endpoints List / Empty state */}
               {repo?.status === "ANALYZING" || repo?.status === "PENDING" ? (
-                <div className="flex-1 flex flex-col items-center justify-center p-12 text-center rounded-xl bg-[#131b2e]/30 border border-white/[0.06] border-dashed">
-                  <div className="w-10 h-10 border-2 border-[#4cd7f6] border-t-transparent rounded-full animate-spin mb-4" />
+                <div className="flex-1 flex flex-col items-center justify-center p-12 text-center rounded-xl bg-surface-container-low/30 border border-white/[0.06] border-dashed">
+                  <div className="w-10 h-10 border-2 border-secondary border-t-transparent rounded-full animate-spin mb-4" />
                   <h3 className="text-sm font-semibold text-white font-mono">
                     Codebase Analysis in Progress
                   </h3>
-                  <p className="text-xs text-[#94a3b8] mt-1 max-w-sm font-mono">
+                  <p className="text-xs text-text-secondary mt-1 max-w-sm font-mono">
                     API endpoints are currently being extracted and indexed from this repository.
                   </p>
                 </div>
               ) : apis.length === 0 ? (
-                <div className="flex-1 flex flex-col items-center justify-center p-12 text-center rounded-xl bg-[#131b2e]/30 border border-white/[0.06] border-dashed">
-                  <span className="material-symbols-outlined text-4xl text-[#64748b] mb-3">
+                <div className="flex-1 flex flex-col items-center justify-center p-12 text-center rounded-xl bg-surface-container-low/30 border border-white/[0.06] border-dashed">
+                  <span className="material-symbols-outlined text-4xl text-text-secondary mb-3">
                     hub
                   </span>
                   <h3 className="text-sm font-semibold text-white font-mono">
                     No API Endpoints Detected
                   </h3>
-                  <p className="text-xs text-[#64748b] mt-1 max-w-sm">
+                  <p className="text-xs text-text-secondary mt-1 max-w-sm">
                     No REST or controller routes were identified during the structural analysis.
                   </p>
                 </div>
               ) : filteredApis.length === 0 ? (
-                <div className="p-8 text-center rounded-xl bg-[#131b2e]/20 border border-white/[0.06] text-xs font-mono text-[#94a3b8]">
+                <div className="p-8 text-center rounded-xl bg-surface-container-low/20 border border-white/[0.06] text-xs font-mono text-text-secondary">
                   No API endpoints matching &quot;{apiSearch}&quot; ({apiMethodFilter})
                 </div>
               ) : (
@@ -738,7 +738,7 @@ export default function ChatWorkspacePage() {
                   {filteredApis.map((api, idx) => (
                     <div
                       key={idx}
-                      className="bg-[#131b2e]/70 hover:bg-[#131b2e] border border-white/[0.08] hover:border-white/[0.14] rounded-xl p-4 transition-all flex flex-col gap-2.5 shadow-sm"
+                      className="bg-surface-container-low/70 hover:bg-surface-container-low border border-white/[0.08] hover:border-white/[0.14] rounded-xl p-4 transition-all flex flex-col gap-2.5 shadow-sm"
                     >
                       <div className="flex items-start justify-between gap-3 flex-wrap">
                         <div className="flex items-center gap-2.5 flex-wrap">
@@ -755,8 +755,8 @@ export default function ChatWorkspacePage() {
                         </div>
 
                         {api.file && (
-                          <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#64748b] bg-[#0b1326] px-2.5 py-1 rounded-md border border-white/[0.06] max-w-full truncate">
-                            <span className="material-symbols-outlined text-sm text-[#4edea3]">
+                          <div className="flex items-center gap-1.5 text-[11px] font-mono text-text-secondary bg-background px-2.5 py-1 rounded-md border border-white/[0.06] max-w-full truncate">
+                            <span className="material-symbols-outlined text-sm text-primary">
                               code
                             </span>
                             <span className="truncate">{api.file}</span>
@@ -765,7 +765,7 @@ export default function ChatWorkspacePage() {
                       </div>
 
                       {api.description && (
-                        <p className="text-xs text-[#94a3b8] leading-relaxed pl-0.5">
+                        <p className="text-xs text-text-secondary leading-relaxed pl-0.5">
                           {api.description}
                         </p>
                       )}
@@ -783,22 +783,22 @@ export default function ChatWorkspacePage() {
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-white/[0.08] mb-6">
                 <div>
                   <h2 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
-                    <span className="material-symbols-outlined text-[#ffb4ab] text-xl">
+                    <span className="material-symbols-outlined text-error text-xl">
                       description
                     </span>
                     <span>Frontend Pages & Routes</span>
-                    <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-white/[0.08] text-[#94a3b8]">
+                    <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-white/[0.08] text-text-secondary">
                       {pages.length} total
                     </span>
                   </h2>
-                  <p className="text-xs text-[#94a3b8] mt-1">
+                  <p className="text-xs text-text-secondary mt-1">
                     Discovered pages, client routes, and layouts identified in the application.
                   </p>
                 </div>
 
                 {/* Search input */}
-                <div className="bg-[#131b2e] border border-white/[0.08] rounded-lg px-3 py-1.5 flex items-center gap-2 text-xs">
-                  <span className="material-symbols-outlined text-sm text-[#64748b]">
+                <div className="bg-surface-container-low border border-white/[0.08] rounded-lg px-3 py-1.5 flex items-center gap-2 text-xs">
+                  <span className="material-symbols-outlined text-sm text-text-secondary">
                     search
                   </span>
                   <input
@@ -811,7 +811,7 @@ export default function ChatWorkspacePage() {
                   {pageSearch && (
                     <button
                       onClick={() => setPageSearch("")}
-                      className="text-[#64748b] hover:text-white"
+                      className="text-text-secondary hover:text-white"
                     >
                       <span className="material-symbols-outlined text-xs">close</span>
                     </button>
@@ -821,29 +821,29 @@ export default function ChatWorkspacePage() {
 
               {/* Pages List / Empty state */}
               {repo?.status === "ANALYZING" || repo?.status === "PENDING" ? (
-                <div className="flex-1 flex flex-col items-center justify-center p-12 text-center rounded-xl bg-[#131b2e]/30 border border-white/[0.06] border-dashed">
-                  <div className="w-10 h-10 border-2 border-[#ffb4ab] border-t-transparent rounded-full animate-spin mb-4" />
+                <div className="flex-1 flex flex-col items-center justify-center p-12 text-center rounded-xl bg-surface-container-low/30 border border-white/[0.06] border-dashed">
+                  <div className="w-10 h-10 border-2 border-error border-t-transparent rounded-full animate-spin mb-4" />
                   <h3 className="text-sm font-semibold text-white font-mono">
                     Codebase Analysis in Progress
                   </h3>
-                  <p className="text-xs text-[#94a3b8] mt-1 max-w-sm font-mono">
+                  <p className="text-xs text-text-secondary mt-1 max-w-sm font-mono">
                     Frontend routes are currently being indexed from this repository.
                   </p>
                 </div>
               ) : pages.length === 0 ? (
-                <div className="flex-1 flex flex-col items-center justify-center p-12 text-center rounded-xl bg-[#131b2e]/30 border border-white/[0.06] border-dashed">
-                  <span className="material-symbols-outlined text-4xl text-[#64748b] mb-3">
+                <div className="flex-1 flex flex-col items-center justify-center p-12 text-center rounded-xl bg-surface-container-low/30 border border-white/[0.06] border-dashed">
+                  <span className="material-symbols-outlined text-4xl text-text-secondary mb-3">
                     auto_stories
                   </span>
                   <h3 className="text-sm font-semibold text-white font-mono">
                     No Frontend Routes Detected
                   </h3>
-                  <p className="text-xs text-[#64748b] mt-1 max-w-sm">
+                  <p className="text-xs text-text-secondary mt-1 max-w-sm">
                     No application routes or view pages were found during the structural analysis.
                   </p>
                 </div>
               ) : filteredPages.length === 0 ? (
-                <div className="p-8 text-center rounded-xl bg-[#131b2e]/20 border border-white/[0.06] text-xs font-mono text-[#94a3b8]">
+                <div className="p-8 text-center rounded-xl bg-surface-container-low/20 border border-white/[0.06] text-xs font-mono text-text-secondary">
                   No pages matching &quot;{pageSearch}&quot;
                 </div>
               ) : (
@@ -851,11 +851,11 @@ export default function ChatWorkspacePage() {
                   {filteredPages.map((page, idx) => (
                     <div
                       key={idx}
-                      className="bg-[#131b2e]/70 hover:bg-[#131b2e] border border-white/[0.08] hover:border-white/[0.14] rounded-xl p-4 transition-all flex flex-col justify-between gap-3 shadow-sm"
+                      className="bg-surface-container-low/70 hover:bg-surface-container-low border border-white/[0.08] hover:border-white/[0.14] rounded-xl p-4 transition-all flex flex-col justify-between gap-3 shadow-sm"
                     >
                       <div className="flex flex-col gap-2">
                         <div className="flex items-center gap-2">
-                          <span className="material-symbols-outlined text-[#ffb4ab] text-[18px]">
+                          <span className="material-symbols-outlined text-error text-[18px]">
                             auto_stories
                           </span>
                           <span className="font-mono text-sm font-bold text-white tracking-wide truncate">
@@ -864,15 +864,15 @@ export default function ChatWorkspacePage() {
                         </div>
 
                         {page.description && (
-                          <p className="text-xs text-[#94a3b8] leading-relaxed">
+                          <p className="text-xs text-text-secondary leading-relaxed">
                             {page.description}
                           </p>
                         )}
                       </div>
 
                       {page.file && (
-                        <div className="pt-2.5 border-t border-white/[0.06] flex items-center gap-1.5 text-[11px] font-mono text-[#64748b] truncate">
-                          <span className="material-symbols-outlined text-sm text-[#4edea3]">
+                        <div className="pt-2.5 border-t border-white/[0.06] flex items-center gap-1.5 text-[11px] font-mono text-text-secondary truncate">
+                          <span className="material-symbols-outlined text-sm text-primary">
                             description
                           </span>
                           <span className="truncate">{page.file}</span>

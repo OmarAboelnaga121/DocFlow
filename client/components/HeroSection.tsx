@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 export default function HeroSection() {
   return (
     <section
@@ -9,23 +11,17 @@ export default function HeroSection() {
       {/* Left — Copy */}
       <div className="lg:w-1/2 flex flex-col gap-5">
         {/* Eyebrow */}
-        <div
-          className="font-mono text-[11px] font-medium tracking-[0.06em] uppercase"
-          style={{ color: "#4edea3" }}
-        >
+        <div className="font-mono text-[11px] font-medium tracking-[0.06em] uppercase text-primary">
           [ CODEBASE INTELLIGENCE FOR PRODUCT TEAMS ]
         </div>
 
         {/* Headline */}
-        <h1
-          className="text-[32px] md:text-[48px] font-extrabold leading-[1.1] tracking-[-0.02em]"
-          style={{ color: "#f8fafc" }}
-        >
+        <h1 className="text-[32px] md:text-[48px] font-extrabold leading-[1.1] tracking-[-0.02em] text-text-primary">
           Bridge the Gap Between Your Codebase and Your Business.
         </h1>
 
         {/* Sub-copy */}
-        <p className="text-base leading-relaxed max-w-xl" style={{ color: "#94a3b8" }}>
+        <p className="text-base leading-relaxed max-w-xl text-text-secondary">
           Transform your architecture into accessible business intelligence.
           DocFlow indexes your codebase, synthesizing complex logic into
           plain-English answers for product managers and stakeholders—eliminating
@@ -34,77 +30,46 @@ export default function HeroSection() {
 
         {/* CTAs */}
         <div className="flex gap-4 mt-2 flex-wrap">
-          <button
+          <Link
+            href="/register"
             id="hero-trial-btn"
-            className="flex items-center gap-2 font-semibold text-sm h-11 px-5 rounded transition-opacity hover:opacity-90 cursor-pointer"
-            style={{ background: "#10b981", color: "#060e20" }}
+            className="flex items-center gap-2 font-semibold text-sm h-11 px-5 rounded transition-opacity hover:opacity-90 cursor-pointer bg-primary-container text-surface-container-lowest"
           >
             Start Free Trial
             <span className="material-symbols-outlined text-[18px]">
               chevron_right
             </span>
-          </button>
-          <button
+          </Link>
+          <Link
+            href="/dashboard"
             id="hero-demo-btn"
-            className="flex items-center gap-2 font-semibold text-sm h-11 px-5 rounded transition-colors cursor-pointer"
-            style={{
-              border: "1px solid rgba(255,255,255,0.15)",
-              color: "#f1f5f9",
-            }}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.background = "rgba(45,52,73,0.4)")
-            }
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.background = "transparent")
-            }
+            className="flex items-center gap-2 font-semibold text-sm h-11 px-5 rounded transition-colors cursor-pointer border border-white/[0.15] text-text-primary hover:bg-surface-variant/40"
           >
             Explore Interactive Demo
-          </button>
+          </Link>
         </div>
       </div>
 
       {/* Right — Code / Chat Preview */}
-      <div
-        className="lg:w-1/2 w-full flex rounded shadow-2xl overflow-hidden"
-        style={{
-          background: "#1e293b",
-          border: "1px solid rgba(255,255,255,0.08)",
-        }}
-      >
+      <div className="lg:w-1/2 w-full flex rounded shadow-2xl overflow-hidden bg-surface border border-white/[0.08]">
         {/* Code Pane */}
-        <div
-          className="w-[45%] flex flex-col"
-          style={{ borderRight: "1px solid rgba(255,255,255,0.08)" }}
-        >
+        <div className="w-[45%] flex flex-col border-r border-white/[0.08]">
           {/* Pane Header */}
-          <div
-            className="flex items-center justify-between px-3 py-2"
-            style={{
-              background: "#131b2e",
-              borderBottom: "1px solid rgba(255,255,255,0.08)",
-            }}
-          >
-            <span
-              className="font-mono text-[11px] font-medium tracking-[0.06em]"
-              style={{ color: "#bbcabf" }}
-            >
+          <div className="flex items-center justify-between px-3 py-2 bg-surface-container-low border-b border-white/[0.08]">
+            <span className="font-mono text-[11px] font-medium tracking-[0.06em] text-on-surface-variant">
               orders.service.ts
             </span>
             <div className="flex gap-1">
-              <div className="w-2 h-2 rounded-full" style={{ background: "#ff5f56" }} />
-              <div className="w-2 h-2 rounded-full" style={{ background: "#ffbd2e" }} />
-              <div className="w-2 h-2 rounded-full" style={{ background: "#27c93f" }} />
+              <div className="w-2 h-2 rounded-full bg-[#ff5f56]" />
+              <div className="w-2 h-2 rounded-full bg-[#ffbd2e]" />
+              <div className="w-2 h-2 rounded-full bg-[#27c93f]" />
             </div>
           </div>
 
           {/* Code */}
-          <div
-            className="p-3 font-mono text-xs overflow-x-auto h-64 leading-relaxed"
-            style={{ background: "#0b1326", color: "#dae2fd" }}
-          >
+          <div className="p-3 font-mono text-xs overflow-x-auto h-64 leading-relaxed bg-background text-on-background">
             <pre>
               <code>
-                {/* Using inline spans to avoid JSX escaping issues */}
                 <span className="token-keyword">@Injectable</span>(){"\n"}
                 <span className="token-keyword">export</span>{" "}
                 <span className="token-keyword">class</span>{" "}
@@ -149,25 +114,13 @@ export default function HeroSection() {
         </div>
 
         {/* Chat Pane */}
-        <div
-          className="w-[55%] flex flex-col"
-          style={{ background: "#060e20" }}
-        >
+        <div className="w-[55%] flex flex-col bg-surface-container-lowest">
           {/* Pane Header */}
-          <div
-            className="flex items-center gap-1 px-3 py-2"
-            style={{
-              background: "#131b2e",
-              borderBottom: "1px solid rgba(255,255,255,0.08)",
-            }}
-          >
-            <span className="material-symbols-outlined text-[14px]" style={{ color: "#bbcabf" }}>
+          <div className="flex items-center gap-1 px-3 py-2 bg-surface-container-low border-b border-white/[0.08]">
+            <span className="material-symbols-outlined text-[14px] text-on-surface-variant">
               chat
             </span>
-            <span
-              className="font-mono text-[11px] font-medium tracking-[0.06em]"
-              style={{ color: "#bbcabf" }}
-            >
+            <span className="font-mono text-[11px] font-medium tracking-[0.06em] text-on-surface-variant">
               DocFlow Query
             </span>
           </div>
@@ -175,49 +128,30 @@ export default function HeroSection() {
           {/* Chat Messages */}
           <div className="p-3 flex flex-col gap-3 h-64 overflow-y-auto">
             {/* User query */}
-            <div
-              className="self-end font-mono text-xs p-2 rounded w-4/5"
-              style={{
-                background: "rgba(45,52,73,0.3)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                color: "#dae2fd",
-              }}
-            >
+            <div className="self-end font-mono text-xs p-2 rounded w-4/5 bg-surface-variant/30 border border-white/[0.08] text-on-background">
               &gt; What business rules apply to VIP orders?
             </div>
 
             {/* AI Answer */}
-            <div
-              className="flex flex-col gap-1 w-11/12 p-2 rounded"
-              style={{
-                background: "#171f33",
-                border: "1px solid rgba(78,222,163,0.3)",
-              }}
-            >
-              <div
-                className="flex items-center gap-1 font-mono text-[10px] font-medium tracking-[0.06em]"
-                style={{ color: "#4edea3" }}
-              >
+            <div className="flex flex-col gap-1 w-11/12 p-2 rounded bg-surface-container border border-primary/30">
+              <div className="flex items-center gap-1 font-mono text-[10px] font-medium tracking-[0.06em] text-primary">
                 <span className="material-symbols-outlined text-[14px]">
                   check_circle
                 </span>
                 Verified Answer
               </div>
-              <p className="text-xs leading-relaxed mt-1" style={{ color: "#dae2fd" }}>
+              <p className="text-xs leading-relaxed mt-1 text-on-background">
                 For VIP orders, a{" "}
-                <strong style={{ color: "#4edea3" }}>15% discount</strong> is
+                <strong className="text-primary">15% discount</strong> is
                 applied automatically if the order total exceeds{" "}
-                <strong style={{ color: "#4edea3" }}>$500</strong>. This logic is
+                <strong className="text-primary">$500</strong>. This logic is
                 handled during the order processing phase.
               </p>
-              <div
-                className="mt-2 pt-1 flex justify-between items-center"
-                style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}
-              >
-                <span className="font-mono text-[10px]" style={{ color: "#bbcabf" }}>
+              <div className="mt-2 pt-1 flex justify-between items-center border-t border-white/[0.08]">
+                <span className="font-mono text-[10px] text-on-surface-variant">
                   Source: orders.service.ts
                 </span>
-                <span className="font-mono text-[10px]" style={{ color: "#4edea3" }}>
+                <span className="font-mono text-[10px] text-primary">
                   Lines 16–19
                 </span>
               </div>

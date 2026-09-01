@@ -61,21 +61,16 @@ export default function UseCasesTabs() {
   return (
     <section
       id="use-cases"
-      className="py-16 px-6 md:px-8 max-w-[1440px] mx-auto"
-      style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}
+      className="py-16 px-6 md:px-8 max-w-[1440px] mx-auto border-t border-white/[0.08]"
     >
-      <h2
-        className="text-2xl font-bold leading-[1.3] tracking-[-0.01em] mb-10 text-center"
-        style={{ color: "#f8fafc" }}
-      >
+      <h2 className="text-2xl font-bold leading-[1.3] tracking-[-0.01em] mb-10 text-center text-text-primary">
         Built for Cross-Functional Teams
       </h2>
 
       <div className="flex flex-col items-center">
         {/* Tab Headers */}
         <div
-          className="flex mb-10 w-full max-w-2xl justify-center gap-8"
-          style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}
+          className="flex mb-10 w-full max-w-2xl justify-center gap-8 border-b border-white/[0.08]"
           role="tablist"
         >
           {TABS.map((t, i) => (
@@ -85,11 +80,11 @@ export default function UseCasesTabs() {
               role="tab"
               aria-selected={activeTab === i}
               onClick={() => setActiveTab(i)}
-              className="pb-3 font-mono text-[11px] font-medium tracking-[0.06em] uppercase transition-colors cursor-pointer"
-              style={{
-                color: activeTab === i ? "#4edea3" : "#bbcabf",
-                borderBottom: activeTab === i ? "2px solid #4edea3" : "2px solid transparent",
-              }}
+              className={`pb-3 font-mono text-[11px] font-medium tracking-[0.06em] uppercase transition-colors cursor-pointer border-b-2 ${
+                activeTab === i
+                  ? "text-primary border-primary"
+                  : "text-on-surface-variant border-transparent hover:text-on-background"
+              }`}
             >
               {t.label}
             </button>
@@ -104,26 +99,19 @@ export default function UseCasesTabs() {
         >
           {/* Copy */}
           <div className="flex flex-col gap-4">
-            <h3
-              className="text-2xl font-semibold leading-[1.3] tracking-[-0.01em]"
-              style={{ color: "#dae2fd" }}
-            >
+            <h3 className="text-2xl font-semibold leading-[1.3] tracking-[-0.01em] text-on-background">
               {tab.heading}
             </h3>
-            <p className="text-sm leading-relaxed" style={{ color: "#94a3b8" }}>
+            <p className="text-sm leading-relaxed text-text-secondary">
               {tab.body}
             </p>
             <ul className="flex flex-col gap-2 mt-2">
               {tab.bullets.map((bullet) => (
                 <li
                   key={bullet}
-                  className="flex items-center gap-3 text-sm"
-                  style={{ color: "#dae2fd" }}
+                  className="flex items-center gap-3 text-sm text-on-background"
                 >
-                  <span
-                    className="material-symbols-outlined text-[16px]"
-                    style={{ color: "#4edea3" }}
-                  >
+                  <span className="material-symbols-outlined text-[16px] text-primary">
                     check
                   </span>
                   {bullet}
@@ -133,39 +121,17 @@ export default function UseCasesTabs() {
           </div>
 
           {/* Mock Chat */}
-          <div
-            className="flex flex-col gap-3 p-5 rounded"
-            style={{
-              background: "#1e293b",
-              border: "1px solid rgba(255,255,255,0.08)",
-            }}
-          >
+          <div className="flex flex-col gap-3 p-5 rounded bg-surface border border-white/[0.08]">
             {/* Query bubble */}
-            <div
-              className="font-mono text-xs p-3 rounded"
-              style={{
-                background: "#060e20",
-                color: "#bbcabf",
-              }}
-            >
+            <div className="font-mono text-xs p-3 rounded bg-surface-container-lowest text-on-surface-variant">
               &gt; {tab.queryText}
             </div>
 
             {/* Answer bubble */}
-            <div
-              className="p-3 text-sm leading-relaxed"
-              style={{
-                borderLeft: "2px solid #4edea3",
-                background: "rgba(78,222,163,0.04)",
-                color: "#dae2fd",
-              }}
-            >
+            <div className="p-3 text-sm leading-relaxed border-l-2 border-primary bg-primary/5 text-on-background">
               {tab.answerText}
               <br />
-              <span
-                className="font-mono text-[11px] block mt-2"
-                style={{ color: "#bbcabf" }}
-              >
+              <span className="font-mono text-[11px] block mt-2 text-on-surface-variant">
                 [{tab.sourceFile}]
               </span>
             </div>

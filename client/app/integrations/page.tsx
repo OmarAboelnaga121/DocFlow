@@ -59,30 +59,18 @@ export default function IntegrationsPage() {
   return (
     <>
       <Navbar />
-      <main
-        className="min-h-screen pt-28 pb-20 px-6 md:px-8"
-        style={{ background: "#0b1326", color: "#dae2fd" }}
-      >
+      <main className="min-h-screen pt-28 pb-20 px-6 md:px-8 bg-background text-on-background">
         <div className="max-w-[1100px] mx-auto">
           {/* Header */}
           <div className="text-center mb-16">
-            <p
-              className="font-mono text-[11px] font-medium tracking-[0.08em] uppercase mb-4"
-              style={{ color: "#4edea3" }}
-            >
+            <p className="font-mono text-[11px] font-medium tracking-[0.08em] uppercase mb-4 text-primary">
               [ CONNECT YOUR STACK ]
             </p>
-            <h1
-              className="text-[40px] md:text-[56px] font-extrabold leading-[1.1] tracking-[-0.02em] mb-6"
-              style={{ color: "#f8fafc" }}
-            >
+            <h1 className="text-[40px] md:text-[56px] font-extrabold leading-[1.1] tracking-[-0.02em] mb-6 text-text-primary">
               Works With Your{" "}
-              <span style={{ color: "#4edea3" }}>Existing Tools</span>
+              <span className="text-primary">Existing Tools</span>
             </h1>
-            <p
-              className="max-w-2xl mx-auto text-base leading-relaxed"
-              style={{ color: "#94a3b8" }}
-            >
+            <p className="max-w-2xl mx-auto text-base leading-relaxed text-text-secondary">
               DocFlow plugs into the tools your team already uses — no workflow disruption,
               just immediate codebase intelligence everywhere you work.
             </p>
@@ -93,83 +81,50 @@ export default function IntegrationsPage() {
             {INTEGRATIONS.map((item) => (
               <div
                 key={item.name}
-                className="flex flex-col gap-4 p-6 rounded-xl transition-all duration-300"
-                style={{
-                  background: "#1e293b",
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  opacity: item.status === "Available" ? 1 : 0.75,
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLDivElement).style.borderColor =
-                    "rgba(78,222,163,0.35)";
-                  (e.currentTarget as HTMLDivElement).style.background = "#222a3d";
-                  (e.currentTarget as HTMLDivElement).style.opacity = "1";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLDivElement).style.borderColor =
-                    "rgba(255,255,255,0.08)";
-                  (e.currentTarget as HTMLDivElement).style.background = "#1e293b";
-                  (e.currentTarget as HTMLDivElement).style.opacity =
-                    item.status === "Available" ? "1" : "0.75";
-                }}
+                className={`flex flex-col gap-4 p-6 rounded-xl transition-all duration-300 bg-surface border border-white/[0.08] hover:border-primary/35 hover:bg-surface-variant ${
+                  item.status === "Available" ? "opacity-100" : "opacity-75"
+                }`}
               >
                 <div className="flex items-center justify-between">
                   <span className="text-3xl">{item.icon}</span>
                   <span
-                    className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
-                    style={
+                    className={`font-mono text-[10px] font-semibold uppercase px-2.5 py-0.5 rounded-full ${
                       item.status === "Available"
-                        ? { background: "rgba(78,222,163,0.15)", color: "#4edea3" }
-                        : { background: "rgba(148,163,184,0.1)", color: "#94a3b8" }
-                    }
+                        ? "bg-primary/15 text-primary border border-primary/30"
+                        : "bg-white/[0.06] text-text-secondary border border-white/[0.08]"
+                    }`}
                   >
                     {item.status}
                   </span>
                 </div>
                 <div>
-                  <p
-                    className="font-mono text-[10px] uppercase tracking-wider mb-1"
-                    style={{ color: "#94a3b8" }}
-                  >
+                  <p className="font-mono text-[10px] uppercase tracking-wider text-text-secondary mb-1">
                     {item.category}
                   </p>
-                  <h3
-                    className="text-lg font-semibold"
-                    style={{ color: "#dae2fd" }}
-                  >
+                  <h2 className="text-lg font-bold tracking-tight text-text-primary">
                     {item.name}
-                  </h3>
+                  </h2>
                 </div>
-                <p className="text-sm leading-relaxed" style={{ color: "#94a3b8" }}>
+                <p className="text-sm leading-relaxed text-text-secondary">
                   {item.description}
                 </p>
               </div>
             ))}
           </div>
 
-          {/* Request integration */}
-          <div
-            className="mt-16 text-center p-10 rounded-2xl"
-            style={{
-              background: "#1e293b",
-              border: "1px solid rgba(255,255,255,0.08)",
-            }}
-          >
-            <h2
-              className="text-2xl font-bold mb-3"
-              style={{ color: "#f8fafc" }}
-            >
-              Don't see your tool?
+          {/* Request integration banner */}
+          <div className="mt-16 p-8 rounded-2xl text-center bg-surface border border-white/[0.08]">
+            <h2 className="text-lg font-bold text-text-primary mb-2">
+              Don&apos;t see your tool here?
             </h2>
-            <p className="text-sm mb-6" style={{ color: "#94a3b8" }}>
-              We're actively expanding our integration catalogue. Reach out and we'll prioritise it.
+            <p className="text-sm text-text-secondary mb-5">
+              We&apos;re adding integrations fast. Tell us what you&apos;d like to see next.
             </p>
             <Link
               href="/contact"
-              className="inline-flex items-center gap-2 font-semibold text-sm px-8 py-3 rounded-lg transition-opacity hover:opacity-90"
-              style={{ background: "#10b981", color: "#060e20" }}
+              className="inline-flex items-center gap-2 text-sm font-semibold transition-colors text-secondary hover:text-white"
             >
-              Request an Integration →
+              Request an integration →
             </Link>
           </div>
         </div>
