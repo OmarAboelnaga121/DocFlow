@@ -11,7 +11,6 @@ const NAV_LINKS = [
   { label: "How It Works", href: "/#how-it-works" },
   { label: "Architecture", href: "/#architecture" },
   { label: "Use Cases", href: "/#use-cases" },
-  { label: "Documentation", href: "/#docs" },
 ];
 
 export default function Navbar() {
