@@ -9,6 +9,7 @@ import {
   getUserRepositories,
   createRepository,
   deleteRepository,
+  syncRepository,
 } from "@/lib/api";
 import { User, Repo } from "@/types";
 import Navbar from "@/components/Navbar";
@@ -32,6 +33,7 @@ export default function DashboardPage() {
   // Menu & action states
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [syncingId, setSyncingId] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -76,6 +78,28 @@ export default function DashboardPage() {
       isMounted = false;
     };
   }, [router]);
+
+  // Auto-refresh when any repository is undergoing indexing or sync
+  useEffect(() => {
+    const hasActiveJobs = repos.some((r) =>
+      ["PENDING", "CLONING", "EMBEDDING", "ANALYZING"].includes(r.status)
+    );
+
+    if (!hasActiveJobs) return;
+
+    const intervalId = setInterval(async () => {
+      try {
+        const freshRepos = await getUserRepositories();
+        if (Array.isArray(freshRepos)) {
+          setRepos(freshRepos);
+        }
+      } catch (err) {
+        // Silent catch during background polling
+      }
+    }, 3000);
+
+    return () => clearInterval(intervalId);
+  }, [repos]);
 
   // Close active dropdown menu when clicking anywhere outside
   useEffect(() => {
@@ -143,6 +167,32 @@ export default function DashboardPage() {
       setErrorMessage(err.message || "Failed to delete repository.");
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleSyncRepo = async (id: string, name: string) => {
+    setActiveMenuId(null);
+    setSyncingId(id);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    try {
+      const res = await syncRepository(id);
+      if (res.upToDate) {
+        setSuccessMessage(`Repository "${name}" is already up to date with remote.`);
+      } else {
+        setSuccessMessage(`Incremental sync initiated for "${name}".`);
+      }
+
+      // Refresh repositories to reflect updated status
+      const updatedRepos = await getUserRepositories();
+      if (Array.isArray(updatedRepos)) {
+        setRepos(updatedRepos);
+      }
+    } catch (err: any) {
+      setErrorMessage(err.message || `Failed to sync repository "${name}".`);
+    } finally {
+      setSyncingId(null);
     }
   };
 
@@ -323,11 +373,37 @@ export default function DashboardPage() {
                       {activeMenuId === repo.id && (
                         <div
                           onClick={(e) => e.stopPropagation()}
-                          className="absolute right-0 top-8 z-30 w-36 py-1 rounded-lg bg-surface-container border border-white/[0.12] shadow-2xl backdrop-blur-md animate-fade-in-up"
+                          className="absolute right-0 top-8 z-30 w-40 py-1 rounded-lg bg-surface-container border border-white/[0.12] shadow-2xl backdrop-blur-md animate-fade-in-up"
                         >
+                          {/* Sync Repo Button */}
                           <button
                             type="button"
-                            disabled={deletingId === repo.id}
+                            disabled={
+                              syncingId === repo.id ||
+                              deletingId === repo.id ||
+                              ["PENDING", "CLONING", "EMBEDDING", "ANALYZING"].includes(repo.status)
+                            }
+                            onClick={() => handleSyncRepo(repo.id, repo.name)}
+                            className="w-full px-3 py-2 text-xs text-left text-text-primary hover:bg-white/[0.08] transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50 font-medium"
+                          >
+                            <span
+                              className={`material-symbols-outlined text-base text-primary ${
+                                syncingId === repo.id ? "animate-spin" : ""
+                              }`}
+                            >
+                              sync
+                            </span>
+                            <span>
+                              {syncingId === repo.id ? "Syncing..." : "Sync Repo"}
+                            </span>
+                          </button>
+
+                          <div className="h-px bg-white/[0.08] my-1" />
+
+                          {/* Delete Button */}
+                          <button
+                            type="button"
+                            disabled={deletingId === repo.id || syncingId === repo.id}
                             onClick={() =>
                               handleDeleteRepo(repo.id, repo.name)
                             }
