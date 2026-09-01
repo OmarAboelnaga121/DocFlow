@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException, Logger } from '@nestjs/common';
 import { CreateRepoDto } from './dto/create-repo.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import simpleGit from 'simple-git';
@@ -12,6 +12,7 @@ import { RepoAnalysisService } from './repo-analysis/repo-analysis.service';
 @Injectable()
 export class RepositoryService {
     private readonly openai: OpenAI;
+    private readonly logger = new Logger(RepositoryService.name);
 
     constructor(
         private readonly prisma: PrismaService,
@@ -37,7 +38,7 @@ export class RepositoryService {
 
         // 2. Perform the ingestion process in the background
         this.ingestRepository(repository.id, repo.url, repo.branch || 'main').catch((err) => {
-            console.error(`Background ingestion failed for repository ${repository.id}:`, err);
+            this.logger.error(`Background ingestion failed for repository ${repository.id}:`, err);
         });
 
         // 3. Return the pending repository metadata immediately
@@ -63,6 +64,10 @@ export class RepositoryService {
             const git = simpleGit();
             await git.clone(url, clonePath, ['--depth', '1', '--single-branch', '-b', branch]);
 
+            // Capture latest commit hash from cloned repository
+            const gitRepo = simpleGit(clonePath);
+            const latestCommitHash = (await gitRepo.revparse(['HEAD'])).trim();
+
             // Transition to EMBEDDING state
             await this.prisma.repo.update({
                 where: { id: repoId },
@@ -71,11 +76,15 @@ export class RepositoryService {
 
             // Get all text/code files recursively
             const filePaths = this.getAllFiles(clonePath);
+            this.logger.log(`[Repo ${repoId}] Ingestion started. Total text/code files found: ${filePaths.length}`);
 
-            for (const filePath of filePaths) {
+            for (let i = 0; i < filePaths.length; i++) {
+                const filePath = filePaths[i];
                 const relativePath = path.relative(clonePath, filePath);
                 const content = fs.readFileSync(filePath, 'utf-8');
                 const contentHash = crypto.createHash('md5').update(content).digest('hex');
+
+                this.logger.log(`[Repo ${repoId}] [${i + 1}/${filePaths.length}] Embedding file: ${relativePath}`);
 
                 // Save file metadata to Database
                 const fileRecord = await this.prisma.file.create({
@@ -87,35 +96,12 @@ export class RepositoryService {
                     },
                 });
 
-                // Chunk content (1200 characters chunk, 200 characters overlap)
-                const chunks = this.chunkText(content, 1200, 200);
-
-                for (const chunk of chunks) {
-                    // Save code chunk metadata
-                    const codeChunk = await this.prisma.codeChunk.create({
-                        data: {
-                            fileId: fileRecord.id,
-                            content: chunk.content,
-                            startLine: chunk.startLine,
-                            endLine: chunk.endLine,
-                        },
-                    });
-
-                    // Generate vector embedding
-                    const embedding = await this.getEmbedding(chunk.content);
-
-                    // Insert pgvector embedding via raw query since Prisma client's 
-                    // auto-generated types don't natively support setting the vector type directly.
-                    const embeddingString = `[${embedding.join(',')}]`;
-                    await this.prisma.$executeRawUnsafe(
-                        `UPDATE "CodeChunk" SET "embedding" = $1::vector WHERE "id" = $2`,
-                        embeddingString,
-                        codeChunk.id
-                    );
-                }
+                // Chunk and generate embeddings in batch
+                await this.processChunksAndEmbeddings(fileRecord.id, content);
             }
 
             // Transition to ANALYZING state
+            this.logger.log(`[Repo ${repoId}] Embedding complete. Transitioning to ANALYZING...`);
             await this.prisma.repo.update({
                 where: { id: repoId },
                 data: { status: 'ANALYZING' },
@@ -124,14 +110,18 @@ export class RepositoryService {
             // Analyze the repository structure to extract backend endpoints and frontend page routes
             await this.repoAnalysisService.analyzeRepositoryStructure(repoId);
 
-            // Transition to COMPLETED state
+            // Transition to COMPLETED state and persist commit hash
+            this.logger.log(`[Repo ${repoId}] Analysis complete. Repository ingestion successfully finished.`);
             await this.prisma.repo.update({
                 where: { id: repoId },
-                data: { status: 'COMPLETED' },
+                data: {
+                    status: 'COMPLETED',
+                    latestCommitHash,
+                },
             });
 
         } catch (error) {
-            console.error(`Error during repository ingestion:`, error);
+            this.logger.error(`Error during repository ingestion:`, error);
             // Transition to FAILED state on error
             await this.prisma.repo.update({
                 where: { id: repoId },
@@ -145,30 +135,335 @@ export class RepositoryService {
         }
     }
 
-    private async getEmbedding(text: string): Promise<number[]> {
+    /**
+     * Re-sync an existing repository with upstream remote changes.
+     * Follows the verification pipeline:
+     * 1. Access Check -> 2. Existence Check -> 3. Remote Commit Check -> 4. Diff & Sync -> 5. Analysis
+     */
+    async syncRepo(repoId: string, userId: string) {
+        // Step 1 & 2: Check existence and access permissions
+        const repo = await this.prisma.repo.findUnique({
+            where: { id: repoId },
+        });
+
+        if (!repo) {
+            throw new NotFoundException('Repository not found');
+        }
+
+        if (repo.userId !== userId) {
+            throw new ForbiddenException('You do not have permission to access this repository');
+        }
+
+        // Prevent concurrent ingestion or sync executions
+        if (['PENDING', 'CLONING', 'EMBEDDING', 'ANALYZING'].includes(repo.status)) {
+            throw new BadRequestException('Repository sync or ingestion is already in progress');
+        }
+
+        // Step 3: Check if the repository already has the latest commit
+        const remoteCommitHash = await this.getRemoteLatestCommit(repo.url, repo.branch);
+
+        if (remoteCommitHash && repo.latestCommitHash && remoteCommitHash === repo.latestCommitHash) {
+            return {
+                message: 'Repository is already up to date',
+                upToDate: true,
+                repo,
+            };
+        }
+
+        // Transition to PENDING and launch differential sync in background
+        const updatedRepo = await this.prisma.repo.update({
+            where: { id: repoId },
+            data: { status: 'PENDING' },
+        });
+
+        this.performSyncRepository(repo.id, repo.url, repo.branch, remoteCommitHash).catch((err) => {
+            this.logger.error(`Background incremental sync failed for repository ${repo.id}:`, err);
+        });
+
+        return {
+            message: 'Repository sync initiated',
+            upToDate: false,
+            repo: updatedRepo,
+        };
+    }
+
+    /**
+     * Executes the incremental resync pipeline:
+     * - Clones shallow repo
+     * - Compares existing DB files vs current cloned files (New, Updated, Deleted)
+     * - Re-indexes only new and modified files
+     * - Runs architecture analysis
+     * - Updates repository status and latest commit hash
+     */
+    private async performSyncRepository(
+        repoId: string,
+        url: string,
+        branch: string,
+        knownCommitHash?: string | null,
+    ) {
+        const clonePath = path.join(os.tmpdir(), `docflow-sync-${repoId}`);
+
+        try {
+            if (fs.existsSync(clonePath)) {
+                fs.rmSync(clonePath, { recursive: true, force: true });
+            }
+
+            // Transition to CLONING state
+            this.logger.log(`[Repo ${repoId}] Starting shallow clone from ${url} (branch: ${branch})...`);
+            await this.prisma.repo.update({
+                where: { id: repoId },
+                data: { status: 'CLONING' },
+            });
+
+            // Clone repository branch
+            const git = simpleGit();
+            await git.clone(url, clonePath, ['--depth', '1', '--single-branch', '-b', branch]);
+
+            const gitRepo = simpleGit(clonePath);
+            const latestCommitHash = knownCommitHash || (await gitRepo.revparse(['HEAD'])).trim();
+
+            // Fetch existing files from DB
+            const existingFiles = await this.prisma.file.findMany({
+                where: { repoId },
+                select: { id: true, path: true, contentHash: true },
+            });
+
+            const existingFilesMap = new Map(existingFiles.map((f) => [f.path, f]));
+
+            // Scan all text files from cloned repository
+            const clonedFilePaths = this.getAllFiles(clonePath);
+            const currentFilesMap = new Map<
+                string,
+                { fullPath: string; content: string; contentHash: string; language: string | null }
+            >();
+
+            for (const filePath of clonedFilePaths) {
+                const relativePath = path.relative(clonePath, filePath);
+                const content = fs.readFileSync(filePath, 'utf-8');
+                const contentHash = crypto.createHash('md5').update(content).digest('hex');
+                const language = this.getLanguageFromExtension(filePath);
+
+                currentFilesMap.set(relativePath, {
+                    fullPath: filePath,
+                    content,
+                    contentHash,
+                    language,
+                });
+            }
+
+            // Differential file categorization
+            const newFiles: { relativePath: string; content: string; contentHash: string; language: string | null }[] = [];
+            const updatedFiles: { id: string; relativePath: string; content: string; contentHash: string; language: string | null }[] = [];
+            const deletedFileIds: string[] = [];
+
+            // Detect new and updated files
+            for (const [relativePath, currentFile] of currentFilesMap.entries()) {
+                const existing = existingFilesMap.get(relativePath);
+                if (!existing) {
+                    newFiles.push({ relativePath, ...currentFile });
+                } else if (existing.contentHash !== currentFile.contentHash) {
+                    updatedFiles.push({ id: existing.id, relativePath, ...currentFile });
+                }
+            }
+
+            // Detect deleted files
+            for (const [relativePath, existing] of existingFilesMap.entries()) {
+                if (!currentFilesMap.has(relativePath)) {
+                    deletedFileIds.push(existing.id);
+                }
+            }
+
+            this.logger.log(`[Repo ${repoId}] Diff results: ${newFiles.length} new, ${updatedFiles.length} updated, ${deletedFileIds.length} deleted.`);
+
+            // Transition to EMBEDDING state
+            await this.prisma.repo.update({
+                where: { id: repoId },
+                data: { status: 'EMBEDDING' },
+            });
+
+            // Process deleted files
+            if (deletedFileIds.length > 0) {
+                this.logger.log(`[Repo ${repoId}] Removing ${deletedFileIds.length} deleted files and stale chunks...`);
+                await this.prisma.file.deleteMany({
+                    where: { id: { in: deletedFileIds } },
+                });
+            }
+
+            // Process updated files (remove old chunks and re-chunk with fresh embeddings)
+            for (let i = 0; i < updatedFiles.length; i++) {
+                const updated = updatedFiles[i];
+                this.logger.log(`[Repo ${repoId}] [${i + 1}/${updatedFiles.length}] Re-embedding updated file: ${updated.relativePath}`);
+
+                await this.prisma.codeChunk.deleteMany({
+                    where: { fileId: updated.id },
+                });
+
+                await this.prisma.file.update({
+                    where: { id: updated.id },
+                    data: {
+                        contentHash: updated.contentHash,
+                        language: updated.language,
+                    },
+                });
+
+                await this.processChunksAndEmbeddings(updated.id, updated.content);
+            }
+
+            // Process new files
+            for (let i = 0; i < newFiles.length; i++) {
+                const newFile = newFiles[i];
+                this.logger.log(`[Repo ${repoId}] [${i + 1}/${newFiles.length}] Embedding new file: ${newFile.relativePath}`);
+
+                const fileRecord = await this.prisma.file.create({
+                    data: {
+                        repoId,
+                        path: newFile.relativePath,
+                        language: newFile.language,
+                        contentHash: newFile.contentHash,
+                    },
+                });
+
+                await this.processChunksAndEmbeddings(fileRecord.id, newFile.content);
+            }
+
+            // Transition to ANALYZING state
+            this.logger.log(`[Repo ${repoId}] Resync embeddings complete. Transitioning to ANALYZING...`);
+            await this.prisma.repo.update({
+                where: { id: repoId },
+                data: { status: 'ANALYZING' },
+            });
+
+            // Re-run architectural extraction for updated repository state
+            await this.repoAnalysisService.analyzeRepositoryStructure(repoId);
+
+            // Transition to COMPLETED with updated commit hash
+            this.logger.log(`[Repo ${repoId}] Resync successfully COMPLETED. HEAD commit: ${latestCommitHash}`);
+            await this.prisma.repo.update({
+                where: { id: repoId },
+                data: {
+                    status: 'COMPLETED',
+                    latestCommitHash,
+                },
+            });
+
+        } catch (error) {
+            this.logger.error(`Error during incremental sync for repository ${repoId}:`, error);
+            await this.prisma.repo.update({
+                where: { id: repoId },
+                data: { status: 'FAILED' },
+            });
+        } finally {
+            if (fs.existsSync(clonePath)) {
+                fs.rmSync(clonePath, { recursive: true, force: true });
+            }
+        }
+    }
+
+    /**
+     * Resolves the latest remote commit SHA for a specific branch without cloning.
+     */
+    private async getRemoteLatestCommit(url: string, branch: string): Promise<string | null> {
+        try {
+            const git = simpleGit();
+            const output = await git.listRemote(['--heads', url, branch]);
+            if (output && output.trim()) {
+                const match = output.trim().match(/^([0-9a-f]{40})/i);
+                if (match) {
+                    return match[1];
+                }
+            }
+
+            const headOutput = await git.listRemote([url, 'HEAD']);
+            if (headOutput && headOutput.trim()) {
+                const match = headOutput.trim().match(/^([0-9a-f]{40})/i);
+                if (match) {
+                    return match[1];
+                }
+            }
+            return null;
+        } catch (error) {
+            this.logger.warn(`Could not check remote commit hash for ${url} (${branch}): ${error.message}`);
+            return null;
+        }
+    }
+
+    /**
+     * Chunks file content and inserts CodeChunks with batched pgvector embeddings.
+     */
+    private async processChunksAndEmbeddings(fileId: string, content: string): Promise<void> {
+        const chunks = this.chunkText(content, 1200, 200);
+        if (chunks.length === 0) return;
+
+        // 1. Fetch embeddings in batch for all chunks of the file
+        const chunkTexts = chunks.map((c) => c.content);
+        const embeddings = await this.getEmbeddingsBatch(chunkTexts);
+
+        // 2. Persist code chunks and vector embeddings concurrently
+        await Promise.all(
+            chunks.map(async (chunk, index) => {
+                const codeChunk = await this.prisma.codeChunk.create({
+                    data: {
+                        fileId: fileId,
+                        content: chunk.content,
+                        startLine: chunk.startLine,
+                        endLine: chunk.endLine,
+                    },
+                });
+
+                const embedding = embeddings[index];
+                if (embedding && embedding.length > 0) {
+                    const embeddingString = `[${embedding.join(',')}]`;
+                    await this.prisma.$executeRawUnsafe(
+                        `UPDATE "CodeChunk" SET "embedding" = $1::vector WHERE "id" = $2`,
+                        embeddingString,
+                        codeChunk.id
+                    );
+                }
+            })
+        );
+    }
+
+    /**
+     * Batch embedding generation (sends up to 25 text chunks per API request).
+     */
+    private async getEmbeddingsBatch(texts: string[]): Promise<number[][]> {
+        if (texts.length === 0) return [];
         const apiKey = process.env.OPENAI_API_KEY;
         if (!apiKey || apiKey === 'mock-key') {
-            return Array.from({ length: 1536 }, () => Math.random() - 0.5);
+            return texts.map(() => Array.from({ length: 1536 }, () => Math.random() - 0.5));
         }
 
         try {
-            const response = await this.openai.embeddings.create({
-                model: process.env.EMBEDDING_MODEL || 'text-embedding-v3',
-                input: text,
-            });
-            return response.data[0].embedding;
+            const BATCH_SIZE = 25;
+            const results: number[][] = [];
+
+            for (let i = 0; i < texts.length; i += BATCH_SIZE) {
+                const batch = texts.slice(i, i + BATCH_SIZE);
+                const response = await this.openai.embeddings.create({
+                    model: process.env.EMBEDDING_MODEL || 'text-embedding-v3',
+                    input: batch,
+                });
+
+                const sorted = response.data.sort((a, b) => a.index - b.index);
+                for (const item of sorted) {
+                    results.push(item.embedding);
+                }
+            }
+
+            return results;
         } catch (error) {
-            console.warn(`Embedding generation failed, falling back to mock: ${error.message}`);
-            return Array.from({ length: 1536 }, () => Math.random() - 0.5);
+            this.logger.warn(`Batch embedding generation failed, falling back to mock: ${error.message}`);
+            return texts.map(() => Array.from({ length: 1536 }, () => Math.random() - 0.5));
         }
     }
 
     private getAllFiles(dirPath: string, arrayOfFiles: string[] = []): string[] {
         const IGNORED_DIRECTORIES = new Set([
-            'node_modules', 'dist', 'build', '.next', '.git', 'coverage', '.turbo'
+            'node_modules', 'dist', 'build', '.next', '.git', 'coverage', '.turbo',
+            '.vscode', '.idea', 'tmp', 'temp', 'out', '.cache', 'public/assets'
         ]);
         const IGNORED_FILES = new Set([
-            'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'bun.lockb'
+            'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'bun.lockb', '.DS_Store'
         ]);
 
         const files = fs.readdirSync(dirPath);
@@ -182,7 +477,7 @@ export class RepositoryService {
                 const stat = fs.statSync(filePath);
                 if (stat.isDirectory()) {
                     this.getAllFiles(filePath, arrayOfFiles);
-                } else if (stat.isFile() && this.isTextFile(file)) {
+                } else if (stat.isFile() && stat.size <= 300 * 1024 && this.isTextFile(file)) {
                     arrayOfFiles.push(filePath);
                 }
             } catch (err) {

@@ -327,3 +327,24 @@ export async function logoutUser(): Promise<{ message: string }> {
 
   return result;
 }
+
+export async function syncRepository(
+  repoId: string
+): Promise<{ message: string; upToDate: boolean; repo: Repo }> {
+  const res = await fetch(`${API_URL}/repository/${repoId}/sync`, {
+    method: "POST",
+    credentials: "include",
+  });
+
+  const result = await res.json();
+
+  if (!res.ok) {
+    const errorMsg = Array.isArray(result.message)
+      ? result.message.join(", ")
+      : result.message || "Failed to sync repository";
+    throw new Error(errorMsg);
+  }
+
+  return result;
+}
+

@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -43,6 +43,20 @@ export class RepositoryController {
     @Param('id') id: string,
   ) {
     return this.repositoryService.getRepoById(id, userId);
+  }
+
+  @Post(':id/sync')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Trigger incremental sync for a repository' })
+  @ApiResponse({ status: 200, description: 'Repository sync initiated successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Repository not found' })
+  async syncRepo(
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+  ) {
+    return this.repositoryService.syncRepo(id, userId);
   }
 
   @Delete(':id')
