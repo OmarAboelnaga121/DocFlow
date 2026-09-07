@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ForbiddenException } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 
 import { UserController } from './user.controller';
@@ -103,10 +104,18 @@ describe('UserController', () => {
       };
       mockUserService.updateRole.mockResolvedValue(mockResponse);
 
-      const result = await controller.updateUserRole('user-id-1', updateRoleDto);
+      const result = await controller.updateUserRole('user-id-1', 'user-id-1', updateRoleDto);
 
       expect(mockUserService.updateRole).toHaveBeenCalledWith('user-id-1', UserRole.DEVELOPER);
       expect(result).toEqual(mockResponse);
+    });
+
+    it('should throw ForbiddenException when user attempts to update another user role', async () => {
+      const updateRoleDto: UpdateRoleDto = { role: UserRole.DEVELOPER };
+      await expect(
+        controller.updateUserRole('user-id-1', 'other-user-id', updateRoleDto),
+      ).rejects.toThrow(ForbiddenException);
+      expect(mockUserService.updateRole).not.toHaveBeenCalled();
     });
   });
 });

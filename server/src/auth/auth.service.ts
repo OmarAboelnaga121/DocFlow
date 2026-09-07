@@ -50,7 +50,7 @@ export class AuthService {
         const uploadResult = await this.cloudinaryService.uploadAvatar(file);
         avatarUrl = uploadResult.secure_url;
       } catch (error) {
-        throw new BadRequestException(error.message || 'Avatar upload failed');
+        throw new BadRequestException('Avatar upload to Cloudinary failed');
       }
     }
 
@@ -116,16 +116,29 @@ export class AuthService {
   async validateGithubUser(githubData: GithubUserData) {
     const { providerId, username, name, email, avatar } = githubData;
 
+    // 1. Look up exclusively by GitHub provider ID and provider enum
     let user = await this.prisma.user.findFirst({
       where: {
-        OR: [
-          { providerId: providerId },
-          { email: email ? email : undefined },
-        ],
+        providerId: providerId,
+        authProvider: AuthProvider.GITHUB,
       },
     });
 
     if (!user) {
+      // 2. Prevent account takeover: If an account exists with the same email, reject linking
+      if (email) {
+        const existingUserByEmail = await this.prisma.user.findUnique({
+          where: { email },
+        });
+
+        if (existingUserByEmail) {
+          throw new ConflictException(
+            'An account with this email already exists with a different authentication provider. Please log in using your original credentials.',
+          );
+        }
+      }
+
+      // 3. Safe to create new GitHub user
       user = await this.prisma.user.create({
         data: {
           providerId,
@@ -136,15 +149,17 @@ export class AuthService {
           authProvider: AuthProvider.GITHUB,
         },
       });
-    } else if (user.authProvider !== AuthProvider.GITHUB || user.providerId !== providerId) {
-      user = await this.prisma.user.update({
-        where: { id: user.id },
-        data: {
-          providerId,
-          authProvider: AuthProvider.GITHUB,
-          avatar: avatar || user.avatar,
-        },
-      });
+    } else {
+      // Update avatar if changed
+      if (avatar && avatar !== user.avatar) {
+        const updated = await this.prisma.user.update({
+          where: { id: user.id },
+          data: { avatar },
+        });
+        if (updated) {
+          user = updated;
+        }
+      }
     }
 
     const payload = { sub: user.id, username: user.username };

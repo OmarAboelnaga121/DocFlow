@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { BadRequestException } from '@nestjs/common';
 
 // ---------------------------------------------------------------------------
 // Mock heavy side-effect modules BEFORE importing RepositoryService,
@@ -7,9 +8,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 
 // Mock simple-git so no real git operations occur
 const mockGitClone = jest.fn().mockResolvedValue(undefined);
+const mockGitRevparse = jest.fn().mockResolvedValue('a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2');
+const mockGitListRemote = jest.fn().mockResolvedValue('a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2 refs/heads/main');
 jest.mock('simple-git', () => {
   return jest.fn().mockImplementation(() => ({
     clone: mockGitClone,
+    revparse: mockGitRevparse,
+    listRemote: mockGitListRemote,
   }));
 });
 
@@ -132,6 +137,11 @@ describe('RepositoryService', () => {
     mockFsExistsSync.mockReturnValue(false);
     // Default: no files in clone dir (prevents deep ingestion loops)
     mockFsReaddirSync.mockReturnValue([]);
+
+    // Default git behaviour
+    mockGitClone.mockResolvedValue(undefined);
+    mockGitRevparse.mockResolvedValue('a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2');
+    mockGitListRemote.mockResolvedValue('a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2 refs/heads/main');
   });
 
   // =========================================================================
@@ -207,6 +217,31 @@ describe('RepositoryService', () => {
       expect(mockPrismaService.repo.update).toHaveBeenCalledWith(
         expect.objectContaining({ data: { status: 'FAILED' } }),
       );
+    });
+
+    it('should throw BadRequestException when URL points to a loopback or private host (SSRF)', async () => {
+      const ssrfDto: CreateRepoDto = {
+        url: 'http://127.0.0.1:5432/repo.git',
+        name: 'ssrf-repo',
+      };
+
+      await expect(service.createRepo('user-id-1', ssrfDto)).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(mockPrismaService.repo.create).not.toHaveBeenCalled();
+    });
+
+    it('should throw BadRequestException when branch starts with a hyphen (flag injection)', async () => {
+      const injectionDto: CreateRepoDto = {
+        url: 'https://github.com/octocat/Hello-World.git',
+        name: 'injection-repo',
+        branch: '--upload-pack=malicious',
+      };
+
+      await expect(service.createRepo('user-id-1', injectionDto)).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(mockPrismaService.repo.create).not.toHaveBeenCalled();
     });
   });
 
@@ -305,7 +340,7 @@ describe('RepositoryService', () => {
       // Simulate one file with content
       const fakeContent = 'const hello = "world";\n'.repeat(5);
       mockFsReaddirSync.mockReturnValue(['index.ts']);
-      mockFsStatSync.mockReturnValue({ isDirectory: () => false, isFile: () => true });
+      mockFsStatSync.mockReturnValue({ isDirectory: () => false, isFile: () => true, size: 100 });
       mockFsReadFileSync.mockReturnValue(fakeContent);
       mockFsExistsSync.mockReturnValue(false);
 

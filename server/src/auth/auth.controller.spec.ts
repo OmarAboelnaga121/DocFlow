@@ -166,7 +166,7 @@ describe('AuthController', () => {
 
       await controller.githubAuthCallback(githubUser, mockResponse);
 
-      expect(mockResponse.redirect).toHaveBeenCalledWith('http://localhost:3000/dashboard');
+      expect(mockResponse.redirect).toHaveBeenCalledWith('http://localhost:3001/dashboard');
     });
   });
 

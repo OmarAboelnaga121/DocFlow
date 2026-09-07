@@ -8,6 +8,7 @@ import * as os from 'os';
 import * as crypto from 'crypto';
 import { OpenAI } from 'openai';
 import { RepoAnalysisService } from './repo-analysis/repo-analysis.service';
+import { validateRepositoryUrl, validateBranchName } from './utils/url-validator.util';
 
 @Injectable()
 export class RepositoryService {
@@ -25,6 +26,10 @@ export class RepositoryService {
     }
 
     async createRepo(userId: string, repo: CreateRepoDto) {
+        // Validate branch name and repository URL (SSRF & command injection prevention)
+        validateBranchName(repo.branch);
+        await validateRepositoryUrl(repo.url);
+
         // 1. Create the repository entry in PENDING status
         const repository = await this.prisma.repo.create({
             data: {
@@ -62,7 +67,7 @@ export class RepositoryService {
 
             // Clone repository using shallow clone (depth 1)
             const git = simpleGit();
-            await git.clone(url, clonePath, ['--depth', '1', '--single-branch', '-b', branch]);
+            await git.clone(url, clonePath, ['--depth', '1', '--single-branch', '-b', branch, '--']);
 
             // Capture latest commit hash from cloned repository
             const gitRepo = simpleGit(clonePath);
@@ -217,7 +222,7 @@ export class RepositoryService {
 
             // Clone repository branch
             const git = simpleGit();
-            await git.clone(url, clonePath, ['--depth', '1', '--single-branch', '-b', branch]);
+            await git.clone(url, clonePath, ['--depth', '1', '--single-branch', '-b', branch, '--']);
 
             const gitRepo = simpleGit(clonePath);
             const latestCommitHash = knownCommitHash || (await gitRepo.revparse(['HEAD'])).trim();

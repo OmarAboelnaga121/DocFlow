@@ -67,7 +67,7 @@ export class UserService {
           await this.cloudinaryService.deleteImage(user.avatar);
         }
       } catch (error) {
-        throw new BadRequestException(error.message || 'Avatar upload to Cloudinary failed');
+        throw new BadRequestException('Avatar upload to Cloudinary failed');
       }
     }
 

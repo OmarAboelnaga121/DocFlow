@@ -21,10 +21,9 @@ import {
   AuthCookieInterceptor,
   ClearCookieInterceptor,
 } from './interceptors/auth-cookie.interceptor';
-import { SkipThrottle } from '@nestjs/throttler';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('Auth')
-@SkipThrottle()
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -33,6 +32,7 @@ export class AuthController {
   ) {}
 
   @Post('register')
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @UseInterceptors(FileInterceptor('avatar'), AuthCookieInterceptor)
   @ApiConsumes('multipart/form-data', 'application/json')
   @ApiOperation({ summary: 'Register a new user with optional avatar image upload' })
@@ -44,6 +44,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   @UseGuards(AuthGuard('local'))
   @UseInterceptors(AuthCookieInterceptor)
   @ApiBody({ type: LoginDto })

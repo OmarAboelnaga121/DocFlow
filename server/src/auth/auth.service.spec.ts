@@ -48,6 +48,7 @@ const mockJwtService = {
 const mockCloudinaryService = {
   uploadAvatar: jest.fn(),
   deleteImage: jest.fn(),
+  getDefaultAvatarUrl: jest.fn().mockReturnValue('https://ui-avatars.com/api/?name=User'),
 };
 
 // ---------------------------------------------------------------------------
@@ -318,6 +319,7 @@ describe('AuthService', () => {
         email: 'john@github.com',
       };
       mockPrismaService.user.findFirst.mockResolvedValue(null);
+      mockPrismaService.user.findUnique.mockResolvedValue(null);
       mockPrismaService.user.create.mockResolvedValue(newGithubUser);
 
       const result = await service.validateGithubUser(githubData);
@@ -338,6 +340,7 @@ describe('AuthService', () => {
         ...mockUser,
         providerId: 'github-123',
         authProvider: AuthProvider.GITHUB,
+        avatar: 'https://avatars.githubusercontent.com/u/1',
       };
       mockPrismaService.user.findFirst.mockResolvedValue(existingGithubUser);
 
@@ -348,31 +351,21 @@ describe('AuthService', () => {
       expect(result.user).toEqual(existingGithubUser);
     });
 
-    it('should update existing user when found by email but provider differs', async () => {
+    it('should throw ConflictException when an account with the same email already exists with a different provider', async () => {
       const credentialsUser = {
         ...mockUser,
         email: 'john@github.com',
         authProvider: AuthProvider.CREDENTIALS,
         providerId: null,
       };
-      const updatedUser = {
-        ...credentialsUser,
-        providerId: 'github-123',
-        authProvider: AuthProvider.GITHUB,
-      };
-      mockPrismaService.user.findFirst.mockResolvedValue(credentialsUser);
-      mockPrismaService.user.update.mockResolvedValue(updatedUser);
+      mockPrismaService.user.findFirst.mockResolvedValue(null);
+      mockPrismaService.user.findUnique.mockResolvedValue(credentialsUser);
 
-      const result = await service.validateGithubUser(githubData);
-
-      expect(mockPrismaService.user.update).toHaveBeenCalledWith({
-        where: { id: credentialsUser.id },
-        data: expect.objectContaining({
-          providerId: 'github-123',
-          authProvider: AuthProvider.GITHUB,
-        }),
-      });
-      expect(result.user).toEqual(updatedUser);
+      await expect(service.validateGithubUser(githubData)).rejects.toThrow(
+        ConflictException,
+      );
+      expect(mockPrismaService.user.create).not.toHaveBeenCalled();
+      expect(mockPrismaService.user.update).not.toHaveBeenCalled();
     });
 
     it('should use fallback email when GitHub provides no email', async () => {

@@ -27,5 +27,12 @@ export class CreateRepoDto {
   })
   @IsOptional()
   @IsString({ message: 'Branch name must be a string' })
+  @Matches(
+    /^(?!\/)(?!-)(?!.*(?:--|\/\.|\.\.|\/\/|\.lock$|[\x00-\x1f\x7f ~^:?*\[\\]))[a-zA-Z0-9_\-\.\/]+$/,
+    {
+      message:
+        'Invalid branch name format. Branch cannot start with a hyphen or slash, or contain git ref special characters.',
+    },
+  )
   branch?: string;
 }
