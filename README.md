@@ -1,6 +1,13 @@
-# DocFlow
+# DocFlow — AI-Powered Codebase Intelligence Platform
 
-**DocFlow** is an AI-powered codebase intelligence platform designed to ingest Git repositories, generate vector embeddings, analyze project architectures (API endpoints, routing, dependencies), and enable interactive RAG-based conversations over your code.
+[![NestJS](https://img.shields.io/badge/NestJS-11-E0234E?style=flat-square&logo=nestjs&logoColor=white)](https://nestjs.com/)
+[![Next.js](https://img.shields.io/badge/Next.js-16%20(React%2019)-black?style=flat-square&logo=next.js&logoColor=white)](https://nextjs.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16%20(pgvector)-336791?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Prisma](https://img.shields.io/badge/Prisma-7-2D3748?style=flat-square&logo=prisma&logoColor=white)](https://www.prisma.io/)
+[![Redis](https://img.shields.io/badge/Redis-7-DC382D?style=flat-square&logo=redis&logoColor=white)](https://redis.io/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+
+> **DocFlow** is an enterprise-ready codebase intelligence platform that bridges the gap between complex software architectures and engineering teams. It ingests Git repositories, extracts architectural topologies, indexes codebases into high-dimensional vector embeddings using PostgreSQL (`pgvector`), and enables context-grounded, interactive RAG (Retrieval-Augmented Generation) conversations over your software systems.
 
 ---
 
