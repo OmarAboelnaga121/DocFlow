@@ -13,7 +13,7 @@ export default function LegalPage() {
         <p className="max-w-2xl text-center mb-8 text-text-secondary leading-relaxed">
           This site is provided as-is. All trademarks belong to their respective owners. Use of the service is governed by our Terms of Service and Privacy Policy.
         </p>
-        <Link href="/" className="mt-4 text-secondary hover:text-white transition-colors">
+        <Link href="/" className="mt-4 text-secondary hover:text-on-surface transition-colors">
           ← Back to Home
         </Link>
       </main>

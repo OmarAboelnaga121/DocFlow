@@ -6,6 +6,6 @@ import { RepoAnalysisModule } from './repo-analysis/repo-analysis.module';
 @Module({
   controllers: [RepositoryController],
   providers: [RepositoryService],
-  imports: [RepoAnalysisModule]
+  imports: [RepoAnalysisModule],
 })
 export class RepositoryModule {}

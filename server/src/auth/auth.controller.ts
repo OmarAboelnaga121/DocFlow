@@ -35,7 +35,9 @@ export class AuthController {
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   @UseInterceptors(FileInterceptor('avatar'), AuthCookieInterceptor)
   @ApiConsumes('multipart/form-data', 'application/json')
-  @ApiOperation({ summary: 'Register a new user with optional avatar image upload' })
+  @ApiOperation({
+    summary: 'Register a new user with optional avatar image upload',
+  })
   async register(
     @Body() registerDto: RegisterDto,
     @UploadedFile() file?: Express.Multer.File,
@@ -63,10 +65,7 @@ export class AuthController {
   @Get('github/callback')
   @UseGuards(AuthGuard('github'))
   @ApiOperation({ summary: 'GitHub OAuth callback handler' })
-  async githubAuthCallback(
-    @CurrentUser() user: any,
-    @Res() res: Response,
-  ) {
+  async githubAuthCallback(@CurrentUser() user: any, @Res() res: Response) {
     const authData = await this.authService.validateGithubUser(user);
 
     res.cookie('token', authData.accessToken, {

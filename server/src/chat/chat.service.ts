@@ -10,17 +10,29 @@ import { SendMessageDto } from './dto/send-message.dto';
 import { RetrievedContextChunkDto } from './dto/retrieved-context-chunk.dto';
 import { MessageRole, UserRole } from '@prisma/client';
 import { OpenAI } from 'openai';
+import { RedisService } from '../redis/redis.service';
 
 @Injectable()
 export class ChatService {
   private readonly openai: OpenAI;
   private readonly logger = new Logger(ChatService.name);
+  private static readonly CHAT_CACHE_TTL = 3600; // 1 hour TTL
 
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redis: RedisService,
+  ) {
     this.openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY || 'mock-key',
       baseURL: process.env.OPENAI_BASE_URL || undefined,
     });
+  }
+
+  private async invalidateChatCache(chatId: string): Promise<void> {
+    await this.redis.invalidateCache([
+      `chat:${chatId}`,
+      `chat-messages:${chatId}`,
+    ]);
   }
 
   async createChat(userId: string, createChatDto: CreateChatDto) {
@@ -57,29 +69,39 @@ export class ChatService {
   }
 
   async getChatById(userId: string, chatId: string) {
-    const chat = await this.prisma.chat.findUnique({
-      where: { id: chatId },
-      include: {
-        repo: {
-          select: {
-            id: true,
-            name: true,
-            branch: true,
-            status: true,
-            url: true,
+    const chat = await this.redis.getOrSet(
+      `chat:${chatId}`,
+      ChatService.CHAT_CACHE_TTL,
+      async () => {
+        const found = await this.prisma.chat.findUnique({
+          where: { id: chatId },
+          include: {
+            repo: {
+              select: {
+                id: true,
+                name: true,
+                branch: true,
+                status: true,
+                url: true,
+              },
+            },
+            messages: {
+              orderBy: {
+                createdAt: 'asc',
+              },
+            },
           },
-        },
-        messages: {
-          orderBy: {
-            createdAt: 'asc',
-          },
-        },
-      },
-    });
+        });
 
-    if (!chat) {
-      throw new NotFoundException(`Chat session with ID "${chatId}" not found`);
-    }
+        if (!found) {
+          throw new NotFoundException(
+            `Chat session with ID "${chatId}" not found`,
+          );
+        }
+
+        return found;
+      },
+    );
 
     if (chat.userId !== userId) {
       throw new ForbiddenException(
@@ -91,27 +113,22 @@ export class ChatService {
   }
 
   async getChatMessages(userId: string, chatId: string) {
-    const chat = await this.prisma.chat.findUnique({
-      where: { id: chatId },
-      select: { id: true, userId: true },
-    });
+    // 1. Verify existence & tenant ownership (uses cached chat session if present)
+    await this.getChatById(userId, chatId);
 
-    if (!chat) {
-      throw new NotFoundException(`Chat session with ID "${chatId}" not found`);
-    }
-
-    if (chat.userId !== userId) {
-      throw new ForbiddenException(
-        'You do not have permission to access this chat messages',
-      );
-    }
-
-    return this.prisma.message.findMany({
-      where: { chatId },
-      orderBy: {
-        createdAt: 'asc',
+    // 2. Cache-aside for the raw messages array
+    return this.redis.getOrSet(
+      `chat-messages:${chatId}`,
+      ChatService.CHAT_CACHE_TTL,
+      async () => {
+        return this.prisma.message.findMany({
+          where: { chatId },
+          orderBy: {
+            createdAt: 'asc',
+          },
+        });
       },
-    });
+    );
   }
 
   async sendMessage(userId: string, chatId: string, dto: SendMessageDto) {
@@ -169,13 +186,35 @@ export class ChatService {
     // 5. Build prompt with high-level repo metadata and retrieved context
     let repoOverview = `Repository Name: ${chat.repo.name}\nBranch: ${chat.repo.branch}\nStatus: ${chat.repo.status}\n`;
     if (chat.repo.analysis) {
-      const apis = (chat.repo.analysis.apis as Array<{ method: string; endpoint: string; description?: string; file?: string }>) || [];
-      const pages = (chat.repo.analysis.pages as Array<{ route?: string; routePath?: string; description?: string; file?: string }>) || [];
+      const apis =
+        (chat.repo.analysis.apis as Array<{
+          method: string;
+          endpoint: string;
+          description?: string;
+          file?: string;
+        }>) || [];
+      const pages =
+        (chat.repo.analysis.pages as Array<{
+          route?: string;
+          routePath?: string;
+          description?: string;
+          file?: string;
+        }>) || [];
       if (apis.length > 0) {
-        repoOverview += `\nIdentified Backend APIs:\n${apis.slice(0, 15).map((a) => `- [${a.method}] ${a.endpoint} (${a.description || a.file})`).join('\n')}\n`;
+        repoOverview += `\nIdentified Backend APIs:\n${apis
+          .slice(0, 15)
+          .map(
+            (a) => `- [${a.method}] ${a.endpoint} (${a.description || a.file})`,
+          )
+          .join('\n')}\n`;
       }
       if (pages.length > 0) {
-        repoOverview += `\nIdentified Frontend Pages:\n${pages.slice(0, 15).map((p) => `- ${p.route || p.routePath} (${p.description || p.file})`).join('\n')}\n`;
+        repoOverview += `\nIdentified Frontend Pages:\n${pages
+          .slice(0, 15)
+          .map(
+            (p) => `- ${p.route || p.routePath} (${p.description || p.file})`,
+          )
+          .join('\n')}\n`;
       }
     }
 
@@ -219,7 +258,9 @@ export class ChatService {
     const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
       { role: 'system', content: systemPrompt },
       ...history.map((m) => ({
-        role: (m.role === MessageRole.USER ? 'user' : 'assistant') as 'user' | 'assistant',
+        role: (m.role === MessageRole.USER
+          ? 'user'
+          : 'assistant') as 'user' | 'assistant',
         content: m.content,
       })),
       {
@@ -262,7 +303,10 @@ export class ChatService {
       },
     });
 
-    // 8. Return the generated AI response
+    // 8. Invalidate cached chat session and messages list
+    await this.invalidateChatCache(chatId);
+
+    // 9. Return the generated AI response
     return aiMessage;
   }
 
@@ -306,7 +350,10 @@ export class ChatService {
             }
           }
         } catch (fileErr) {
-          this.logger.warn(`Direct file matching failed for ${fileName}:`, fileErr);
+          this.logger.warn(
+            `Direct file matching failed for ${fileName}:`,
+            fileErr,
+          );
         }
       }
     }
@@ -317,7 +364,9 @@ export class ChatService {
       if (queryEmbedding && queryEmbedding.length > 0) {
         const embeddingString = `[${queryEmbedding.join(',')}]`;
 
-        const vectorChunks = await this.prisma.$queryRawUnsafe<RetrievedContextChunkDto[]>(
+        const vectorChunks = await this.prisma.$queryRawUnsafe<
+          RetrievedContextChunkDto[]
+        >(
           `
           SELECT 
             cc.id,
@@ -346,7 +395,10 @@ export class ChatService {
         }
       }
     } catch (error) {
-      this.logger.error(`Vector similarity search failed for repo ${repoId}:`, error);
+      this.logger.error(
+        `Vector similarity search failed for repo ${repoId}:`,
+        error,
+      );
     }
 
     // 3. Fallback: Keyword Search across content and file paths

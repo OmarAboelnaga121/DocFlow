@@ -258,7 +258,7 @@ export default function ChatWorkspacePage() {
       {/* ───────────────────────────────────────────────────────────
           1. LEFT SECTION (Sidebar)
           ─────────────────────────────────────────────────────────── */}
-      <aside className="w-64 md:w-72 shrink-0 bg-surface-container-lowest border-r border-white/[0.08] flex flex-col h-full select-none overflow-hidden">
+      <aside className="w-64 md:w-72 shrink-0 bg-surface border-r border-border-hairline flex flex-col h-full select-none overflow-hidden">
         {/* Top Fixed Section */}
         <div className="p-4 pb-2 shrink-0 flex flex-col">
           {/* Brand Header */}
@@ -277,7 +277,7 @@ export default function ChatWorkspacePage() {
             onClick={() => {
               router.push(`/dashboard/chats/${chat?.repoId}`);
             }}
-            className="w-full mt-3 bg-text-primary hover:bg-white text-surface-container-lowest font-mono font-medium text-xs py-2 px-4 rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-sm active:scale-[0.99] cursor-pointer disabled:opacity-50"
+            className="w-full mt-3 bg-primary-container hover:bg-primary text-white font-mono font-medium text-xs py-2 px-4 rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-sm active:scale-[0.99] cursor-pointer disabled:opacity-50"
           >
             <span className="text-sm font-bold leading-none">+</span>
             <span>New Chat</span>
@@ -286,7 +286,7 @@ export default function ChatWorkspacePage() {
 
         {/* Scrollable Middle Section (Recent Chats) */}
         <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3">
-          <h2 className="text-[11px] font-mono tracking-wider text-text-secondary uppercase px-1 mb-2 sticky top-0 bg-surface-container-lowest/95 backdrop-blur-xs py-0.5 z-10">
+          <h2 className="text-[11px] font-mono tracking-wider text-text-secondary uppercase px-1 mb-2 sticky top-0 bg-surface/95 backdrop-blur-xs py-0.5 z-10">
             Recent Chats
           </h2>
 
@@ -302,8 +302,8 @@ export default function ChatWorkspacePage() {
                     href={`/dashboard/chats/chat/${c.id}`}
                     className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-mono transition-all group ${
                       isCurrentChat
-                        ? "bg-white/[0.08] text-white font-medium border border-white/[0.06]"
-                        : "text-text-secondary hover:text-white hover:bg-white/[0.04]"
+                        ? "bg-surface-container-low text-primary font-medium border border-surface-container"
+                        : "text-text-secondary hover:text-on-surface hover:bg-surface-container-low"
                     }`}
                   >
                     <span
@@ -328,10 +328,10 @@ export default function ChatWorkspacePage() {
         </div>
 
         {/* Bottom Fixed Section (Settings & Support) */}
-        <div className="p-4 pt-3 border-t border-white/[0.08] shrink-0 flex flex-col bg-surface-container-lowest">
+        <div className="p-4 pt-3 border-t border-border-hairline shrink-0 flex flex-col bg-surface">
           <Link
             href="/dashboard/user"
-            className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-mono text-text-secondary hover:text-white hover:bg-white/[0.04] transition-all"
+            className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-mono text-text-secondary hover:text-on-surface hover:bg-surface-container-low transition-all"
           >
             <span className="material-symbols-outlined text-[17px] text-text-secondary">
               settings
@@ -341,7 +341,7 @@ export default function ChatWorkspacePage() {
 
           <Link
             href="mailto:support@docflow.ai"
-            className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-mono text-text-secondary hover:text-white hover:bg-white/[0.04] transition-all mt-0.5"
+            className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-mono text-text-secondary hover:text-on-surface hover:bg-surface-container-low transition-all mt-0.5"
           >
             <span className="material-symbols-outlined text-[17px] text-text-secondary">
               help
@@ -356,7 +356,7 @@ export default function ChatWorkspacePage() {
           ─────────────────────────────────────────────────────────── */}
       <main className="flex-1 flex flex-col h-full overflow-hidden bg-background">
         {/* Top Tab Navigation Bar */}
-        <header className="h-14 shrink-0 bg-surface-container-lowest border-b border-white/[0.08] px-6 flex items-center justify-between">
+        <header className="h-14 shrink-0 bg-surface border-b border-border-hairline px-6 flex items-center justify-between">
           {/* 3 Tabs: [chat, apis, pages] */}
           <div className="flex items-center gap-2">
             {TABS.map((tab) => {
@@ -375,8 +375,8 @@ export default function ChatWorkspacePage() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-mono transition-all cursor-pointer ${
                     isActive
-                      ? "bg-surface-container-low text-primary border border-white/[0.12] shadow-sm"
-                      : "text-text-secondary hover:text-white hover:bg-white/[0.04]"
+                      ? "bg-surface-container-low text-primary border border-surface-container shadow-xs"
+                      : "text-text-secondary hover:text-on-surface hover:bg-surface-container-low"
                   }`}
                 >
                   <span className="material-symbols-outlined text-[16px]">
@@ -384,7 +384,7 @@ export default function ChatWorkspacePage() {
                   </span>
                   <span>{tab.label}</span>
                   {count !== null && count > 0 && (
-                    <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-white/[0.08] text-on-background">
+                    <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-surface-container text-on-background">
                       {count}
                     </span>
                   )}
@@ -401,7 +401,7 @@ export default function ChatWorkspacePage() {
               </span>
             )}
             {chat?.repo && (
-              <span className="px-2 py-0.5 rounded bg-white/[0.06] border border-white/[0.08] text-[11px] text-primary">
+              <span className="px-2 py-0.5 rounded bg-surface-container-low border border-surface-container text-[11px] text-primary">
                 {chat.repo.name}
               </span>
             )}
@@ -424,7 +424,7 @@ export default function ChatWorkspacePage() {
                       </span>
                     </div>
 
-                    <h2 className="text-xl font-bold text-white tracking-tight">
+                    <h2 className="text-xl font-bold text-text-primary tracking-tight">
                       Chat with {repo?.name || "Codebase"}
                     </h2>
                     <p className="text-xs text-text-secondary mt-1.5 max-w-md leading-relaxed">
@@ -438,13 +438,13 @@ export default function ChatWorkspacePage() {
                           key={idx}
                           type="button"
                           onClick={() => handleSendMessage(prompt)}
-                          className="text-left text-xs text-on-background bg-surface-container-low/80 hover:bg-surface-variant border border-white/[0.08] hover:border-primary/40 rounded-xl p-3.5 transition-all shadow-sm cursor-pointer group"
+                          className="text-left text-xs text-on-background bg-white hover:bg-surface-container-low border border-surface-container hover:border-primary/40 rounded-xl p-3.5 transition-all shadow-xs cursor-pointer group"
                         >
                           <span className="flex items-center gap-1.5 font-mono text-[11px] text-primary mb-1">
                             <span className="material-symbols-outlined text-sm">bolt</span>
                             Prompt
                           </span>
-                          <span className="line-clamp-2 leading-relaxed text-text-secondary group-hover:text-white transition-colors">
+                          <span className="line-clamp-2 leading-relaxed text-text-secondary group-hover:text-on-surface transition-colors">
                             {prompt}
                           </span>
                         </button>
@@ -482,14 +482,14 @@ export default function ChatWorkspacePage() {
 
                         {/* Content Box */}
                         <div
-                          className={`flex flex-col gap-2 max-w-[85%] md:max-w-[78%] rounded-2xl p-4 text-xs shadow-sm ${
+                          className={`flex flex-col gap-2 max-w-[85%] md:max-w-[78%] rounded-2xl p-4 text-xs shadow-xs ${
                             isUser
-                              ? "bg-surface text-text-primary border border-white/[0.08] rounded-tr-xs"
-                              : "bg-surface-container-low text-on-background border border-white/[0.08] rounded-tl-xs"
+                              ? "bg-primary/10 text-text-primary border border-primary/25 rounded-tr-xs"
+                              : "bg-white text-on-background border border-surface-container rounded-tl-xs shadow-xs"
                           }`}
                         >
                           {/* Role Tag & Timestamp */}
-                          <div className="flex items-center justify-between gap-3 text-[10px] font-mono text-text-secondary pb-1 border-b border-white/[0.04]">
+                          <div className="flex items-center justify-between gap-3 text-[10px] font-mono text-text-secondary pb-1 border-b border-surface-container">
                             <span className="font-semibold text-text-secondary">
                               {isUser ? "You" : "DocFlow AI"}
                             </span>
@@ -510,7 +510,7 @@ export default function ChatWorkspacePage() {
 
                           {/* Citations / Retrieved Context Accordion */}
                           {!isUser && citations.length > 0 && (
-                            <div className="mt-2 pt-2 border-t border-white/[0.06]">
+                            <div className="mt-2 pt-2 border-t border-surface-container">
                               <button
                                 type="button"
                                 onClick={() => toggleCitation(msg.id)}
@@ -530,7 +530,7 @@ export default function ChatWorkspacePage() {
                                   {citations.map((chunk: any, cIdx: number) => (
                                     <div
                                       key={cIdx}
-                                      className="p-2.5 rounded-lg bg-surface-container-lowest border border-white/[0.08] text-[11px] font-mono"
+                                      className="p-2.5 rounded-lg bg-surface-container-low border border-surface-container text-[11px] font-mono"
                                     >
                                       <div className="flex items-center justify-between text-primary mb-1.5">
                                         <span className="truncate">
@@ -564,7 +564,7 @@ export default function ChatWorkspacePage() {
                       <span className="material-symbols-outlined text-base">smart_toy</span>
                     </div>
 
-                    <div className="bg-surface-container-low border border-white/[0.08] rounded-2xl rounded-tl-xs p-4 flex items-center gap-3 text-xs text-text-secondary font-mono">
+                    <div className="bg-white border border-surface-container rounded-2xl rounded-tl-xs p-4 flex items-center gap-3 text-xs text-text-secondary font-mono shadow-xs">
                       <span className="inline-block w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                       <span>Synthesizing repository context and reasoning...</span>
                     </div>
@@ -581,7 +581,7 @@ export default function ChatWorkspacePage() {
                     <button
                       type="button"
                       onClick={() => setSendError(null)}
-                      className="text-error hover:text-white"
+                      className="text-error hover:text-text-primary"
                     >
                       <span className="material-symbols-outlined text-xs">close</span>
                     </button>
@@ -592,7 +592,7 @@ export default function ChatWorkspacePage() {
               </div>
 
               {/* Chat Input Box (Sticky at bottom) */}
-              <div className="p-4 bg-surface-container-lowest border-t border-white/[0.08] shrink-0">
+              <div className="p-4 bg-surface border-t border-border-hairline shrink-0">
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
@@ -600,7 +600,7 @@ export default function ChatWorkspacePage() {
                   }}
                   className="max-w-4xl mx-auto flex flex-col gap-2"
                 >
-                  <div className="bg-surface-container-low border border-white/[0.1] focus-within:border-primary/70 focus-within:ring-1 focus-within:ring-primary/30 rounded-xl p-2 flex items-end gap-2 transition-all">
+                  <div className="bg-surface-container-low border border-surface-container focus-within:border-primary/70 focus-within:ring-1 focus-within:ring-primary/30 rounded-xl p-2 flex items-end gap-2 transition-all">
                     <textarea
                       ref={textareaRef}
                       value={inputMessage}
@@ -618,13 +618,13 @@ export default function ChatWorkspacePage() {
                       placeholder={`Ask about ${repo?.name || "architecture, routes, logic..."} (Enter to send, Shift+Enter for new line)`}
                       rows={1}
                       disabled={isSending}
-                      className="w-full bg-transparent text-xs text-text-primary placeholder-[#64748b] outline-none font-sans resize-none py-1 px-2 max-h-36 leading-relaxed"
+                      className="w-full bg-transparent text-xs text-text-primary placeholder-[#94a3b8] outline-none font-sans resize-none py-1 px-2 max-h-36 leading-relaxed"
                     />
 
                     <button
                       type="submit"
                       disabled={!inputMessage.trim() || isSending}
-                      className="shrink-0 bg-primary-container hover:bg-primary text-surface-container-lowest disabled:opacity-30 disabled:cursor-not-allowed w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer"
+                      className="shrink-0 bg-primary-container hover:bg-primary text-white disabled:opacity-30 disabled:cursor-not-allowed w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer"
                     >
                       <span className="material-symbols-outlined text-base">send</span>
                     </button>
@@ -646,14 +646,14 @@ export default function ChatWorkspacePage() {
           {activeTab === "apis" && (
             <div id="tab-content-apis" className="flex-1 min-h-0 flex flex-col overflow-y-auto p-6">
               {/* Header Controls */}
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-white/[0.08] mb-6">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-border-hairline mb-6">
                 <div>
-                  <h2 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+                  <h2 className="text-lg font-bold text-text-primary tracking-tight flex items-center gap-2">
                     <span className="material-symbols-outlined text-secondary text-xl">
                       api
                     </span>
                     <span>Backend API Endpoints</span>
-                    <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-white/[0.08] text-text-secondary">
+                    <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-surface-container text-text-secondary">
                       {apis.length} total
                     </span>
                   </h2>
@@ -665,7 +665,7 @@ export default function ChatWorkspacePage() {
                 {/* Filter controls */}
                 <div className="flex flex-wrap items-center gap-2">
                   {/* Search input */}
-                  <div className="bg-surface-container-low border border-white/[0.08] rounded-lg px-3 py-1.5 flex items-center gap-2 text-xs">
+                  <div className="bg-white border border-surface-container rounded-lg px-3 py-1.5 flex items-center gap-2 text-xs shadow-xs">
                     <span className="material-symbols-outlined text-sm text-text-secondary">
                       search
                     </span>
@@ -674,12 +674,12 @@ export default function ChatWorkspacePage() {
                       value={apiSearch}
                       onChange={(e) => setApiSearch(e.target.value)}
                       placeholder="Filter endpoints, files..."
-                      className="bg-transparent text-white placeholder-[#64748b] outline-none font-mono text-xs w-40 sm:w-52"
+                      className="bg-transparent text-text-primary placeholder-[#94a3b8] outline-none font-mono text-xs w-40 sm:w-52"
                     />
                     {apiSearch && (
                       <button
                         onClick={() => setApiSearch("")}
-                        className="text-text-secondary hover:text-white"
+                        className="text-text-secondary hover:text-on-surface"
                       >
                         <span className="material-symbols-outlined text-xs">close</span>
                       </button>
@@ -687,7 +687,7 @@ export default function ChatWorkspacePage() {
                   </div>
 
                   {/* Method Pills */}
-                  <div className="flex items-center bg-surface-container-low border border-white/[0.08] rounded-lg p-1 gap-1 text-[11px] font-mono">
+                  <div className="flex items-center bg-white border border-surface-container rounded-lg p-1 gap-1 text-[11px] font-mono shadow-xs">
                     {["ALL", "GET", "POST", "PUT", "PATCH", "DELETE"].map((m) => (
                       <button
                         key={m}
@@ -695,7 +695,7 @@ export default function ChatWorkspacePage() {
                         onClick={() => setApiMethodFilter(m)}
                         className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
                           apiMethodFilter === m
-                            ? "bg-white/[0.12] text-white font-bold shadow-xs"
+                            ? "bg-surface-container-high text-primary font-bold shadow-xs"
                             : "text-text-secondary hover:text-on-background"
                         }`}
                       >
@@ -708,9 +708,9 @@ export default function ChatWorkspacePage() {
 
               {/* Endpoints List / Empty state */}
               {repo?.status === "ANALYZING" || repo?.status === "PENDING" ? (
-                <div className="flex-1 flex flex-col items-center justify-center p-12 text-center rounded-xl bg-surface-container-low/30 border border-white/[0.06] border-dashed">
+                <div className="flex-1 flex flex-col items-center justify-center p-12 text-center rounded-xl bg-white border border-surface-container border-dashed">
                   <div className="w-10 h-10 border-2 border-secondary border-t-transparent rounded-full animate-spin mb-4" />
-                  <h3 className="text-sm font-semibold text-white font-mono">
+                  <h3 className="text-sm font-semibold text-text-primary font-mono">
                     Codebase Analysis in Progress
                   </h3>
                   <p className="text-xs text-text-secondary mt-1 max-w-sm font-mono">
@@ -718,11 +718,11 @@ export default function ChatWorkspacePage() {
                   </p>
                 </div>
               ) : apis.length === 0 ? (
-                <div className="flex-1 flex flex-col items-center justify-center p-12 text-center rounded-xl bg-surface-container-low/30 border border-white/[0.06] border-dashed">
+                <div className="flex-1 flex flex-col items-center justify-center p-12 text-center rounded-xl bg-white border border-surface-container border-dashed">
                   <span className="material-symbols-outlined text-4xl text-text-secondary mb-3">
                     hub
                   </span>
-                  <h3 className="text-sm font-semibold text-white font-mono">
+                  <h3 className="text-sm font-semibold text-text-primary font-mono">
                     No API Endpoints Detected
                   </h3>
                   <p className="text-xs text-text-secondary mt-1 max-w-sm">
@@ -730,7 +730,7 @@ export default function ChatWorkspacePage() {
                   </p>
                 </div>
               ) : filteredApis.length === 0 ? (
-                <div className="p-8 text-center rounded-xl bg-surface-container-low/20 border border-white/[0.06] text-xs font-mono text-text-secondary">
+                <div className="p-8 text-center rounded-xl bg-surface border border-surface-container text-xs font-mono text-text-secondary">
                   No API endpoints matching &quot;{apiSearch}&quot; ({apiMethodFilter})
                 </div>
               ) : (
@@ -738,7 +738,7 @@ export default function ChatWorkspacePage() {
                   {filteredApis.map((api, idx) => (
                     <div
                       key={idx}
-                      className="bg-surface-container-low/70 hover:bg-surface-container-low border border-white/[0.08] hover:border-white/[0.14] rounded-xl p-4 transition-all flex flex-col gap-2.5 shadow-sm"
+                      className="bg-white hover:bg-surface-container-low/40 border border-surface-container hover:border-surface-container-high rounded-xl p-4 transition-all flex flex-col gap-2.5 shadow-xs"
                     >
                       <div className="flex items-start justify-between gap-3 flex-wrap">
                         <div className="flex items-center gap-2.5 flex-wrap">
@@ -749,13 +749,13 @@ export default function ChatWorkspacePage() {
                           >
                             {api.method}
                           </span>
-                          <span className="font-mono text-sm font-semibold text-white tracking-wide break-all">
+                          <span className="font-mono text-sm font-semibold text-text-primary tracking-wide break-all">
                             {api.endpoint}
                           </span>
                         </div>
 
                         {api.file && (
-                          <div className="flex items-center gap-1.5 text-[11px] font-mono text-text-secondary bg-background px-2.5 py-1 rounded-md border border-white/[0.06] max-w-full truncate">
+                          <div className="flex items-center gap-1.5 text-[11px] font-mono text-text-secondary bg-surface-container-low px-2.5 py-1 rounded-md border border-surface-container max-w-full truncate">
                             <span className="material-symbols-outlined text-sm text-primary">
                               code
                             </span>
@@ -780,14 +780,14 @@ export default function ChatWorkspacePage() {
           {activeTab === "pages" && (
             <div id="tab-content-pages" className="flex-1 min-h-0 flex flex-col overflow-y-auto p-6">
               {/* Header Controls */}
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-white/[0.08] mb-6">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-border-hairline mb-6">
                 <div>
-                  <h2 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+                  <h2 className="text-lg font-bold text-text-primary tracking-tight flex items-center gap-2">
                     <span className="material-symbols-outlined text-error text-xl">
                       description
                     </span>
                     <span>Frontend Pages & Routes</span>
-                    <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-white/[0.08] text-text-secondary">
+                    <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-surface-container text-text-secondary">
                       {pages.length} total
                     </span>
                   </h2>
@@ -797,7 +797,7 @@ export default function ChatWorkspacePage() {
                 </div>
 
                 {/* Search input */}
-                <div className="bg-surface-container-low border border-white/[0.08] rounded-lg px-3 py-1.5 flex items-center gap-2 text-xs">
+                <div className="bg-white border border-surface-container rounded-lg px-3 py-1.5 flex items-center gap-2 text-xs shadow-xs">
                   <span className="material-symbols-outlined text-sm text-text-secondary">
                     search
                   </span>
@@ -806,12 +806,12 @@ export default function ChatWorkspacePage() {
                     value={pageSearch}
                     onChange={(e) => setPageSearch(e.target.value)}
                     placeholder="Filter routes, files..."
-                    className="bg-transparent text-white placeholder-[#64748b] outline-none font-mono text-xs w-48 sm:w-64"
+                    className="bg-transparent text-text-primary placeholder-[#94a3b8] outline-none font-mono text-xs w-48 sm:w-64"
                   />
                   {pageSearch && (
                     <button
                       onClick={() => setPageSearch("")}
-                      className="text-text-secondary hover:text-white"
+                      className="text-text-secondary hover:text-on-surface"
                     >
                       <span className="material-symbols-outlined text-xs">close</span>
                     </button>
@@ -821,9 +821,9 @@ export default function ChatWorkspacePage() {
 
               {/* Pages List / Empty state */}
               {repo?.status === "ANALYZING" || repo?.status === "PENDING" ? (
-                <div className="flex-1 flex flex-col items-center justify-center p-12 text-center rounded-xl bg-surface-container-low/30 border border-white/[0.06] border-dashed">
+                <div className="flex-1 flex flex-col items-center justify-center p-12 text-center rounded-xl bg-white border border-surface-container border-dashed">
                   <div className="w-10 h-10 border-2 border-error border-t-transparent rounded-full animate-spin mb-4" />
-                  <h3 className="text-sm font-semibold text-white font-mono">
+                  <h3 className="text-sm font-semibold text-text-primary font-mono">
                     Codebase Analysis in Progress
                   </h3>
                   <p className="text-xs text-text-secondary mt-1 max-w-sm font-mono">
@@ -831,11 +831,11 @@ export default function ChatWorkspacePage() {
                   </p>
                 </div>
               ) : pages.length === 0 ? (
-                <div className="flex-1 flex flex-col items-center justify-center p-12 text-center rounded-xl bg-surface-container-low/30 border border-white/[0.06] border-dashed">
+                <div className="flex-1 flex flex-col items-center justify-center p-12 text-center rounded-xl bg-white border border-surface-container border-dashed">
                   <span className="material-symbols-outlined text-4xl text-text-secondary mb-3">
                     auto_stories
                   </span>
-                  <h3 className="text-sm font-semibold text-white font-mono">
+                  <h3 className="text-sm font-semibold text-text-primary font-mono">
                     No Frontend Routes Detected
                   </h3>
                   <p className="text-xs text-text-secondary mt-1 max-w-sm">
@@ -843,7 +843,7 @@ export default function ChatWorkspacePage() {
                   </p>
                 </div>
               ) : filteredPages.length === 0 ? (
-                <div className="p-8 text-center rounded-xl bg-surface-container-low/20 border border-white/[0.06] text-xs font-mono text-text-secondary">
+                <div className="p-8 text-center rounded-xl bg-surface border border-surface-container text-xs font-mono text-text-secondary">
                   No pages matching &quot;{pageSearch}&quot;
                 </div>
               ) : (
@@ -851,14 +851,14 @@ export default function ChatWorkspacePage() {
                   {filteredPages.map((page, idx) => (
                     <div
                       key={idx}
-                      className="bg-surface-container-low/70 hover:bg-surface-container-low border border-white/[0.08] hover:border-white/[0.14] rounded-xl p-4 transition-all flex flex-col justify-between gap-3 shadow-sm"
+                      className="bg-white hover:bg-surface-container-low/40 border border-surface-container hover:border-surface-container-high rounded-xl p-4 transition-all flex flex-col justify-between gap-3 shadow-xs"
                     >
                       <div className="flex flex-col gap-2">
                         <div className="flex items-center gap-2">
                           <span className="material-symbols-outlined text-error text-[18px]">
                             auto_stories
                           </span>
-                          <span className="font-mono text-sm font-bold text-white tracking-wide truncate">
+                          <span className="font-mono text-sm font-bold text-text-primary tracking-wide truncate">
                             {page.route}
                           </span>
                         </div>
@@ -871,7 +871,7 @@ export default function ChatWorkspacePage() {
                       </div>
 
                       {page.file && (
-                        <div className="pt-2.5 border-t border-white/[0.06] flex items-center gap-1.5 text-[11px] font-mono text-text-secondary truncate">
+                        <div className="pt-2.5 border-t border-surface-container flex items-center gap-1.5 text-[11px] font-mono text-text-secondary truncate">
                           <span className="material-symbols-outlined text-sm text-primary">
                             description
                           </span>

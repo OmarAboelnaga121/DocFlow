@@ -79,19 +79,19 @@ export default function ChangelogPage() {
             {CHANGELOG.map((entry) => (
               <div
                 key={entry.version}
-                className="flex flex-col gap-6 pb-12 border-b border-white/[0.08]"
+                className="flex flex-col gap-6 pb-12 border-b border-surface-container"
               >
                 {/* Version header */}
                 <div className="flex items-center gap-3 flex-wrap">
-                  <h2 className="text-2xl font-bold text-text-primary">
+                  <h2 className="text-2xl font-bold text-on-surface">
                     {entry.version}
                   </h2>
                   {entry.badge && (
-                    <span className="font-mono text-[11px] font-semibold uppercase px-2.5 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30">
+                    <span className="font-mono text-[11px] font-semibold uppercase px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
                       {entry.badge}
                     </span>
                   )}
-                  <span className="text-sm font-mono text-text-secondary">
+                  <span className="text-sm font-mono text-secondary">
                     {entry.date}
                   </span>
                 </div>
@@ -101,7 +101,7 @@ export default function ChangelogPage() {
                   {entry.changes.map((item, idx) => {
                     const style = TYPE_STYLES[item.type] ?? {
                       label: item.type,
-                      className: "text-text-secondary bg-white/[0.06] border-white/10",
+                      className: "text-secondary bg-surface-container-low border-surface-container",
                     };
                     return (
                       <li key={idx} className="flex items-start gap-3 text-sm">
@@ -110,7 +110,7 @@ export default function ChangelogPage() {
                         >
                           {style.label}
                         </span>
-                        <span className="leading-relaxed text-on-background">
+                        <span className="leading-relaxed text-on-surface">
                           {item.text}
                         </span>
                       </li>
@@ -122,16 +122,16 @@ export default function ChangelogPage() {
           </div>
 
           {/* Subscribe CTA */}
-          <div className="mt-16 p-8 rounded-2xl text-center bg-surface border border-white/[0.08]">
-            <h2 className="text-xl font-bold text-text-primary mb-2">
+          <div className="mt-16 p-8 rounded-2xl text-center bg-surface-container-low border border-surface-container">
+            <h2 className="text-xl font-bold text-on-surface mb-2">
               Stay up to date
             </h2>
-            <p className="text-sm text-text-secondary mb-6">
+            <p className="text-sm text-secondary mb-6">
               Get notified whenever a major version lands.
             </p>
             <Link
               href="/register"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm transition-all duration-200 cursor-pointer shadow-lg hover:shadow-primary/30 bg-primary-container text-surface-container-lowest hover:bg-primary"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm transition-all duration-200 cursor-pointer shadow-sm bg-primary-container text-white hover:bg-emerald-600"
             >
               Join the Beta Free
             </Link>

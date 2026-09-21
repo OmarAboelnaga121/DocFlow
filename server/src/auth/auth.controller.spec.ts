@@ -92,7 +92,11 @@ describe('AuthController', () => {
 
   describe('login()', () => {
     it('should delegate to authService.login() with the current user and return the result', async () => {
-      const user = { id: 'user-id-1', email: 'john@example.com', username: 'johndoe' };
+      const user = {
+        id: 'user-id-1',
+        email: 'john@example.com',
+        username: 'johndoe',
+      };
       mockAuthService.login.mockResolvedValue(mockAuthResponse);
 
       const result = await controller.login(user);
@@ -137,14 +141,22 @@ describe('AuthController', () => {
 
       await controller.githubAuthCallback(githubUser, mockResponse);
 
-      expect(mockAuthService.validateGithubUser).toHaveBeenCalledWith(githubUser);
-      expect(mockResponse.cookie).toHaveBeenCalledWith('token', mockAuthResponse.accessToken, {
-        httpOnly: true,
-        secure: false,
-        sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-      });
-      expect(mockResponse.redirect).toHaveBeenCalledWith('http://localhost:3000/dashboard');
+      expect(mockAuthService.validateGithubUser).toHaveBeenCalledWith(
+        githubUser,
+      );
+      expect(mockResponse.cookie).toHaveBeenCalledWith(
+        'token',
+        mockAuthResponse.accessToken,
+        {
+          httpOnly: true,
+          secure: false,
+          sameSite: 'lax',
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+        },
+      );
+      expect(mockResponse.redirect).toHaveBeenCalledWith(
+        'http://localhost:3000/dashboard',
+      );
     });
 
     it('should fallback to default frontend url if FRONTEND_URL is not configured', async () => {
@@ -166,7 +178,9 @@ describe('AuthController', () => {
 
       await controller.githubAuthCallback(githubUser, mockResponse);
 
-      expect(mockResponse.redirect).toHaveBeenCalledWith('http://localhost:3001/dashboard');
+      expect(mockResponse.redirect).toHaveBeenCalledWith(
+        'http://localhost:3001/dashboard',
+      );
     });
   });
 

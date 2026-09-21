@@ -3,29 +3,55 @@ import {
   NotFoundException,
   ConflictException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { RedisService } from '../redis/redis.service';
 import { UpdateProfileDto } from './DTO/update-profile.dto';
-import { UserRole } from '@prisma/client';
+import { User, UserRole } from '@prisma/client';
+
+export type SanitizedUser = Omit<User, 'password'>;
 
 @Injectable()
 export class UserService {
+  private readonly logger = new Logger(UserService.name);
+  private static readonly USER_CACHE_TTL = 3600; // 1 hour TTL
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly cloudinaryService: CloudinaryService,
+    private readonly redis: RedisService,
   ) {}
 
-  async findById(id: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id },
-    });
-    if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found`);
-    }
+  private getUserCacheKey(id: string): string {
+    return `user:${id}`;
+  }
 
-    const { password: _, ...sanitizedUser } = user;
-    return sanitizedUser;
+  private sanitizeUser(user: User): SanitizedUser {
+    const sanitized = { ...user } as Partial<User>;
+    delete sanitized.password;
+    return sanitized as SanitizedUser;
+  }
+
+  private async invalidateUserCache(userId: string): Promise<void> {
+    await this.redis.invalidateCache(this.getUserCacheKey(userId));
+  }
+
+  async findById(id: string): Promise<SanitizedUser> {
+    return this.redis.getOrSet(
+      this.getUserCacheKey(id),
+      UserService.USER_CACHE_TTL,
+      async () => {
+        const user = await this.prisma.user.findUnique({
+          where: { id },
+        });
+        if (!user) {
+          throw new NotFoundException(`User with ID ${id} not found`);
+        }
+        return this.sanitizeUser(user);
+      },
+    );
   }
 
   async updateProfile(
@@ -66,7 +92,7 @@ export class UserService {
         if (user.avatar && user.avatar.includes('cloudinary')) {
           await this.cloudinaryService.deleteImage(user.avatar);
         }
-      } catch (error) {
+      } catch {
         throw new BadRequestException('Avatar upload to Cloudinary failed');
       }
     }
@@ -81,8 +107,11 @@ export class UserService {
       },
     });
 
-    // 7. return updated user
-    const { password: _, ...sanitizedUser } = updatedUser;
+    // 7. Invalidate cached profile
+    await this.invalidateUserCache(userId);
+
+    // 8. return updated user
+    const sanitizedUser = this.sanitizeUser(updatedUser);
     return {
       message: 'Profile updated successfully',
       user: sanitizedUser,
@@ -106,7 +135,10 @@ export class UserService {
       },
     });
 
-    const { password: _, ...sanitizedUser } = updatedUser;
+    // 3. Invalidate cached profile
+    await this.invalidateUserCache(userId);
+
+    const sanitizedUser = this.sanitizeUser(updatedUser);
     return {
       message: 'User role updated successfully',
       user: sanitizedUser,

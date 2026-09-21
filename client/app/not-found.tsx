@@ -22,7 +22,7 @@ export default function NotFound() {
           <h1
             className="text-7xl md:text-9xl font-mono font-bold tracking-tighter mb-4 select-none"
             style={{
-              background: "linear-gradient(180deg, #f8fafc 0%, rgba(148, 163, 184, 0.3) 100%)",
+              background: "linear-gradient(180deg, #1a1c1c 0%, rgba(30, 41, 59, 0.3) 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
             }}
@@ -39,8 +39,8 @@ export default function NotFound() {
           </p>
 
           {/* Interactive / Visual Terminal Card */}
-          <div className="w-full max-w-lg mb-8 rounded-lg text-left overflow-hidden shadow-2xl bg-surface-container-lowest border border-white/[0.08]">
-            <div className="flex items-center gap-2 px-4 py-2.5 bg-white/[0.03] border-b border-white/[0.06]">
+          <div className="w-full max-w-lg mb-8 rounded-lg text-left overflow-hidden shadow-xl bg-white border border-surface-container">
+            <div className="flex items-center gap-2 px-4 py-2.5 bg-surface-container-low border-b border-surface-container">
               <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
               <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
               <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
@@ -63,14 +63,14 @@ export default function NotFound() {
           <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
             <Link
               href="/"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-md font-semibold text-sm transition-all hover:opacity-95 shadow-lg cursor-pointer bg-primary-container text-surface-container-lowest"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-md font-semibold text-sm transition-all hover:opacity-95 shadow-lg cursor-pointer bg-primary-container text-white"
             >
               <span className="material-symbols-outlined text-[18px]">arrow_back</span>
               Back to Home
             </Link>
             <Link
               href="/login"
-              className="cursor-pointer w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-md font-medium text-sm transition-all hover:bg-white/10 bg-white/[0.05] border border-white/[0.12] text-text-primary"
+              className="cursor-pointer w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-md font-medium text-sm transition-all hover:bg-surface-variant bg-white border border-surface-container-high text-text-primary"
             >
               <span className="material-symbols-outlined text-[18px]">dashboard</span>
               Go to Workspace

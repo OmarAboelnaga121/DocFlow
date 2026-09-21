@@ -81,8 +81,8 @@ export default function IntegrationsPage() {
             {INTEGRATIONS.map((item) => (
               <div
                 key={item.name}
-                className={`flex flex-col gap-4 p-6 rounded-xl transition-all duration-300 bg-surface border border-white/[0.08] hover:border-primary/35 hover:bg-surface-variant ${
-                  item.status === "Available" ? "opacity-100" : "opacity-75"
+                className={`flex flex-col gap-4 p-6 rounded-xl transition-all duration-300 bg-white border border-surface-container shadow-sm hover:border-primary/50 hover:shadow-md ${
+                  item.status === "Available" ? "opacity-100" : "opacity-85"
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -90,22 +90,22 @@ export default function IntegrationsPage() {
                   <span
                     className={`font-mono text-[10px] font-semibold uppercase px-2.5 py-0.5 rounded-full ${
                       item.status === "Available"
-                        ? "bg-primary/15 text-primary border border-primary/30"
-                        : "bg-white/[0.06] text-text-secondary border border-white/[0.08]"
+                        ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                        : "bg-surface-container-low text-secondary border border-surface-container"
                     }`}
                   >
                     {item.status}
                   </span>
                 </div>
                 <div>
-                  <p className="font-mono text-[10px] uppercase tracking-wider text-text-secondary mb-1">
+                  <p className="font-mono text-[10px] uppercase tracking-wider text-secondary mb-1">
                     {item.category}
                   </p>
-                  <h2 className="text-lg font-bold tracking-tight text-text-primary">
+                  <h2 className="text-lg font-bold tracking-tight text-on-surface">
                     {item.name}
                   </h2>
                 </div>
-                <p className="text-sm leading-relaxed text-text-secondary">
+                <p className="text-sm leading-relaxed text-secondary">
                   {item.description}
                 </p>
               </div>
@@ -113,16 +113,16 @@ export default function IntegrationsPage() {
           </div>
 
           {/* Request integration banner */}
-          <div className="mt-16 p-8 rounded-2xl text-center bg-surface border border-white/[0.08]">
-            <h2 className="text-lg font-bold text-text-primary mb-2">
+          <div className="mt-16 p-8 rounded-2xl text-center bg-surface-container-low border border-surface-container">
+            <h2 className="text-lg font-bold text-on-surface mb-2">
               Don&apos;t see your tool here?
             </h2>
-            <p className="text-sm text-text-secondary mb-5">
+            <p className="text-sm text-secondary mb-5">
               We&apos;re adding integrations fast. Tell us what you&apos;d like to see next.
             </p>
             <Link
               href="/contact"
-              className="inline-flex items-center gap-2 text-sm font-semibold transition-colors text-secondary hover:text-white"
+              className="inline-flex items-center gap-2 text-sm font-semibold transition-colors text-primary hover:text-emerald-700 hover:underline"
             >
               Request an integration →
             </Link>

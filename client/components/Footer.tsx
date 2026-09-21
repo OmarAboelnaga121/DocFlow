@@ -20,7 +20,7 @@ const COMPANY_LINKS: { label: string; href: string }[] = [
 
 export default function Footer() {
   return (
-    <footer className="py-10 bg-surface-container-lowest border-t border-white/[0.08]">
+    <footer className="py-10 bg-surface-container-lowest border-t border-border-hairline">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-8 px-6 md:px-8 max-w-[1440px] mx-auto text-sm">
         {/* Brand */}
         <div className="col-span-2 md:col-span-2 flex flex-col gap-4">
@@ -94,14 +94,14 @@ export default function Footer() {
       </div>
 
       {/* Bottom Bar */}
-      <div className="mt-10 pt-6 px-6 md:px-8 max-w-[1440px] mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 text-xs border-t border-white/[0.08] text-text-secondary/60">
+      <div className="mt-10 pt-6 px-6 md:px-8 max-w-[1440px] mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 text-xs border-t border-border-hairline text-text-secondary/80">
         <p>
           © 2026 DocFlow Inc. Built by{" "}
           <a
             href="https://github.com/OmarAboelnaga121"
             target="_blank"
             rel="noopener noreferrer"
-            className="transition-colors hover:text-white"
+            className="transition-colors hover:text-on-surface"
           >
             Omar Wael
           </a>
@@ -110,13 +110,13 @@ export default function Footer() {
         <div className="flex gap-6">
           <Link
             href="/legal"
-            className="transition-colors hover:text-white"
+            className="transition-colors hover:text-on-surface"
           >
             Privacy Policy
           </Link>
           <Link
             href="/legal"
-            className="transition-colors hover:text-white"
+            className="transition-colors hover:text-on-surface"
           >
             Terms of Service
           </Link>

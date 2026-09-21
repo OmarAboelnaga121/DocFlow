@@ -159,7 +159,7 @@ export default function ChatsPage() {
               href={repo.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs text-text-secondary hover:text-white transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs text-text-secondary hover:text-on-surface transition-colors"
             >
               <span className="material-symbols-outlined text-sm">open_in_new</span>
               <span>View on Git</span>
@@ -174,7 +174,7 @@ export default function ChatsPage() {
             <span>{repo?.branch || "main"} branch</span>
           </div>
 
-          <h1 className="text-2xl md:text-4xl font-extrabold text-white tracking-tight">
+          <h1 className="text-2xl md:text-4xl font-extrabold text-text-primary tracking-tight">
             {isLoadingRepo ? "Loading Repository..." : repo?.name || "Repository Workspace"}
           </h1>
 
@@ -186,15 +186,15 @@ export default function ChatsPage() {
                 </span>
                 {repo.files?.length || 0} Indexed Files
               </span>
-              <span className="text-white/20">•</span>
+              <span className="text-text-secondary/40">•</span>
               <span className="flex items-center gap-1">
                 <span className="material-symbols-outlined text-[15px] text-secondary">
                   chat
                 </span>
                 {chats.length} Chat Sessions
               </span>
-              <span className="text-white/20">•</span>
-              <span className="px-2 py-0.5 rounded bg-white/[0.06] border border-white/[0.08] text-[11px] font-mono text-on-surface-variant">
+              <span className="text-text-secondary/40">•</span>
+              <span className="px-2 py-0.5 rounded bg-surface-container-low border border-surface-container text-[11px] font-mono text-on-surface-variant">
                 Status: {repo.status}
               </span>
             </div>
@@ -202,9 +202,9 @@ export default function ChatsPage() {
         </div>
 
         {/* Start New Chat Action Card */}
-        <div className="bg-surface-container-low/90 backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6 md:p-8 shadow-2xl mb-14 transition-all">
+        <div className="bg-white border border-surface-container rounded-2xl p-6 md:p-8 shadow-xl mb-14 transition-all">
           <div className="mb-4">
-            <h2 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+            <h2 className="text-lg font-bold text-text-primary tracking-tight flex items-center gap-2">
               <span className="material-symbols-outlined text-primary text-xl">
                 auto_awesome
               </span>
@@ -218,7 +218,7 @@ export default function ChatsPage() {
           <form onSubmit={(e) => handleCreateChat(e)} className="flex flex-col gap-3">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
               {/* Chat Title / Query Input */}
-              <div className="md:col-span-9 bg-background border border-white/[0.1] focus-within:border-primary/70 focus-within:ring-1 focus-within:ring-primary/30 rounded-xl p-1.5 pl-4 flex items-center gap-3 transition-all">
+              <div className="md:col-span-9 bg-surface-container-low border border-surface-container focus-within:border-primary/70 focus-within:ring-1 focus-within:ring-primary/30 rounded-xl p-1.5 pl-4 flex items-center gap-3 transition-all">
                 <span className="material-symbols-outlined text-text-secondary text-[22px] shrink-0">
                   edit_note
                 </span>
@@ -237,11 +237,11 @@ export default function ChatsPage() {
                 <button
                   type="submit"
                   disabled={isCreatingChat || isLoadingRepo}
-                  className="w-full bg-primary-container hover:bg-primary text-surface-container-lowest font-semibold text-sm h-full min-h-[44px] px-6 py-2.5 rounded-xl transition-all shadow-sm hover:shadow-primary/35 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full bg-primary-container hover:bg-primary text-white font-semibold text-sm h-full min-h-[44px] px-6 py-2.5 rounded-xl transition-all shadow-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {isCreatingChat ? (
                     <>
-                      <span className="inline-block w-4 h-4 border-2 border-surface-container-lowest border-t-transparent rounded-full animate-spin" />
+                      <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                       <span>Creating...</span>
                     </>
                   ) : (
@@ -264,7 +264,7 @@ export default function ChatsPage() {
                   onClick={() => {
                     setChatTitle(prompt);
                   }}
-                  className="text-[11px] text-text-secondary hover:text-primary bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] px-2.5 py-1 rounded-lg transition-all cursor-pointer"
+                  className="text-[11px] text-text-secondary hover:text-primary bg-surface hover:bg-surface-container border border-surface-container px-2.5 py-1 rounded-lg transition-all cursor-pointer"
                 >
                   {prompt}
                 </button>
@@ -294,7 +294,7 @@ export default function ChatsPage() {
             <h2 className="text-xl font-bold text-text-primary tracking-tight flex items-center gap-2">
               <span>Chat Sessions</span>
               {chats.length > 0 && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-white/[0.08] text-text-secondary font-mono font-normal">
+                <span className="text-xs px-2 py-0.5 rounded-full bg-surface-container text-text-secondary font-mono font-normal">
                   {chats.length}
                 </span>
               )}
@@ -307,7 +307,7 @@ export default function ChatsPage() {
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="h-36 rounded-xl bg-surface-container-low/60 border border-white/[0.06] animate-pulse"
+                  className="h-36 rounded-xl bg-surface-container-low border border-surface-container animate-pulse"
                 />
               ))}
             </div>
@@ -317,11 +317,11 @@ export default function ChatsPage() {
                 <Link
                   key={chat.id}
                   href={`/dashboard/chats/chat/${chat.id}`}
-                  className="relative bg-surface-container-low border border-white/[0.08] hover:border-primary/50 hover:bg-surface-variant rounded-xl p-5 transition-all flex flex-col justify-between group shadow-lg cursor-pointer"
+                  className="relative bg-white border border-surface-container hover:border-primary/50 hover:bg-surface-container-low rounded-xl p-5 transition-all flex flex-col justify-between group shadow-sm cursor-pointer"
                 >
                   <div>
                     <div className="flex items-start justify-between gap-2 mb-2">
-                      <h3 className="font-semibold text-white truncate text-base group-hover:text-primary transition-colors">
+                      <h3 className="font-semibold text-text-primary truncate text-base group-hover:text-primary transition-colors">
                         {chat.title || "Untitled Session"}
                       </h3>
                       <span className="material-symbols-outlined text-text-secondary group-hover:text-primary text-lg transition-colors shrink-0">
@@ -336,7 +336,7 @@ export default function ChatsPage() {
                     </p>
                   </div>
 
-                  <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs text-text-secondary">
+                  <div className="pt-3 border-t border-surface-container flex items-center justify-between text-xs text-text-secondary">
                     <span className="font-mono text-[11px]">
                       {new Date(chat.updatedAt || chat.createdAt).toLocaleDateString()}
                     </span>
@@ -350,7 +350,7 @@ export default function ChatsPage() {
             </div>
           ) : (
             /* Clean Empty State */
-            <div className="bg-surface-container-low/40 border border-white/[0.06] border-dashed rounded-xl p-8 text-center flex flex-col items-center justify-center">
+            <div className="bg-surface border border-surface-container border-dashed rounded-xl p-8 text-center flex flex-col items-center justify-center">
               <span className="material-symbols-outlined text-3xl text-text-secondary mb-2">
                 forum
               </span>

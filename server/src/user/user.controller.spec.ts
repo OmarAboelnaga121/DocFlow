@@ -71,23 +71,37 @@ describe('UserController', () => {
     it('should delegate to userService.updateProfile() with userId, dto, and file and return the result', async () => {
       const dto: UpdateProfileDto = { name: 'Jane Doe', username: 'janedoe' };
       const file = { originalname: 'avatar.jpg' } as Express.Multer.File;
-      const mockResponse = { message: 'Profile updated successfully', user: mockUserProfile };
+      const mockResponse = {
+        message: 'Profile updated successfully',
+        user: mockUserProfile,
+      };
       mockUserService.updateProfile.mockResolvedValue(mockResponse);
 
       const result = await controller.updateProfile('user-id-1', dto, file);
 
-      expect(mockUserService.updateProfile).toHaveBeenCalledWith('user-id-1', dto, file);
+      expect(mockUserService.updateProfile).toHaveBeenCalledWith(
+        'user-id-1',
+        dto,
+        file,
+      );
       expect(result).toEqual(mockResponse);
     });
 
     it('should call userService.updateProfile() with undefined file when no file is uploaded', async () => {
       const dto: UpdateProfileDto = { name: 'Jane Doe' };
-      const mockResponse = { message: 'Profile updated successfully', user: mockUserProfile };
+      const mockResponse = {
+        message: 'Profile updated successfully',
+        user: mockUserProfile,
+      };
       mockUserService.updateProfile.mockResolvedValue(mockResponse);
 
       await controller.updateProfile('user-id-1', dto, undefined);
 
-      expect(mockUserService.updateProfile).toHaveBeenCalledWith('user-id-1', dto, undefined);
+      expect(mockUserService.updateProfile).toHaveBeenCalledWith(
+        'user-id-1',
+        dto,
+        undefined,
+      );
     });
   });
 
@@ -104,9 +118,16 @@ describe('UserController', () => {
       };
       mockUserService.updateRole.mockResolvedValue(mockResponse);
 
-      const result = await controller.updateUserRole('user-id-1', 'user-id-1', updateRoleDto);
+      const result = await controller.updateUserRole(
+        'user-id-1',
+        'user-id-1',
+        updateRoleDto,
+      );
 
-      expect(mockUserService.updateRole).toHaveBeenCalledWith('user-id-1', UserRole.DEVELOPER);
+      expect(mockUserService.updateRole).toHaveBeenCalledWith(
+        'user-id-1',
+        UserRole.DEVELOPER,
+      );
       expect(result).toEqual(mockResponse);
     });
 

@@ -29,7 +29,7 @@ export default function FormattedMessage({ content }: FormattedMessageProps) {
         return (
           <code
             key={codeKey}
-            className="font-mono text-[11px] bg-white/[0.08] text-primary px-1.5 py-0.5 rounded border border-white/[0.06] font-medium"
+            className="font-mono text-[11px] bg-surface-container text-primary px-1.5 py-0.5 rounded border border-surface-container-high font-medium"
           >
             {codeText}
           </code>
@@ -43,7 +43,7 @@ export default function FormattedMessage({ content }: FormattedMessageProps) {
         const boldKey = `${codeKey}-b${bIdx}`;
         if (bPart.startsWith("**") && bPart.endsWith("**") && bPart.length > 4) {
           return (
-            <strong key={boldKey} className="font-semibold text-white">
+            <strong key={boldKey} className="font-semibold text-on-surface">
               {bPart.slice(2, -2)}
             </strong>
           );
@@ -81,10 +81,10 @@ export default function FormattedMessage({ content }: FormattedMessageProps) {
       .filter((h) => h.length > 0);
 
     return (
-      <div key={tableKey} className="my-3 overflow-x-auto rounded-xl border border-white/[0.1] bg-surface-container-lowest/60 shadow-md">
+      <div key={tableKey} className="my-3 overflow-x-auto rounded-xl border border-surface-container bg-surface shadow-xs">
         <table className="w-full text-left border-collapse text-xs">
           <thead>
-            <tr className="bg-white/[0.06] border-b border-white/[0.1]">
+            <tr className="bg-surface-container-low border-b border-surface-container">
               {headers.map((h, hIdx) => (
                 <th
                   key={`${tableKey}-th-${hIdx}`}
@@ -95,7 +95,7 @@ export default function FormattedMessage({ content }: FormattedMessageProps) {
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/[0.04]">
+          <tbody className="divide-y divide-surface-container">
             {dataLines.map((line, rIdx) => {
               const cells = line
                 .split("|")
@@ -105,7 +105,7 @@ export default function FormattedMessage({ content }: FormattedMessageProps) {
               return (
                 <tr
                   key={`${tableKey}-tr-${rIdx}`}
-                  className="hover:bg-white/[0.03] transition-colors odd:bg-transparent even:bg-white/[0.01]"
+                  className="hover:bg-surface-container-lowest transition-colors odd:bg-transparent even:bg-surface-container-low/40"
                 >
                   {cells.map((cell, cIdx) => (
                     <td key={`${tableKey}-td-${rIdx}-${cIdx}`} className="px-3.5 py-2.5 text-text-secondary leading-relaxed">
@@ -139,16 +139,16 @@ export default function FormattedMessage({ content }: FormattedMessageProps) {
           return (
             <div
               key={blockPrefix}
-              className="my-3 rounded-xl overflow-hidden bg-surface-container-lowest border border-white/[0.1] font-mono text-xs shadow-inner group"
+              className="my-3 rounded-xl overflow-hidden bg-surface-container-low border border-surface-container font-mono text-xs shadow-xs group"
             >
-              <div className="bg-white/[0.04] border-b border-white/[0.06] px-3.5 py-1.5 text-[11px] text-text-secondary flex items-center justify-between">
+              <div className="bg-surface-container border-b border-surface-container-high px-3.5 py-1.5 text-[11px] text-text-secondary flex items-center justify-between">
                 <span className="font-semibold text-on-background uppercase tracking-wider text-[10px]">
                   {language || "code"}
                 </span>
                 <button
                   type="button"
                   onClick={() => handleCopy(code, blockIndex)}
-                  className="flex items-center gap-1 text-[10px] text-text-secondary hover:text-primary transition-colors cursor-pointer bg-white/[0.04] px-2 py-0.5 rounded border border-white/[0.06]"
+                  className="flex items-center gap-1 text-[10px] text-text-secondary hover:text-primary transition-colors cursor-pointer bg-surface hover:bg-surface-container px-2 py-0.5 rounded border border-surface-container"
                 >
                   <span className="material-symbols-outlined text-[13px]">
                     {copiedIndex === blockIndex ? "check" : "content_copy"}
@@ -202,7 +202,7 @@ export default function FormattedMessage({ content }: FormattedMessageProps) {
           // Horizontal Rule
           if (trimmed === "---" || trimmed === "***" || trimmed === "___") {
             renderedElements.push(
-              <hr key={lineKey} className="border-t border-white/[0.08] my-3.5" />
+              <hr key={lineKey} className="border-t border-surface-container my-3.5" />
             );
             return;
           }
@@ -224,7 +224,7 @@ export default function FormattedMessage({ content }: FormattedMessageProps) {
             renderedElements.push(
               <h3
                 key={lineKey}
-                className="text-sm font-bold text-white mt-4 mb-1.5 tracking-tight flex items-center gap-1.5"
+                className="text-sm font-bold text-on-surface mt-4 mb-1.5 tracking-tight flex items-center gap-1.5"
               >
                 {renderInline(trimmed.slice(4), `${lineKey}-h3`)}
               </h3>
@@ -236,7 +236,7 @@ export default function FormattedMessage({ content }: FormattedMessageProps) {
             renderedElements.push(
               <h2
                 key={lineKey}
-                className="text-base font-extrabold text-primary mt-5 mb-2 tracking-tight border-b border-white/[0.06] pb-1"
+                className="text-base font-extrabold text-primary mt-5 mb-2 tracking-tight border-b border-surface-container pb-1"
               >
                 {renderInline(trimmed.slice(3), `${lineKey}-h2`)}
               </h2>
@@ -248,7 +248,7 @@ export default function FormattedMessage({ content }: FormattedMessageProps) {
             renderedElements.push(
               <h1
                 key={lineKey}
-                className="text-lg font-black text-white mt-5 mb-2.5 tracking-tight"
+                className="text-lg font-black text-on-surface mt-5 mb-2.5 tracking-tight"
               >
                 {renderInline(trimmed.slice(2), `${lineKey}-h1`)}
               </h1>
@@ -261,7 +261,7 @@ export default function FormattedMessage({ content }: FormattedMessageProps) {
             renderedElements.push(
               <blockquote
                 key={lineKey}
-                className="border-l-2 border-primary bg-white/[0.03] pl-3 py-1.5 my-2 rounded-r-lg text-text-secondary italic text-xs leading-relaxed"
+                className="border-l-2 border-primary bg-surface-container-low/60 pl-3 py-1.5 my-2 rounded-r-lg text-text-secondary italic text-xs leading-relaxed"
               >
                 {renderInline(trimmed.slice(2), `${lineKey}-bq`)}
               </blockquote>

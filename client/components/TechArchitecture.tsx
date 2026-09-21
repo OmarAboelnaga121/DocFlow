@@ -40,13 +40,13 @@ export default function TechArchitecture() {
   return (
     <section
       id="architecture"
-      className="py-16 md:py-20 max-w-[1440px] mx-auto text-center overflow-hidden relative bg-surface-container-low/50 border-b border-white/[0.08]"
+      className="py-16 md:py-20 max-w-[1440px] mx-auto text-center overflow-hidden relative bg-surface-container-low border-b border-surface-container"
     >
       <div className="px-6 md:px-8 mb-10">
-        <h2 className="text-2xl md:text-3xl font-bold leading-[1.3] tracking-[-0.01em] mb-3 text-text-primary">
+        <h2 className="text-2xl md:text-3xl font-bold leading-[1.3] tracking-[-0.01em] mb-3 text-on-surface">
           Built for Any Tech Stack
         </h2>
-        <p className="text-sm md:text-base max-w-2xl mx-auto text-text-secondary">
+        <p className="text-sm md:text-base max-w-2xl mx-auto text-secondary">
           Universal AST parsers and protocol analyzers adapt to your languages,
           frameworks, databases, and infrastructure.
         </p>
@@ -54,19 +54,19 @@ export default function TechArchitecture() {
 
       {/* Infinite Scrolling Tickers Container */}
       <div className="relative w-full overflow-hidden py-2 space-y-3 mb-10">
-        {/* Left & Right Edge Gradient Fade Overlays */}
+        {/* Left & Right Edge Gradient Fade Overlays — White */}
         <div
-          className="pointer-events-none absolute top-0 bottom-0 left-0 w-24 md:w-40 z-10"
+          className="pointer-events-none absolute top-0 bottom-0 left-0 w-24 md:w-44 z-10"
           style={{
             background:
-              "linear-gradient(to right, #0b1326 0%, rgba(11, 19, 38, 0) 100%)",
+              "linear-gradient(to right, #f3f3f4 0%, rgba(243, 243, 244, 0) 100%)",
           }}
         />
         <div
-          className="pointer-events-none absolute top-0 bottom-0 right-0 w-24 md:w-40 z-10"
+          className="pointer-events-none absolute top-0 bottom-0 right-0 w-24 md:w-44 z-10"
           style={{
             background:
-              "linear-gradient(to left, #0b1326 0%, rgba(11, 19, 38, 0) 100%)",
+              "linear-gradient(to left, #f3f3f4 0%, rgba(243, 243, 244, 0) 100%)",
           }}
         />
 
@@ -89,8 +89,8 @@ export default function TechArchitecture() {
         </div>
       </div>
 
-      <p className="font-mono text-[11px] font-medium tracking-[0.06em] uppercase flex items-center justify-center gap-1.5 px-6 text-text-secondary/60">
-        <span className="material-symbols-outlined text-[14px]">lock</span>
+      <p className="font-mono text-[11px] font-medium tracking-[0.06em] uppercase flex items-center justify-center gap-1.5 px-6 text-secondary">
+        <span className="material-symbols-outlined text-[14px] text-emerald-600">lock</span>
         Enterprise-Grade Privacy: Your code never trains public models.
       </p>
     </section>
@@ -99,10 +99,10 @@ export default function TechArchitecture() {
 
 function TechBadge({ tech }: { tech: TechItem }) {
   return (
-    <div className="cursor-pointer flex items-center gap-3 px-5 py-3 rounded border font-mono text-sm font-medium whitespace-nowrap select-none cursor-default transition-all duration-200 hover:-translate-y-1 hover:border-primary/50 hover:bg-surface-variant/90 hover:shadow-[0_4px_20px_-4px_rgba(78,222,163,0.2)] bg-surface border-white/[0.08] text-on-background">
-      <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-      <span className="text-text-primary">{tech.name}</span>
-      <span className="text-[10px] px-1.5 py-0.5 rounded uppercase tracking-wider bg-white/[0.06] text-text-secondary">
+    <div className="flex items-center gap-3 px-5 py-3 rounded-lg border font-mono text-sm font-medium whitespace-nowrap select-none transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-500/50 hover:shadow-md bg-white border-surface-container text-on-surface shadow-sm">
+      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+      <span className="text-on-surface font-semibold">{tech.name}</span>
+      <span className="text-[10px] px-1.5 py-0.5 rounded uppercase tracking-wider bg-surface-container-low text-secondary border border-surface-container">
         {tech.category}
       </span>
     </div>

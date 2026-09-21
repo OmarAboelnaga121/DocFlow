@@ -1,8 +1,17 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { v2 as cloudinary, UploadApiResponse, UploadApiErrorResponse } from 'cloudinary';
+import {
+  v2 as cloudinary,
+  UploadApiResponse,
+  UploadApiErrorResponse,
+} from 'cloudinary';
 
-const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const ALLOWED_MIME_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+];
 const MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024; // 2MB
 
 @Injectable()
@@ -43,7 +52,9 @@ export class CloudinaryService {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           folder: 'docflow/avatars',
-          transformation: [{ width: 300, height: 300, crop: 'fill', gravity: 'face' }],
+          transformation: [
+            { width: 300, height: 300, crop: 'fill', gravity: 'face' },
+          ],
         },
         (error, result) => {
           if (error) {
@@ -60,17 +71,25 @@ export class CloudinaryService {
   async deleteImage(publicIdOrUrl: string): Promise<any> {
     try {
       let publicId = publicIdOrUrl;
-      if (publicIdOrUrl.startsWith('http://') || publicIdOrUrl.startsWith('https://')) {
+      if (
+        publicIdOrUrl.startsWith('http://') ||
+        publicIdOrUrl.startsWith('https://')
+      ) {
         const splitUrl = publicIdOrUrl.split('/upload/');
         if (splitUrl.length > 1) {
           const pathAfterUpload = splitUrl[1];
           const withoutVersion = pathAfterUpload.replace(/^v\d+\//, '');
-          publicId = withoutVersion.substring(0, withoutVersion.lastIndexOf('.')) || withoutVersion;
+          publicId =
+            withoutVersion.substring(0, withoutVersion.lastIndexOf('.')) ||
+            withoutVersion;
         }
       }
       return await cloudinary.uploader.destroy(publicId);
     } catch (error) {
-      this.logger.error(`Failed to delete image from Cloudinary: ${publicIdOrUrl}`, error);
+      this.logger.error(
+        `Failed to delete image from Cloudinary: ${publicIdOrUrl}`,
+        error,
+      );
     }
   }
 }

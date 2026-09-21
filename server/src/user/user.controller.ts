@@ -46,7 +46,8 @@ export class UserController {
   @ApiBearerAuth()
   @ApiConsumes('multipart/form-data', 'application/json')
   @ApiOperation({
-    summary: 'Update current user profile (name, username, and optional avatar image)',
+    summary:
+      'Update current user profile (name, username, and optional avatar image)',
   })
   async updateProfile(
     @CurrentUser('id') userId: string,

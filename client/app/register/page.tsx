@@ -100,7 +100,7 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen w-full grid grid-cols-1 lg:grid-cols-2 bg-background text-on-background">
       {/* Left Column - Brand & Value Proposition */}
-      <div className="relative flex flex-col justify-between p-8 sm:p-12 lg:p-16 border-b lg:border-b-0 lg:border-r border-white/[0.08] bg-surface-container-lowest/60 overflow-hidden">
+      <div className="relative flex flex-col justify-between p-8 sm:p-12 lg:p-16 border-b lg:border-b-0 lg:border-r border-surface-container bg-surface-container-low overflow-hidden">
         {/* Decorative background glows */}
         <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full blur-[120px] pointer-events-none opacity-20 bg-primary" />
         <div className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full blur-[140px] pointer-events-none opacity-15 bg-secondary" />
@@ -123,12 +123,12 @@ export default function RegisterPage() {
 
           {/* Value Proposition */}
           <div className="mt-2 sm:mt-4 max-w-lg">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-text-primary tracking-tight leading-[1.15] mb-4">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-on-surface tracking-tight leading-[1.15] mb-4">
               Stop writing docs.
               <br />
               <span className="text-primary">Start building.</span>
             </h1>
-            <p className="text-base sm:text-lg text-text-secondary leading-relaxed">
+            <p className="text-base sm:text-lg text-secondary leading-relaxed">
               DocFlow automates your entire documentation pipeline with AI. Connect
               your repositories, let the models analyze your codebase, and deploy
               perfect, always-sync developer docs instantly.
@@ -138,24 +138,24 @@ export default function RegisterPage() {
 
         {/* Bottom Footer Notice */}
         <div className="relative z-10 pt-8">
-          <p className="font-mono text-xs text-text-secondary/70">
+          <p className="font-mono text-xs text-secondary">
             © {new Date().getFullYear()} DocFlow Inc. All rights reserved.
           </p>
         </div>
       </div>
 
       {/* Right Column - Workspace Registration Form */}
-      <div className="relative flex items-center justify-center p-6 sm:p-12 lg:p-16 bg-background">
+      <div className="relative flex items-center justify-center p-6 sm:p-12 lg:p-16 bg-white">
         {/* Ambient subtle glow */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full blur-[150px] pointer-events-none opacity-10 bg-primary-container" />
 
         <div className="relative z-10 w-full max-w-[440px] mx-auto flex flex-col py-6">
           {/* Header */}
           <div className="mb-6">
-            <h2 className="text-2xl sm:text-3xl font-bold text-text-primary tracking-tight">
+            <h2 className="text-2xl sm:text-3xl font-bold text-on-surface tracking-tight">
               Create your workspace
             </h2>
-            <p className="text-sm text-text-secondary mt-1.5">
+            <p className="text-sm text-secondary mt-1.5">
               Get started with DocFlow for free.
             </p>
           </div>
@@ -165,7 +165,7 @@ export default function RegisterPage() {
             <Link
               href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"}/auth/github`}
               id="github-register-btn"
-              className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-md font-medium text-sm transition-all duration-200 cursor-pointer bg-text-primary text-background hover:bg-white hover:shadow-[0_0_20px_rgba(255,255,255,0.15)]"
+              className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-md font-medium text-sm transition-all duration-200 cursor-pointer bg-[#1a1c1c] text-white hover:bg-black shadow-sm"
             >
               <i className="fa-brands fa-github text-lg" aria-hidden="true" />
               <span>Continue with GitHub</span>
@@ -174,11 +174,11 @@ export default function RegisterPage() {
 
           {/* Divider */}
           <div className="relative flex items-center justify-center mb-6">
-            <div className="border-t border-white/[0.1] w-full" />
-            <span className="px-3 font-mono text-[11px] uppercase tracking-wider text-text-secondary/70">
+            <div className="border-t border-surface-container w-full" />
+            <span className="px-3 font-mono text-[11px] uppercase tracking-wider text-secondary">
               OR
             </span>
-            <div className="border-t border-white/[0.1] w-full" />
+            <div className="border-t border-surface-container w-full" />
           </div>
 
           {/* Error Alert Box */}
@@ -194,7 +194,7 @@ export default function RegisterPage() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             {/* Avatar Upload Section */}
-            <div className="flex items-center gap-4 p-3 rounded-lg bg-surface-container-low/60 border border-white/[0.08]">
+            <div className="flex items-center gap-4 p-3 rounded-lg bg-surface-container-low border border-surface-container">
               <input
                 type="file"
                 ref={fileInputRef}
@@ -205,7 +205,7 @@ export default function RegisterPage() {
               />
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="relative w-14 h-14 rounded-full bg-surface border-2 border-dashed border-white/20 hover:border-primary flex items-center justify-center cursor-pointer transition-all overflow-hidden shrink-0 group"
+                className="relative w-14 h-14 rounded-full bg-white border-2 border-dashed border-surface-container-highest hover:border-primary flex items-center justify-center cursor-pointer transition-all overflow-hidden shrink-0 group shadow-sm"
                 title="Upload avatar"
               >
                 {avatarPreview ? (
@@ -216,7 +216,7 @@ export default function RegisterPage() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <span className="material-symbols-outlined text-xl text-text-secondary group-hover:text-primary transition-colors">
+                  <span className="material-symbols-outlined text-xl text-secondary group-hover:text-primary transition-colors">
                     add_a_photo
                   </span>
                 )}
@@ -224,7 +224,7 @@ export default function RegisterPage() {
 
               <div className="flex flex-col flex-1 min-w-0">
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-xs font-medium text-on-background uppercase tracking-wider">
+                  <span className="font-mono text-xs font-medium text-on-surface uppercase tracking-wider">
                     Avatar
                   </span>
                   {avatarFile && (
@@ -237,7 +237,7 @@ export default function RegisterPage() {
                     </button>
                   )}
                 </div>
-                <p className="text-xs text-text-secondary/80 truncate mt-0.5">
+                <p className="text-xs text-secondary truncate mt-0.5">
                   {avatarFile ? avatarFile.name : "JPEG, PNG, or WEBP (Max 5MB)"}
                 </p>
                 <button
@@ -256,7 +256,7 @@ export default function RegisterPage() {
               <div className="flex flex-col gap-1.5">
                 <label
                   htmlFor="name"
-                  className="font-mono text-xs font-medium text-on-background uppercase tracking-wider"
+                  className="font-mono text-xs font-medium text-on-surface uppercase tracking-wider"
                 >
                   Full Name
                 </label>
@@ -266,7 +266,7 @@ export default function RegisterPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="John Doe"
-                  className="w-full h-11 px-3.5 rounded-md bg-surface-container-low border border-white/[0.12] text-on-background placeholder:text-text-secondary/50 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                  className="w-full h-11 px-3.5 rounded-md bg-surface-container-low border border-surface-container text-on-surface placeholder:text-secondary/60 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
                 />
               </div>
 
@@ -274,7 +274,7 @@ export default function RegisterPage() {
               <div className="flex flex-col gap-1.5">
                 <label
                   htmlFor="username"
-                  className="font-mono text-xs font-medium text-on-background uppercase tracking-wider"
+                  className="font-mono text-xs font-medium text-on-surface uppercase tracking-wider"
                 >
                   Username <span className="text-primary">*</span>
                 </label>
@@ -285,7 +285,7 @@ export default function RegisterPage() {
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="johndoe2"
                   required
-                  className="w-full h-11 px-3.5 rounded-md bg-surface-container-low border border-white/[0.12] text-on-background placeholder:text-text-secondary/50 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                  className="w-full h-11 px-3.5 rounded-md bg-surface-container-low border border-surface-container text-on-surface placeholder:text-secondary/60 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
                 />
               </div>
             </div>
@@ -294,7 +294,7 @@ export default function RegisterPage() {
             <div className="flex flex-col gap-1.5">
               <label
                 htmlFor="email"
-                className="font-mono text-xs font-medium text-on-background uppercase tracking-wider"
+                className="font-mono text-xs font-medium text-on-surface uppercase tracking-wider"
               >
                 Work Email <span className="text-primary">*</span>
               </label>
@@ -305,7 +305,7 @@ export default function RegisterPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="example@company.com"
                 required
-                className="w-full h-11 px-3.5 rounded-md bg-surface-container-low border border-white/[0.12] text-on-background placeholder:text-text-secondary/50 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                className="w-full h-11 px-3.5 rounded-md bg-surface-container-low border border-surface-container text-on-surface placeholder:text-secondary/60 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
               />
             </div>
 
@@ -313,7 +313,7 @@ export default function RegisterPage() {
             <div className="flex flex-col gap-1.5">
               <label
                 htmlFor="password"
-                className="font-mono text-xs font-medium text-on-background uppercase tracking-wider"
+                className="font-mono text-xs font-medium text-on-surface uppercase tracking-wider"
               >
                 Password <span className="text-primary">*</span>
               </label>
@@ -326,12 +326,12 @@ export default function RegisterPage() {
                   placeholder="Password@1234"
                   required
                   minLength={6}
-                  className="w-full h-11 pl-3.5 pr-10 rounded-md bg-surface-container-low border border-white/[0.12] text-on-background placeholder:text-text-secondary/50 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                  className="w-full h-11 pl-3.5 pr-10 rounded-md bg-surface-container-low border border-surface-container text-on-surface placeholder:text-secondary/60 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-on-background focus:outline-none transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary hover:text-on-surface focus:outline-none transition-colors"
                   tabIndex={-1}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
@@ -340,7 +340,7 @@ export default function RegisterPage() {
                   </span>
                 </button>
               </div>
-              <p className="text-[11px] text-text-secondary/70">
+              <p className="text-[11px] text-secondary">
                 Minimum 6 characters
               </p>
             </div>
@@ -350,7 +350,7 @@ export default function RegisterPage() {
               type="submit"
               id="register-submit-btn"
               disabled={isLoading}
-              className="mt-2 w-full h-11 rounded-md font-semibold text-sm transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed shadow-md shadow-primary-container/10 bg-primary-container text-surface-container-lowest hover:bg-primary"
+              className="mt-2 w-full h-11 rounded-md font-semibold text-sm transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed shadow-md bg-primary-container text-white hover:bg-emerald-600"
             >
               {isLoading && (
                 <span className="w-4 h-4 border-2 border-surface-container-lowest border-t-transparent rounded-full animate-spin" />

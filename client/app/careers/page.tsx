@@ -15,7 +15,7 @@ export default function CareersPage() {
           <br />
           <strong className="text-text-primary">Open positions coming soon.</strong>
         </p>
-        <Link href="/" className="mt-4 text-secondary hover:text-white transition-colors">
+        <Link href="/" className="mt-4 text-secondary hover:text-on-surface transition-colors">
           ← Back to Home
         </Link>
       </main>

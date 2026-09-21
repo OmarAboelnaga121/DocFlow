@@ -17,7 +17,7 @@ export default function AboutUsPage() {
         <p className="text-sm mb-6 text-on-surface-variant">
           Created by Omar Wael – passionate about building developer‑first experiences.
         </p>
-        <Link href="/" className="mt-2 text-secondary hover:text-white transition-colors">
+        <Link href="/" className="mt-2 text-secondary hover:text-on-surface transition-colors">
           ← Back to Home
         </Link>
       </main>

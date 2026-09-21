@@ -23,7 +23,8 @@ export class CreateRepoDto {
 
   @ApiPropertyOptional({
     example: 'main',
-    description: 'Target branch to clone (defaults to repository default branch)',
+    description:
+      'Target branch to clone (defaults to repository default branch)',
   })
   @IsOptional()
   @IsString({ message: 'Branch name must be a string' })

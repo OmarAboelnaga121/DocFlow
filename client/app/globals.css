@@ -4,49 +4,57 @@
    DocFlow Design Tokens — Tailwind v4 theme
    ────────────────────────────────────────────── */
 @theme {
-  /* ── Colors actually used ── */
+  /* ── Colors (Light Mode) ── */
 
   /* Brand */
-  --color-primary: #4edea3;          /* text-primary, token-keyword */
-  --color-primary-container: #10b981; /* CTA buttons */
+  --color-primary: #059669;          /* emerald-600 */
+  --color-primary-container: #10b981; /* CTA button emerald-500 */
+  --color-primary-dark: #006e28;     /* deep brand forest green */
+  --color-emerald-accent: #34c759;   /* vibrant accent */
+  --color-emerald-glow: rgba(16, 185, 129, 0.2);
 
-  /* Surfaces */
-  --color-background: #0b1326;               /* body bg */
-  --color-surface: #1e293b;                  /* feature cards */
-  --color-surface-variant: #2d3449;          /* code pane bg tint */
-  --color-surface-container: #171f33;        /* chat bubbles */
-  --color-surface-container-low: #131b2e;    /* pane headers */
-  --color-surface-container-lowest: #060e20; /* darkest bg */
-  --color-surface-bright: #31394d;           /* CTA banner */
+  /* Surfaces (Light Mode) */
+  --color-background: #f9f9f9;               /* light canvas bg */
+  --color-surface: #ffffff;                  /* cards & panels */
+  --color-surface-variant: #f3f3f4;          /* subtle pane tint */
+  --color-surface-container: #eeeeee;        /* borders & separators */
+  --color-surface-container-low: #f3f3f4;    /* subtle nested cards */
+  --color-surface-container-lowest: #ffffff; /* pure white surface */
+  --color-surface-container-high: #e8e8e8;   /* elevated elements */
+  --color-surface-container-highest: #e2e2e2; /* borders & badges */
+  --color-surface-bright: #ffffff;           /* banner background */
 
-  /* Text */
-  --color-on-background: #dae2fd;      /* body text, body style */
-  --color-on-surface: #dae2fd;         /* card text */
-  --color-on-surface-variant: #bbcabf; /* muted text, token-comment */
-  --color-text-primary: #f8fafc;       /* headings */
-  --color-text-secondary: #94a3b8;     /* sub-copy */
+  /* Text (Light Mode) */
+  --color-on-background: #1a1c1c;      /* dark body text */
+  --color-on-surface: #1a1c1c;         /* dark card text */
+  --color-on-surface-variant: #5f5e5e; /* muted subtext */
+  --color-text-primary: #1a1c1c;       /* main headings */
+  --color-text-secondary: #5f5e5e;     /* descriptions */
 
   /* Accent */
-  --color-secondary: #4cd7f6;          /* token-string */
-  --color-secondary-container: #03b5d3; /* token-function */
+  --color-secondary: #0284c7;          /* sky-600 */
+  --color-secondary-container: #0369a1; /* sky-700 */
 
   /* Semantic */
-  --color-error: #ffb4ab;              /* problem card text */
-  --color-error-container: #93000a;    /* problem card bg */
+  --color-error: #ba1a1a;              /* rose/red */
+  --color-error-container: #ffdad6;    /* soft red bg */
+  --color-success: #059669;            /* emerald */
+  --color-success-container: #d1fae5;  /* soft green bg */
 
   /* Utility */
-  --color-border-hairline: rgba(255, 255, 255, 0.08); /* border-hairline */
-  --color-outline-variant: #3c4a42;    /* outline-variant */
+  --color-border-hairline: rgba(0, 0, 0, 0.08); /* clean light hairline border */
+  --color-outline-variant: #bccbb8;
 
   /* Border Radius */
-  --radius-DEFAULT: 0.125rem;
-  --radius-lg: 0.25rem;
-  --radius-xl: 0.5rem;
-  --radius-full: 0.75rem;
+  --radius-DEFAULT: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-full: 9999px;
 
   /* Fonts */
   --font-sans: var(--font-geist-sans);
-  --font-mono: "JetBrains Mono", monospace;
+  --font-mono: var(--font-geist-mono), monospace;
 }
 
 /* ──────────────────────────────────────────────
@@ -174,15 +182,15 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.14);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.24);
+  background: rgba(0, 0, 0, 0.28);
 }
 
 /* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+  scrollbar-color: rgba(0, 0, 0, 0.14) transparent;
 }

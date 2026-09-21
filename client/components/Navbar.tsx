@@ -73,7 +73,7 @@ export default function Navbar() {
   return (
     <header
       id="navbar"
-      className="fixed top-0 w-full h-[68px] z-50 flex items-center justify-between px-6 md:px-8 bg-background/92 backdrop-blur-md border-b border-white/[0.08]"
+      className="fixed top-0 w-full h-[68px] z-50 flex items-center justify-between px-6 md:px-8 bg-surface-container-lowest/90 backdrop-blur-md border-b border-border-hairline"
     >
       {/* Logo */}
       <Link href="/" className="flex items-center flex-shrink-0">
@@ -114,7 +114,7 @@ export default function Navbar() {
               className={`w-full flex items-center justify-between gap-2.5 px-3 py-1.5 rounded-full bg-surface-container-low border transition-all duration-200 group cursor-pointer shadow-sm ${
                 userDropdownOpen
                   ? "border-primary bg-surface-variant ring-1 ring-primary/40"
-                  : "border-white/[0.12] hover:border-primary/60 hover:bg-surface-variant"
+                  : "border-border-hairline hover:border-primary/60 hover:bg-surface-variant"
               }`}
             >
               <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -134,7 +134,7 @@ export default function Navbar() {
                     {userInitials}
                   </div>
                 )}
-                <span className="text-sm font-medium text-on-background group-hover:text-white transition-colors truncate text-left">
+                <span className="text-sm font-medium text-on-background group-hover:text-text-primary transition-colors truncate text-left">
                   {displayName}
                 </span>
               </div>
@@ -149,11 +149,11 @@ export default function Navbar() {
 
             {/* Dropdown Menu */}
             {userDropdownOpen && (
-              <div className="absolute left-0 right-0 w-full top-full mt-2 rounded-xl bg-surface-container-low border border-white/10 shadow-2xl backdrop-blur-xl p-1.5 z-50 flex flex-col gap-1 animate-in fade-in slide-in-from-top-2 duration-150">
+              <div className="absolute left-0 right-0 w-full top-full mt-2 rounded-xl bg-surface border border-border-hairline shadow-2xl backdrop-blur-xl p-1.5 z-50 flex flex-col gap-1 animate-in fade-in slide-in-from-top-2 duration-150">
                 <Link
                   href="/dashboard"
                   onClick={() => setUserDropdownOpen(false)}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-text-secondary hover:text-white hover:bg-white/5 transition-colors"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-surface-container-low transition-colors"
                 >
                   <span className="material-symbols-outlined text-[18px] text-primary">
                     dashboard
@@ -164,7 +164,7 @@ export default function Navbar() {
                 <Link
                   href="/dashboard/user"
                   onClick={() => setUserDropdownOpen(false)}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-text-secondary hover:text-white hover:bg-white/5 transition-colors"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-surface-container-low transition-colors"
                 >
                   <span className="material-symbols-outlined text-[18px] text-secondary">
                     person
@@ -207,27 +207,27 @@ export default function Navbar() {
 
       {/* Mobile Dropdown */}
       {menuOpen && (
-        <div className="absolute top-[68px] left-0 right-0 flex flex-col gap-4 px-6 py-6 md:hidden bg-background/97 border-b border-white/[0.08]">
+        <div className="absolute top-[68px] left-0 right-0 flex flex-col gap-4 px-6 py-6 md:hidden bg-surface/98 backdrop-blur-md border-b border-border-hairline shadow-xl">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.label}
               href={link.href}
               onClick={() => setMenuOpen(false)}
-              className="text-sm font-medium text-on-surface-variant"
+              className="text-sm font-medium text-on-surface-variant hover:text-on-background"
             >
               {link.label}
             </Link>
           ))}
-          <hr className="border-white/[0.08]" />
+          <hr className="border-border-hairline" />
 
           {isLoadingAuth ? (
-            <div className="h-10 w-full rounded-md bg-white/[0.05] animate-pulse" />
+            <div className="h-10 w-full rounded-md bg-surface-container animate-pulse" />
           ) : user ? (
             <div className="flex flex-col gap-2">
               <Link
                 href="/dashboard"
                 onClick={() => setMenuOpen(false)}
-                className="flex items-center justify-between p-3 rounded-lg bg-surface-container-low border border-white/[0.12] hover:border-primary/50 transition-all"
+                className="flex items-center justify-between p-3 rounded-lg bg-surface-container-low border border-surface-container hover:border-primary/50 transition-all"
               >
                 <div className="flex items-center gap-3 min-w-0">
                   {user.avatar && !imageError ? (
@@ -242,7 +242,7 @@ export default function Navbar() {
                       />
                     </div>
                   ) : (
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary-container to-primary text-surface-container-lowest font-bold text-xs flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary-container to-primary text-white font-bold text-xs flex items-center justify-center shrink-0">
                       {userInitials}
                     </div>
                   )}
@@ -263,7 +263,7 @@ export default function Navbar() {
               <Link
                 href="/dashboard/user"
                 onClick={() => setMenuOpen(false)}
-                className="flex items-center justify-between p-3 rounded-lg bg-surface-container-low border border-white/[0.12] hover:border-secondary/50 transition-all text-xs font-medium text-text-secondary hover:text-white"
+                className="flex items-center justify-between p-3 rounded-lg bg-surface-container-low border border-surface-container hover:border-secondary/50 transition-all text-xs font-medium text-text-secondary hover:text-on-surface"
               >
                 <div className="flex items-center gap-2.5">
                   <span className="material-symbols-outlined text-[18px] text-secondary">

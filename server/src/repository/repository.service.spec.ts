@@ -8,8 +8,14 @@ import { BadRequestException } from '@nestjs/common';
 
 // Mock simple-git so no real git operations occur
 const mockGitClone = jest.fn().mockResolvedValue(undefined);
-const mockGitRevparse = jest.fn().mockResolvedValue('a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2');
-const mockGitListRemote = jest.fn().mockResolvedValue('a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2 refs/heads/main');
+const mockGitRevparse = jest
+  .fn()
+  .mockResolvedValue('a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2');
+const mockGitListRemote = jest
+  .fn()
+  .mockResolvedValue(
+    'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2 refs/heads/main',
+  );
 jest.mock('simple-git', () => {
   return jest.fn().mockImplementation(() => ({
     clone: mockGitClone,
@@ -36,6 +42,7 @@ jest.mock('fs', () => ({
 import { RepositoryService } from './repository.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RepoAnalysisService } from './repo-analysis/repo-analysis.service';
+import { RedisService } from '../redis/redis.service';
 import { CreateRepoDto } from './dto/create-repo.dto';
 
 // ---------------------------------------------------------------------------
@@ -74,6 +81,7 @@ const mockPrismaService = {
     create: jest.fn(),
     update: jest.fn(),
     findUnique: jest.fn(),
+    findMany: jest.fn(),
     delete: jest.fn(),
   },
   file: {
@@ -99,12 +107,24 @@ const mockPrismaService = {
   pageRoute: {
     deleteMany: jest.fn(),
   },
-  $transaction: jest.fn((cb) => (typeof cb === 'function' ? cb(mockPrismaService) : Promise.resolve(cb))),
+  $transaction: jest.fn((cb) =>
+    typeof cb === 'function' ? cb(mockPrismaService) : Promise.resolve(cb),
+  ),
   $executeRawUnsafe: jest.fn(),
 };
 
 const mockRepoAnalysisService = {
   analyzeRepositoryStructure: jest.fn().mockResolvedValue(undefined),
+};
+
+const mockRedisService = {
+  get: jest.fn(),
+  set: jest.fn(),
+  del: jest.fn(),
+  getCache: jest.fn(),
+  setCache: jest.fn(),
+  invalidateCache: jest.fn().mockResolvedValue(true),
+  getOrSet: jest.fn(),
 };
 
 // ---------------------------------------------------------------------------
@@ -126,12 +146,20 @@ describe('RepositoryService', () => {
         RepositoryService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: RepoAnalysisService, useValue: mockRepoAnalysisService },
+        { provide: RedisService, useValue: mockRedisService },
       ],
     }).compile();
 
     service = module.get<RepositoryService>(RepositoryService);
 
     jest.clearAllMocks();
+
+    mockRedisService.getOrSet.mockImplementation(
+      async (_key: string, _ttl: number, fetcher: () => Promise<unknown>) => {
+        return fetcher();
+      },
+    );
+    mockRedisService.invalidateCache.mockResolvedValue(true);
 
     // Default fs behaviour — no stale clone dir
     mockFsExistsSync.mockReturnValue(false);
@@ -140,8 +168,12 @@ describe('RepositoryService', () => {
 
     // Default git behaviour
     mockGitClone.mockResolvedValue(undefined);
-    mockGitRevparse.mockResolvedValue('a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2');
-    mockGitListRemote.mockResolvedValue('a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2 refs/heads/main');
+    mockGitRevparse.mockResolvedValue(
+      'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2',
+    );
+    mockGitListRemote.mockResolvedValue(
+      'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2 refs/heads/main',
+    );
   });
 
   // =========================================================================
@@ -156,7 +188,10 @@ describe('RepositoryService', () => {
 
     it('should create a PENDING repo entry and return it immediately', async () => {
       mockPrismaService.repo.create.mockResolvedValue(mockRepo);
-      mockPrismaService.repo.update.mockResolvedValue({ ...mockRepo, status: 'COMPLETED' });
+      mockPrismaService.repo.update.mockResolvedValue({
+        ...mockRepo,
+        status: 'COMPLETED',
+      });
 
       const result = await service.createRepo('user-id-1', createRepoDto);
 
@@ -177,7 +212,10 @@ describe('RepositoryService', () => {
         ...createRepoDto,
         branch: 'develop',
       };
-      mockPrismaService.repo.create.mockResolvedValue({ ...mockRepo, branch: 'develop' });
+      mockPrismaService.repo.create.mockResolvedValue({
+        ...mockRepo,
+        branch: 'develop',
+      });
       mockPrismaService.repo.update.mockResolvedValue({});
 
       await service.createRepo('user-id-1', dtoWithBranch);
@@ -208,7 +246,9 @@ describe('RepositoryService', () => {
       mockPrismaService.repo.update.mockResolvedValue({});
 
       // createRepo itself must resolve cleanly
-      await expect(service.createRepo('user-id-1', createRepoDto)).resolves.toBeDefined();
+      await expect(
+        service.createRepo('user-id-1', createRepoDto),
+      ).resolves.toBeDefined();
 
       // Flush background task
       await flushPromises();
@@ -238,9 +278,9 @@ describe('RepositoryService', () => {
         branch: '--upload-pack=malicious',
       };
 
-      await expect(service.createRepo('user-id-1', injectionDto)).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(
+        service.createRepo('user-id-1', injectionDto),
+      ).rejects.toThrow(BadRequestException);
       expect(mockPrismaService.repo.create).not.toHaveBeenCalled();
     });
   });
@@ -273,9 +313,15 @@ describe('RepositoryService', () => {
       expect(updateCalls).toContain('EMBEDDING');
       expect(updateCalls).toContain('ANALYZING');
       expect(updateCalls).toContain('COMPLETED');
-      expect(updateCalls.indexOf('CLONING')).toBeLessThan(updateCalls.indexOf('EMBEDDING'));
-      expect(updateCalls.indexOf('EMBEDDING')).toBeLessThan(updateCalls.indexOf('ANALYZING'));
-      expect(updateCalls.indexOf('ANALYZING')).toBeLessThan(updateCalls.indexOf('COMPLETED'));
+      expect(updateCalls.indexOf('CLONING')).toBeLessThan(
+        updateCalls.indexOf('EMBEDDING'),
+      );
+      expect(updateCalls.indexOf('EMBEDDING')).toBeLessThan(
+        updateCalls.indexOf('ANALYZING'),
+      );
+      expect(updateCalls.indexOf('ANALYZING')).toBeLessThan(
+        updateCalls.indexOf('COMPLETED'),
+      );
     });
 
     it('should call repoAnalysisService.analyzeRepositoryStructure with the correct repoId', async () => {
@@ -285,7 +331,9 @@ describe('RepositoryService', () => {
       await service.createRepo('user-id-1', createRepoDto);
       await flushPromises();
 
-      expect(mockRepoAnalysisService.analyzeRepositoryStructure).toHaveBeenCalledWith(mockRepo.id);
+      expect(
+        mockRepoAnalysisService.analyzeRepositoryStructure,
+      ).toHaveBeenCalledWith(mockRepo.id);
     });
 
     it('should remove a stale clone directory before cloning', async () => {
@@ -322,7 +370,7 @@ describe('RepositoryService', () => {
       // After ingestion, dir is present
       mockFsExistsSync
         .mockReturnValueOnce(false) // pre-clone check
-        .mockReturnValueOnce(true);  // finally check
+        .mockReturnValueOnce(true); // finally check
 
       mockPrismaService.repo.create.mockResolvedValue(mockRepo);
       mockPrismaService.repo.update.mockResolvedValue({});
@@ -340,7 +388,11 @@ describe('RepositoryService', () => {
       // Simulate one file with content
       const fakeContent = 'const hello = "world";\n'.repeat(5);
       mockFsReaddirSync.mockReturnValue(['index.ts']);
-      mockFsStatSync.mockReturnValue({ isDirectory: () => false, isFile: () => true, size: 100 });
+      mockFsStatSync.mockReturnValue({
+        isDirectory: () => false,
+        isFile: () => true,
+        size: 100,
+      });
       mockFsReadFileSync.mockReturnValue(fakeContent);
       mockFsExistsSync.mockReturnValue(false);
 
@@ -519,7 +571,9 @@ describe('RepositoryService', () => {
     });
 
     it('startLine of first chunk should always be 1', () => {
-      const text = Array.from({ length: 10 }, (_, i) => `line ${i + 1}`).join('\n');
+      const text = Array.from({ length: 10 }, (_, i) => `line ${i + 1}`).join(
+        '\n',
+      );
       const result = chunkText(text, 1200, 200);
 
       expect(result[0].startLine).toBe(1);
@@ -542,8 +596,14 @@ describe('RepositoryService', () => {
 
       // With overlap the last lines of chunk[0] and first lines of chunk[1] should share content
       if (chunks.length >= 2) {
-        const lastLinesOfFirst = chunks[0].content.split('\n').slice(-3).join('\n');
-        const firstLinesOfSecond = chunks[1].content.split('\n').slice(0, 3).join('\n');
+        const lastLinesOfFirst = chunks[0].content
+          .split('\n')
+          .slice(-3)
+          .join('\n');
+        const firstLinesOfSecond = chunks[1].content
+          .split('\n')
+          .slice(0, 3)
+          .join('\n');
         // At least one overlapping line
         const hasOverlap = lastLinesOfFirst
           .split('\n')
@@ -606,8 +666,49 @@ describe('RepositoryService', () => {
       expect(mockPrismaService.repo.delete).toHaveBeenCalledWith({
         where: { id: 'repo-id-1' },
       });
+      expect(mockRedisService.invalidateCache).toHaveBeenCalledWith([
+        'repo:repo-id-1',
+        'user-repos:user-id-1',
+      ]);
       expect(mockFsRmSync).toHaveBeenCalled();
       expect(result).toEqual(mockRepo);
+    });
+  });
+
+  // =========================================================================
+  // getAllReposForUser()
+  // =========================================================================
+
+  describe('getAllReposForUser()', () => {
+    it('should return cached repositories without querying database on cache hit', async () => {
+      mockRedisService.getOrSet.mockResolvedValue([mockRepo]);
+
+      const result = await service.getAllReposForUser('user-id-1');
+
+      expect(mockRedisService.getOrSet).toHaveBeenCalledWith(
+        'user-repos:user-id-1',
+        3600,
+        expect.any(Function),
+      );
+      expect(mockPrismaService.repo.findMany).not.toHaveBeenCalled();
+      expect(result).toEqual([mockRepo]);
+    });
+
+    it('should fetch from database on cache miss', async () => {
+      mockPrismaService.repo.findMany.mockResolvedValue([mockRepo]);
+
+      const result = await service.getAllReposForUser('user-id-1');
+
+      expect(mockRedisService.getOrSet).toHaveBeenCalledWith(
+        'user-repos:user-id-1',
+        3600,
+        expect.any(Function),
+      );
+      expect(mockPrismaService.repo.findMany).toHaveBeenCalledWith({
+        where: { userId: 'user-id-1' },
+        include: { files: true },
+      });
+      expect(result).toEqual([mockRepo]);
     });
   });
 
@@ -616,6 +717,20 @@ describe('RepositoryService', () => {
   // =========================================================================
 
   describe('getRepoById()', () => {
+    it('should return cached repository without querying database on cache hit', async () => {
+      mockRedisService.getOrSet.mockResolvedValue(mockRepo);
+
+      const result = await service.getRepoById('repo-id-1', 'user-id-1');
+
+      expect(mockRedisService.getOrSet).toHaveBeenCalledWith(
+        'repo:repo-id-1',
+        3600,
+        expect.any(Function),
+      );
+      expect(mockPrismaService.repo.findUnique).not.toHaveBeenCalled();
+      expect(result).toEqual(mockRepo);
+    });
+
     it('should throw NotFoundException if repository does not exist', async () => {
       mockPrismaService.repo.findUnique.mockResolvedValue(null);
 

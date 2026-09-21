@@ -102,7 +102,7 @@ function RoleChoicesContent() {
       <main className="relative z-10 w-full max-w-4xl mx-auto px-6 sm:px-8 pt-1 sm:pt-3 pb-8 flex flex-col items-center flex-1">
         {/* Header Titles */}
         <div className="text-center max-w-2xl mb-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-low border border-white/[0.08] text-xs font-mono text-primary mb-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-low border border-surface-container text-xs font-mono text-primary mb-3">
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
             STEP 2 OF 2 &bull; WORKSPACE SETUP
           </div>
@@ -132,8 +132,8 @@ function RoleChoicesContent() {
               onClick={() => handleSelectRole("DEVELOPER")}
               className={`relative cursor-pointer rounded-xl p-6 transition-all duration-300 flex flex-col justify-between border ${
                 selectedRole === "DEVELOPER"
-                  ? "bg-surface-container-low border-primary shadow-[0_0_30px_rgba(78,222,163,0.15)] ring-1 ring-primary"
-                  : "bg-surface-container-low/60 border-white/[0.08] hover:border-white/20 hover:bg-surface-container-low"
+                  ? "bg-white border-primary shadow-lg ring-1 ring-primary"
+                  : "bg-surface border-surface-container hover:border-surface-container-high hover:bg-surface-container-low"
               }`}
             >
               {/* Radio Indicator */}
@@ -142,11 +142,11 @@ function RoleChoicesContent() {
                   className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all ${
                     selectedRole === "DEVELOPER"
                       ? "border-primary bg-primary"
-                      : "border-white/30 bg-transparent"
+                      : "border-surface-container-high bg-surface-container-low"
                   }`}
                 >
                   {selectedRole === "DEVELOPER" && (
-                    <span className="material-symbols-outlined text-xs text-surface-container-lowest font-bold">
+                    <span className="material-symbols-outlined text-xs text-white font-bold">
                       check
                     </span>
                   )}
@@ -159,7 +159,7 @@ function RoleChoicesContent() {
                   className={`w-12 h-12 rounded-lg flex items-center justify-center mb-5 transition-colors ${
                     selectedRole === "DEVELOPER"
                       ? "bg-primary/15 text-primary"
-                      : "bg-white/[0.05] text-text-secondary"
+                      : "bg-surface-container text-text-secondary"
                   }`}
                 >
                   <span className="material-symbols-outlined text-2xl">
@@ -179,14 +179,14 @@ function RoleChoicesContent() {
               </div>
 
               {/* Feature Tags */}
-              <div className="flex flex-wrap gap-2 pt-4 border-t border-white/[0.08]">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-container-lowest border border-white/[0.06] text-[11px] font-mono text-on-background">
+              <div className="flex flex-wrap gap-2 pt-4 border-t border-surface-container">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-container-low border border-surface-container text-[11px] font-mono text-on-surface">
                   <i className="fa-brands fa-github text-primary text-xs" /> Git Repositories
                 </span>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-container-lowest border border-white/[0.06] text-[11px] font-mono text-on-background">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-container-low border border-surface-container text-[11px] font-mono text-on-surface">
                   <span className="material-symbols-outlined text-xs text-primary">api</span> Interactive APIs
                 </span>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-container-lowest border border-white/[0.06] text-[11px] font-mono text-on-background">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-container-low border border-surface-container text-[11px] font-mono text-on-surface">
                   <span className="material-symbols-outlined text-xs text-primary">code</span> Code Embeddings
                 </span>
               </div>
@@ -197,8 +197,8 @@ function RoleChoicesContent() {
               onClick={() => handleSelectRole("BUSINESS")}
               className={`relative cursor-pointer rounded-xl p-6 transition-all duration-300 flex flex-col justify-between border ${
                 selectedRole === "BUSINESS"
-                  ? "bg-surface-container-low border-secondary shadow-[0_0_30px_rgba(76,215,246,0.15)] ring-1 ring-secondary"
-                  : "bg-surface-container-low/60 border-white/[0.08] hover:border-white/20 hover:bg-surface-container-low"
+                  ? "bg-white border-secondary shadow-lg ring-1 ring-secondary"
+                  : "bg-surface border-surface-container hover:border-surface-container-high hover:bg-surface-container-low"
               }`}
             >
               {/* Radio Indicator */}
@@ -207,11 +207,11 @@ function RoleChoicesContent() {
                   className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all ${
                     selectedRole === "BUSINESS"
                       ? "border-secondary bg-secondary"
-                      : "border-white/30 bg-transparent"
+                      : "border-surface-container-high bg-surface-container-low"
                   }`}
                 >
                   {selectedRole === "BUSINESS" && (
-                    <span className="material-symbols-outlined text-xs text-surface-container-lowest font-bold">
+                    <span className="material-symbols-outlined text-xs text-white font-bold">
                       check
                     </span>
                   )}
@@ -224,7 +224,7 @@ function RoleChoicesContent() {
                   className={`w-12 h-12 rounded-lg flex items-center justify-center mb-5 transition-colors ${
                     selectedRole === "BUSINESS"
                       ? "bg-secondary/15 text-secondary"
-                      : "bg-white/[0.05] text-text-secondary"
+                      : "bg-surface-container text-text-secondary"
                   }`}
                 >
                   <span className="material-symbols-outlined text-2xl">
@@ -244,14 +244,14 @@ function RoleChoicesContent() {
               </div>
 
               {/* Feature Tags */}
-              <div className="flex flex-wrap gap-2 pt-4 border-t border-white/[0.08]">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-container-lowest border border-white/[0.06] text-[11px] font-mono text-on-background">
+              <div className="flex flex-wrap gap-2 pt-4 border-t border-surface-container">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-container-low border border-surface-container text-[11px] font-mono text-on-surface">
                   <span className="material-symbols-outlined text-xs text-secondary">insights</span> Project Insights
                 </span>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-container-lowest border border-white/[0.06] text-[11px] font-mono text-on-background">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-container-low border border-surface-container text-[11px] font-mono text-on-surface">
                   <span className="material-symbols-outlined text-xs text-secondary">description</span> Executive Summaries
                 </span>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-container-lowest border border-white/[0.06] text-[11px] font-mono text-on-background">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-container-low border border-surface-container text-[11px] font-mono text-on-surface">
                   <span className="material-symbols-outlined text-xs text-secondary">analytics</span> Workflows
                 </span>
               </div>
@@ -264,7 +264,7 @@ function RoleChoicesContent() {
               type="submit"
               id="role-submit-btn"
               disabled={isLoading}
-              className="w-full h-12 rounded-lg font-semibold text-sm transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed shadow-lg shadow-primary-container/15 bg-primary-container text-surface-container-lowest hover:bg-primary"
+              className="w-full h-12 rounded-lg font-semibold text-sm transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed shadow-lg bg-primary-container text-white hover:bg-primary"
             >
               {isLoading ? (
                 <>

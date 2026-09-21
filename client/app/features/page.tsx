@@ -69,13 +69,13 @@ export default function FeaturesPage() {
             {FEATURES.map((feat) => (
               <div
                 key={feat.title}
-                className="flex flex-col gap-4 p-6 rounded-xl transition-all duration-300 bg-surface border border-white/[0.08] hover:border-primary/35 hover:bg-surface-variant"
+                className="flex flex-col gap-4 p-6 rounded-xl transition-all duration-300 bg-white border border-surface-container shadow-sm hover:border-primary/50 hover:shadow-md"
               >
                 <span className="text-3xl">{feat.icon}</span>
-                <h2 className="text-xl font-bold tracking-tight text-text-primary">
+                <h2 className="text-xl font-bold tracking-tight text-on-surface">
                   {feat.title}
                 </h2>
-                <p className="text-sm leading-relaxed text-text-secondary">
+                <p className="text-sm leading-relaxed text-secondary">
                   {feat.description}
                 </p>
               </div>
@@ -83,7 +83,7 @@ export default function FeaturesPage() {
           </div>
 
           {/* CTA Banner */}
-          <div className="mt-20 p-10 rounded-2xl text-center bg-surface-container-low border border-white/[0.08]">
+          <div className="mt-20 p-10 rounded-2xl text-center bg-surface-container-low border border-surface-container">
             <h2 className="text-2xl md:text-3xl font-extrabold text-text-primary mb-3">
               Ready to explore your codebase?
             </h2>

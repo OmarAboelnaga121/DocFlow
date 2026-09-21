@@ -28,21 +28,21 @@ export default function PricingPage() {
           </p>
 
           {/* Waitlist card */}
-          <div className="w-full flex flex-col gap-5 p-8 rounded-2xl text-left bg-surface border border-white/[0.08]">
-            <p className="font-mono text-[11px] font-semibold tracking-wider uppercase text-text-secondary">
+          <div className="w-full flex flex-col gap-5 p-8 rounded-2xl text-left bg-white border border-surface-container shadow-sm">
+            <p className="font-mono text-[11px] font-semibold tracking-wider uppercase text-secondary">
               Get notified when pricing launches
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <input
                 type="email"
                 placeholder="you@company.com"
-                className="flex-1 bg-transparent rounded-lg px-4 py-3 text-sm outline-none border border-white/[0.12] text-on-background focus:border-primary/45"
+                className="flex-1 bg-surface-container-low rounded-lg px-4 py-3 text-sm outline-none border border-surface-container text-on-surface placeholder:text-secondary focus:border-primary/50"
               />
-              <button className="shrink-0 font-semibold text-sm px-6 py-3 rounded-lg transition-opacity hover:opacity-90 bg-primary-container text-surface-container-lowest">
+              <button className="shrink-0 font-semibold text-sm px-6 py-3 rounded-lg transition-opacity hover:opacity-90 bg-primary-container text-white cursor-pointer shadow-sm">
                 Notify Me
               </button>
             </div>
-            <p className="text-xs text-text-secondary/60">
+            <p className="text-xs text-secondary">
               No spam. Unsubscribe any time.
             </p>
           </div>
@@ -50,7 +50,7 @@ export default function PricingPage() {
           {/* Back link */}
           <Link
             href="/"
-            className="text-sm transition-colors text-secondary hover:text-white"
+            className="text-sm transition-colors text-secondary hover:text-on-surface"
           >
             ← Back to Home
           </Link>

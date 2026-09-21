@@ -44,7 +44,9 @@ export class AuthService {
     }
 
     // 3. Upload avatar to Cloudinary if provided, or assign default avatar URL
-    let avatarUrl: string = this.cloudinaryService.getDefaultAvatarUrl(cleanName || cleanUsername || email);
+    let avatarUrl: string = this.cloudinaryService.getDefaultAvatarUrl(
+      cleanName || cleanUsername || email,
+    );
     if (file && file.buffer) {
       try {
         const uploadResult = await this.cloudinaryService.uploadAvatar(file);
@@ -103,7 +105,11 @@ export class AuthService {
   }
 
   async login(user: any) {
-    const payload = { sub: user.id, username: user.username, email: user.email };
+    const payload = {
+      sub: user.id,
+      username: user.username,
+      email: user.email,
+    };
     const accessToken = this.jwtService.sign(payload);
 
     return {

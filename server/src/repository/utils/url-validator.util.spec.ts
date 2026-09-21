@@ -77,7 +77,9 @@ describe('url-validator.util', () => {
       ).rejects.toThrow(BadRequestException);
 
       await expect(
-        validateRepositoryUrl('http://metadata.google.internal/computeMetadata/v1/'),
+        validateRepositoryUrl(
+          'http://metadata.google.internal/computeMetadata/v1/',
+        ),
       ).rejects.toThrow(BadRequestException);
 
       await expect(
@@ -86,9 +88,9 @@ describe('url-validator.util', () => {
     });
 
     it('should reject non-HTTP/SSH protocols like file:// or gopher://', async () => {
-      await expect(
-        validateRepositoryUrl('file:///etc/passwd'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(validateRepositoryUrl('file:///etc/passwd')).rejects.toThrow(
+        BadRequestException,
+      );
 
       await expect(
         validateRepositoryUrl('gopher://127.0.0.1:70/'),
@@ -118,16 +120,28 @@ describe('url-validator.util', () => {
 
     it('should reject branch names starting with slash or containing path traversal', () => {
       expect(() => validateBranchName('/main')).toThrow(BadRequestException);
-      expect(() => validateBranchName('feature/../main')).toThrow(BadRequestException);
-      expect(() => validateBranchName('feature//branch')).toThrow(BadRequestException);
-      expect(() => validateBranchName('branch.lock')).toThrow(BadRequestException);
-      expect(() => validateBranchName('feature~1')).toThrow(BadRequestException);
-      expect(() => validateBranchName('feature^1')).toThrow(BadRequestException);
+      expect(() => validateBranchName('feature/../main')).toThrow(
+        BadRequestException,
+      );
+      expect(() => validateBranchName('feature//branch')).toThrow(
+        BadRequestException,
+      );
+      expect(() => validateBranchName('branch.lock')).toThrow(
+        BadRequestException,
+      );
+      expect(() => validateBranchName('feature~1')).toThrow(
+        BadRequestException,
+      );
+      expect(() => validateBranchName('feature^1')).toThrow(
+        BadRequestException,
+      );
       expect(() => validateBranchName('feat:bug')).toThrow(BadRequestException);
       expect(() => validateBranchName('feat?')).toThrow(BadRequestException);
       expect(() => validateBranchName('feat*')).toThrow(BadRequestException);
       expect(() => validateBranchName('feat[1]')).toThrow(BadRequestException);
-      expect(() => validateBranchName('feat name with spaces')).toThrow(BadRequestException);
+      expect(() => validateBranchName('feat name with spaces')).toThrow(
+        BadRequestException,
+      );
     });
   });
 });

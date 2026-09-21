@@ -32,7 +32,9 @@ describe('RepositoryController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [RepositoryController],
-      providers: [{ provide: RepositoryService, useValue: mockRepositoryService }],
+      providers: [
+        { provide: RepositoryService, useValue: mockRepositoryService },
+      ],
     }).compile();
 
     controller = module.get<RepositoryController>(RepositoryController);
@@ -60,7 +62,10 @@ describe('RepositoryController', () => {
       const result = await controller.createRepo('user-id-1', createRepoDto);
 
       expect(mockRepositoryService.createRepo).toHaveBeenCalledTimes(1);
-      expect(mockRepositoryService.createRepo).toHaveBeenCalledWith('user-id-1', createRepoDto);
+      expect(mockRepositoryService.createRepo).toHaveBeenCalledWith(
+        'user-id-1',
+        createRepoDto,
+      );
       expect(result).toEqual(mockPendingRepo);
     });
 
@@ -81,19 +86,27 @@ describe('RepositoryController', () => {
         name: 'Hello-World',
         branch: 'develop',
       };
-      mockRepositoryService.createRepo.mockResolvedValue({ ...mockPendingRepo, branch: 'develop' });
+      mockRepositoryService.createRepo.mockResolvedValue({
+        ...mockPendingRepo,
+        branch: 'develop',
+      });
 
       await controller.createRepo('user-id-1', dtoWithBranch);
 
-      expect(mockRepositoryService.createRepo).toHaveBeenCalledWith('user-id-1', dtoWithBranch);
+      expect(mockRepositoryService.createRepo).toHaveBeenCalledWith(
+        'user-id-1',
+        dtoWithBranch,
+      );
     });
 
     it('should propagate service errors to the caller without catching them', async () => {
-      mockRepositoryService.createRepo.mockRejectedValue(new Error('DB connection failed'));
-
-      await expect(controller.createRepo('user-id-1', createRepoDto)).rejects.toThrow(
-        'DB connection failed',
+      mockRepositoryService.createRepo.mockRejectedValue(
+        new Error('DB connection failed'),
       );
+
+      await expect(
+        controller.createRepo('user-id-1', createRepoDto),
+      ).rejects.toThrow('DB connection failed');
     });
 
     it('should return a PENDING status repository immediately', async () => {

@@ -1,10 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 
 import { UserService } from './user.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { RedisService } from '../redis/redis.service';
 import { UpdateProfileDto } from './DTO/update-profile.dto';
 
 // ---------------------------------------------------------------------------
@@ -37,6 +42,16 @@ const mockCloudinaryService = {
   deleteImage: jest.fn(),
 };
 
+const mockRedisService = {
+  get: jest.fn(),
+  set: jest.fn(),
+  del: jest.fn(),
+  getCache: jest.fn(),
+  setCache: jest.fn(),
+  invalidateCache: jest.fn(),
+  getOrSet: jest.fn(),
+};
+
 // ---------------------------------------------------------------------------
 // Test suite
 // ---------------------------------------------------------------------------
@@ -50,12 +65,20 @@ describe('UserService', () => {
         UserService,
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: CloudinaryService, useValue: mockCloudinaryService },
+        { provide: RedisService, useValue: mockRedisService },
       ],
     }).compile();
 
     service = module.get<UserService>(UserService);
 
     jest.clearAllMocks();
+
+    mockRedisService.getOrSet.mockImplementation(
+      async (_key: string, _ttl: number, fetcher: () => Promise<unknown>) => {
+        return fetcher();
+      },
+    );
+    mockRedisService.invalidateCache.mockResolvedValue(true);
   });
 
   // =========================================================================
@@ -63,11 +86,35 @@ describe('UserService', () => {
   // =========================================================================
 
   describe('findById()', () => {
-    it('should return a user object without the password field', async () => {
+    it('should return cached user when getOrSet resolves cached data', async () => {
+      const cachedUser = {
+        id: 'user-id-1',
+        email: 'john@example.com',
+        username: 'johndoe',
+      };
+      mockRedisService.getOrSet.mockResolvedValue(cachedUser);
+
+      const result = await service.findById('user-id-1');
+
+      expect(mockRedisService.getOrSet).toHaveBeenCalledWith(
+        'user:user-id-1',
+        3600,
+        expect.any(Function),
+      );
+      expect(mockPrismaService.user.findUnique).not.toHaveBeenCalled();
+      expect(result).toEqual(cachedUser);
+    });
+
+    it('should query database, return sanitized user on cache miss', async () => {
       mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
 
       const result = await service.findById('user-id-1');
 
+      expect(mockRedisService.getOrSet).toHaveBeenCalledWith(
+        'user:user-id-1',
+        3600,
+        expect.any(Function),
+      );
       expect(mockPrismaService.user.findUnique).toHaveBeenCalledWith({
         where: { id: 'user-id-1' },
       });
@@ -76,7 +123,7 @@ describe('UserService', () => {
       expect(result.username).toBe(mockUser.username);
     });
 
-    it('should throw NotFoundException when user does not exist', async () => {
+    it('should throw NotFoundException when user does not exist in database', async () => {
       mockPrismaService.user.findUnique.mockResolvedValue(null);
 
       await expect(service.findById('non-existent-id')).rejects.toThrow(
@@ -99,7 +146,10 @@ describe('UserService', () => {
     it('should update name only and return sanitized user without password', async () => {
       const dto: UpdateProfileDto = { name: 'Jane Doe' };
       mockPrismaService.user.findUnique.mockResolvedValueOnce(mockUser); // existence check
-      mockPrismaService.user.update.mockResolvedValue({ ...mockUser, name: 'Jane Doe' });
+      mockPrismaService.user.update.mockResolvedValue({
+        ...mockUser,
+        name: 'Jane Doe',
+      });
 
       const result = await service.updateProfile('user-id-1', dto);
 
@@ -114,8 +164,11 @@ describe('UserService', () => {
     it('should update username after passing uniqueness check', async () => {
       const dto: UpdateProfileDto = { username: 'newusername' };
       mockPrismaService.user.findUnique.mockResolvedValueOnce(mockUser); // existence check
-      mockPrismaService.user.findUnique.mockResolvedValueOnce(null);    // username check passes
-      mockPrismaService.user.update.mockResolvedValue({ ...mockUser, username: 'newusername' });
+      mockPrismaService.user.findUnique.mockResolvedValueOnce(null); // username check passes
+      mockPrismaService.user.update.mockResolvedValue({
+        ...mockUser,
+        username: 'newusername',
+      });
 
       const result = await service.updateProfile('user-id-1', dto);
 
@@ -142,7 +195,9 @@ describe('UserService', () => {
       const result = await service.updateProfile('user-id-1', dto, mockFile);
 
       expect(mockCloudinaryService.uploadAvatar).toHaveBeenCalledWith(mockFile);
-      expect(mockCloudinaryService.deleteImage).toHaveBeenCalledWith(mockUser.avatar);
+      expect(mockCloudinaryService.deleteImage).toHaveBeenCalledWith(
+        mockUser.avatar,
+      );
       expect(result.user.avatar).toBe('https://cloudinary.com/new-avatar.jpg');
     });
 
@@ -170,7 +225,9 @@ describe('UserService', () => {
 
       await expect(
         service.updateProfile('non-existent-id', { name: 'Test' }),
-      ).rejects.toThrow(new NotFoundException('User with ID non-existent-id not found'));
+      ).rejects.toThrow(
+        new NotFoundException('User with ID non-existent-id not found'),
+      );
     });
 
     it('should throw ConflictException when username is taken by another user', async () => {
@@ -194,7 +251,9 @@ describe('UserService', () => {
       // No username uniqueness check should be triggered because trimmed === user.username
       mockPrismaService.user.update.mockResolvedValue(mockUser);
 
-      await expect(service.updateProfile('user-id-1', dto)).resolves.not.toThrow();
+      await expect(
+        service.updateProfile('user-id-1', dto),
+      ).resolves.not.toThrow();
       // findUnique called only once (existence check), NOT for username uniqueness
       expect(mockPrismaService.user.findUnique).toHaveBeenCalledTimes(1);
     });
@@ -202,10 +261,14 @@ describe('UserService', () => {
     it('should throw BadRequestException when Cloudinary upload fails', async () => {
       const dto: UpdateProfileDto = {};
       mockPrismaService.user.findUnique.mockResolvedValueOnce(mockUser);
-      mockCloudinaryService.uploadAvatar.mockRejectedValue(new Error('upload error'));
+      mockCloudinaryService.uploadAvatar.mockRejectedValue(
+        new Error('upload error'),
+      );
 
       const mockFile = { buffer: Buffer.from('img') } as Express.Multer.File;
-      await expect(service.updateProfile('user-id-1', dto, mockFile)).rejects.toThrow(
+      await expect(
+        service.updateProfile('user-id-1', dto, mockFile),
+      ).rejects.toThrow(
         new BadRequestException('Avatar upload to Cloudinary failed'),
       );
       expect(mockPrismaService.user.update).not.toHaveBeenCalled();
@@ -268,7 +331,9 @@ describe('UserService', () => {
 
       await expect(
         service.updateRole('non-existent-id', UserRole.DEVELOPER),
-      ).rejects.toThrow(new NotFoundException('User with ID non-existent-id not found'));
+      ).rejects.toThrow(
+        new NotFoundException('User with ID non-existent-id not found'),
+      );
       expect(mockPrismaService.user.update).not.toHaveBeenCalled();
     });
   });

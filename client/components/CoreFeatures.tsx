@@ -1,53 +1,85 @@
 "use client";
 
-const FEATURES = [
-  {
-    icon: "search",
-    title: "Semantic RAG Search",
-    description:
-      "Ask questions in plain English. DocFlow uses advanced RAG to find the exact code blocks and context needed to answer your query accurately.",
-  },
-  {
-    icon: "memory",
-    title: "Logic Extraction",
-    description:
-      "Automatically untangle complex, undocumented legacy logic. Convert messy spaghetti code into clear, actionable business rules.",
-  },
-  {
-    icon: "group_add",
-    title: "Instant Onboarding",
-    description:
-      "Bring new developers and PMs up to speed instantly. They can explore the architecture safely without needing hours of senior dev time.",
-  },
-];
-
 export default function CoreFeatures() {
   return (
     <section
       id="how-it-works"
-      className="py-16 px-6 md:px-8 max-w-[1440px] mx-auto text-center border-b border-white/[0.08]"
+      className="w-full bg-surface-container-lowest py-16 md:py-24 border-b border-surface-container"
     >
-      <h2 className="text-[48px] font-bold leading-[1.1] tracking-[-0.02em] mb-12 text-text-primary">
-        Supercharge Your Workflow
-      </h2>
+      <div className="mx-auto max-w-[1280px] px-6 md:px-8">
+        <div className="text-center max-w-3xl mx-auto">
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-on-surface">
+            Supercharge Your Workflow
+          </h2>
+          <p className="mt-3 text-base sm:text-lg text-secondary leading-relaxed">
+            Purpose-built intelligence engines designed to keep engineers building and executives informed.
+          </p>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto text-left">
-        {FEATURES.map((feat) => (
-          <div
-            key={feat.title}
-            className="cursor-pointer flex flex-col gap-4 p-6 rounded group transition-all duration-300 bg-surface border border-white/[0.08] hover:border-primary/30 hover:bg-surface-variant"
-          >
-            <span className="material-symbols-outlined text-[32px] text-primary">
-              {feat.icon}
-            </span>
-            <h3 className="text-2xl font-semibold leading-[1.3] tracking-[-0.01em] text-on-background">
-              {feat.title}
-            </h3>
-            <p className="text-sm leading-relaxed text-text-secondary">
-              {feat.description}
-            </p>
+        <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Card 1 — Deep RAG Code Search */}
+          <div className="group rounded-2xl bg-white p-8 border border-surface-container shadow-md transition-all duration-200 hover:-translate-y-1 hover:shadow-xl flex flex-col justify-between">
+            <div>
+              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-surface-container-low text-emerald-600 shadow-inner">
+                <i className="fa-solid fa-magnifying-glass text-2xl transition-transform duration-200 group-hover:scale-110" />
+              </div>
+
+              <h3 className="mt-6 text-xl sm:text-2xl font-bold text-on-surface">
+                Deep RAG Code Search
+              </h3>
+              <p className="mt-2 text-sm text-secondary leading-relaxed">
+                Semantic vector search trained specifically on syntax trees, interface contracts, and commit histories. Query complex logic in plain English.
+              </p>
+            </div>
+
+            <div className="mt-6 rounded-lg bg-surface-container-low p-3 font-mono text-xs text-secondary border border-surface-container">
+              <div className="text-on-surface font-semibold">&gt; &quot;Where is credit limit computed?&quot;</div>
+              <div className="text-emerald-600 font-semibold mt-1">Found in src/policies/credit.py:88</div>
+            </div>
           </div>
-        ))}
+
+          {/* Card 2 — Automated Logic Extraction */}
+          <div className="group rounded-2xl bg-white p-8 border border-surface-container shadow-md transition-all duration-200 hover:-translate-y-1 hover:shadow-xl flex flex-col justify-between">
+            <div>
+              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-surface-container-low text-emerald-600 shadow-inner">
+                <i className="fa-solid fa-diagram-project text-2xl transition-transform duration-200 group-hover:scale-110" />
+              </div>
+
+              <h3 className="mt-6 text-xl sm:text-2xl font-bold text-on-surface">
+                Automated Logic Extraction
+              </h3>
+              <p className="mt-2 text-sm text-secondary leading-relaxed">
+                Reverse-engineers business formulas, pricing rules, and compliance boundaries directly from controller source code into accessible specs.
+              </p>
+            </div>
+
+            <div className="mt-6 rounded-lg bg-surface-container-low p-3 font-mono text-xs text-secondary border border-surface-container">
+              <div className="text-on-surface font-semibold">Rule: TieredDiscountPolicy</div>
+              <div className="text-emerald-600 font-semibold mt-1">Exported as OAS 3.1 &amp; Markdown</div>
+            </div>
+          </div>
+
+          {/* Card 3 — Instant Team Onboarding */}
+          <div className="group rounded-2xl bg-white p-8 border border-surface-container shadow-md transition-all duration-200 hover:-translate-y-1 hover:shadow-xl flex flex-col justify-between">
+            <div>
+              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-surface-container-low text-emerald-600 shadow-inner">
+                <i className="fa-solid fa-users-gear text-2xl transition-transform duration-200 group-hover:scale-110" />
+              </div>
+
+              <h3 className="mt-6 text-xl sm:text-2xl font-bold text-on-surface">
+                Instant Team Onboarding
+              </h3>
+              <p className="mt-2 text-sm text-secondary leading-relaxed">
+                New engineers ship their first PR on Day 1 with guided walkthroughs, interactive architecture sandboxes, and automated dependency trees.
+              </p>
+            </div>
+
+            <div className="mt-6 rounded-lg bg-surface-container-low p-3 font-mono text-xs text-secondary border border-surface-container">
+              <div className="text-on-surface font-semibold">Median time to first PR:</div>
+              <div className="text-emerald-600 font-semibold mt-1">Reduced from 11 days to 3 hours</div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );

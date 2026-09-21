@@ -33,8 +33,18 @@ const mockFileWithChunks = (path: string) => ({
   language: 'typescript',
   contentHash: 'abc123',
   chunks: [
-    { id: 'chunk-1', content: 'const router = express.Router();', startLine: 1, endLine: 1 },
-    { id: 'chunk-2', content: 'router.get("/users", handler);', startLine: 2, endLine: 2 },
+    {
+      id: 'chunk-1',
+      content: 'const router = express.Router();',
+      startLine: 1,
+      endLine: 1,
+    },
+    {
+      id: 'chunk-2',
+      content: 'router.get("/users", handler);',
+      startLine: 2,
+      endLine: 2,
+    },
   ],
 });
 
@@ -152,7 +162,9 @@ describe('RepoAnalysisService', () => {
       );
 
       // Should not throw — error is caught internally
-      await expect(service.analyzeRepositoryStructure('repo-id-1')).resolves.toBeUndefined();
+      await expect(
+        service.analyzeRepositoryStructure('repo-id-1'),
+      ).resolves.toBeUndefined();
       expect(mockPrismaService.repoAnalysis.upsert).not.toHaveBeenCalled();
     });
 
@@ -163,7 +175,9 @@ describe('RepoAnalysisService', () => {
       mockChatCompletionsCreate.mockRejectedValue(new Error('Network timeout'));
 
       // The service catches internally — must not propagate
-      await expect(service.analyzeRepositoryStructure('repo-id-1')).resolves.toBeUndefined();
+      await expect(
+        service.analyzeRepositoryStructure('repo-id-1'),
+      ).resolves.toBeUndefined();
       expect(mockPrismaService.repoAnalysis.upsert).not.toHaveBeenCalled();
     });
 
@@ -191,7 +205,9 @@ describe('RepoAnalysisService', () => {
         const userContent: string = messages[1].content;
         // Verify truncation
         expect(userContent.length).toBeLessThanOrEqual(300000);
-        return Promise.resolve(buildOpenAIResponse(JSON.stringify(mockApiExtraction)));
+        return Promise.resolve(
+          buildOpenAIResponse(JSON.stringify(mockApiExtraction)),
+        );
       });
 
       mockPrismaService.repoAnalysis.upsert.mockResolvedValue({
@@ -213,7 +229,11 @@ describe('RepoAnalysisService', () => {
   // =========================================================================
 
   describe('syncEndpointsAndRoutesFromAnalysis() [via analyzeRepositoryStructure()]', () => {
-    const setupSuccessfulAnalysis = (apis: any[], pages: any[], files: any[]) => {
+    const setupSuccessfulAnalysis = (
+      apis: any[],
+      pages: any[],
+      files: any[],
+    ) => {
       // First findMany: for routing file detection + content building
       mockPrismaService.file.findMany.mockResolvedValueOnce([
         mockFileWithChunks('src/user.controller.ts'),
@@ -231,8 +251,12 @@ describe('RepoAnalysisService', () => {
       mockChatCompletionsCreate.mockResolvedValue(
         buildOpenAIResponse(JSON.stringify({ apis, pages })),
       );
-      mockPrismaService.apiEndpoint.createMany.mockResolvedValue({ count: apis.length });
-      mockPrismaService.pageRoute.createMany.mockResolvedValue({ count: pages.length });
+      mockPrismaService.apiEndpoint.createMany.mockResolvedValue({
+        count: apis.length,
+      });
+      mockPrismaService.pageRoute.createMany.mockResolvedValue({
+        count: pages.length,
+      });
     };
 
     it('should NOT call apiEndpoint.createMany when apis array is empty', async () => {
@@ -244,9 +268,11 @@ describe('RepoAnalysisService', () => {
     });
 
     it('should NOT call pageRoute.createMany when pages array is empty', async () => {
-      setupSuccessfulAnalysis(mockApiExtraction.apis, [], [
-        { id: 'file-id-1', path: 'src/user.controller.ts' },
-      ]);
+      setupSuccessfulAnalysis(
+        mockApiExtraction.apis,
+        [],
+        [{ id: 'file-id-1', path: 'src/user.controller.ts' }],
+      );
 
       await service.analyzeRepositoryStructure('repo-id-1');
 

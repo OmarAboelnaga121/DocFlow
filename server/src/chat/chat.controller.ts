@@ -1,11 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import {
   ApiBearerAuth,
@@ -46,7 +39,10 @@ export class ChatController {
     summary: 'Get a specific chat session with its full message history',
   })
   @ApiParam({ name: 'id', description: 'Chat ID' })
-  @ApiResponse({ status: 200, description: 'Chat session and messages retrieved' })
+  @ApiResponse({
+    status: 200,
+    description: 'Chat session and messages retrieved',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden access to chat' })
   @ApiResponse({ status: 404, description: 'Chat not found' })
@@ -60,7 +56,10 @@ export class ChatController {
   @Get(':chatId/messages')
   @ApiOperation({ summary: 'Get all messages for a specific chat session' })
   @ApiParam({ name: 'chatId', description: 'Chat ID' })
-  @ApiResponse({ status: 200, description: 'List of messages retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of messages retrieved successfully',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden access to chat' })
   @ApiResponse({ status: 404, description: 'Chat not found' })
@@ -86,4 +85,3 @@ export class ChatController {
     return this.chatService.sendMessage(userId, chatId, sendMessageDto);
   }
 }
-

@@ -218,18 +218,18 @@ export default function DashboardPage() {
       <main className="flex-1 pt-28 pb-20 px-6 md:px-8 max-w-5xl mx-auto w-full">
         {/* Section Heading */}
         <div className="text-center mb-10">
-          <h1 className="text-2xl md:text-4xl font-extrabold text-white tracking-tight">
+          <h1 className="text-2xl md:text-4xl font-extrabold text-text-primary tracking-tight">
             Analyze & Document Your Codebase
           </h1>
         </div>
 
         {/* Ingestion Card */}
-        <div className="bg-surface-container-low/90 backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6 md:p-8 shadow-2xl mb-14 transition-all">
+        <div className="bg-white border border-surface-container rounded-2xl p-6 md:p-8 shadow-xl mb-14 transition-all">
           {/* URL, Name, and Branch Input Form */}
           <form onSubmit={handleImport} className="flex flex-col gap-3">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
               {/* Repository URL */}
-              <div className="md:col-span-6 bg-background border border-white/[0.1] focus-within:border-primary/70 focus-within:ring-1 focus-within:ring-primary/30 rounded-xl p-1.5 pl-4 flex items-center gap-3 transition-all">
+              <div className="md:col-span-6 bg-surface-container-low border border-surface-container focus-within:border-primary/70 focus-within:ring-1 focus-within:ring-primary/30 rounded-xl p-1.5 pl-4 flex items-center gap-3 transition-all">
                 <span className="material-symbols-outlined text-text-secondary text-[22px] shrink-0">
                   link
                 </span>
@@ -245,7 +245,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Repository Name */}
-              <div className="md:col-span-3 bg-background border border-white/[0.1] focus-within:border-primary/70 focus-within:ring-1 focus-within:ring-primary/30 rounded-xl p-1.5 pl-3.5 flex items-center gap-2.5 transition-all">
+              <div className="md:col-span-3 bg-surface-container-low border border-surface-container focus-within:border-primary/70 focus-within:ring-1 focus-within:ring-primary/30 rounded-xl p-1.5 pl-3.5 flex items-center gap-2.5 transition-all">
                 <span className="material-symbols-outlined text-text-secondary text-[20px] shrink-0">
                   label
                 </span>
@@ -261,7 +261,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Branch Name */}
-              <div className="md:col-span-3 bg-background border border-white/[0.1] focus-within:border-primary/70 focus-within:ring-1 focus-within:ring-primary/30 rounded-xl p-1.5 pl-3.5 flex items-center gap-2.5 transition-all">
+              <div className="md:col-span-3 bg-surface-container-low border border-surface-container focus-within:border-primary/70 focus-within:ring-1 focus-within:ring-primary/30 rounded-xl p-1.5 pl-3.5 flex items-center gap-2.5 transition-all">
                 <span className="material-symbols-outlined text-text-secondary text-[20px] shrink-0">
                   fork_right
                 </span>
@@ -287,11 +287,11 @@ export default function DashboardPage() {
                   !repoName.trim() ||
                   !repoBranch.trim()
                 }
-                className="bg-primary-container hover:bg-primary text-surface-container-lowest font-semibold text-sm px-7 py-2.5 rounded-xl transition-all shadow-sm hover:shadow-primary/35 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto"
+                className="bg-primary-container hover:bg-primary text-white font-semibold text-sm px-7 py-2.5 rounded-xl transition-all shadow-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto"
               >
                 {isImporting ? (
                   <>
-                    <span className="inline-block w-4 h-4 border-2 border-surface-container-lowest border-t-transparent rounded-full animate-spin" />
+                    <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     <span>Importing...</span>
                   </>
                 ) : (
@@ -334,7 +334,7 @@ export default function DashboardPage() {
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="h-36 rounded-xl bg-surface-container-low/60 border border-white/[0.06] animate-pulse"
+                  className="h-36 rounded-xl bg-surface-container-low border border-surface-container animate-pulse"
                 />
               ))}
             </div>
@@ -344,10 +344,10 @@ export default function DashboardPage() {
                 <div
                   key={repo.id}
                   onClick={() => router.push(`/dashboard/chats/${repo.id}`)}
-                  className="relative bg-surface-container-low border border-white/[0.08] hover:border-primary/50 hover:bg-surface-variant rounded-xl p-5 transition-all flex flex-col justify-between group shadow-lg cursor-pointer"
+                  className="relative bg-white border border-surface-container hover:border-primary/50 hover:bg-surface-container-low rounded-xl p-5 transition-all flex flex-col justify-between group shadow-sm cursor-pointer"
                 >
                   <div className="flex items-start justify-between gap-2 mb-3">
-                    <h3 className="font-semibold text-white truncate text-base group-hover:text-primary transition-colors">
+                    <h3 className="font-semibold text-text-primary truncate text-base group-hover:text-primary transition-colors">
                       {repo.name}
                     </h3>
 
@@ -361,7 +361,7 @@ export default function DashboardPage() {
                             activeMenuId === repo.id ? null : repo.id
                           );
                         }}
-                        className="p-1 rounded-md text-text-secondary hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer flex items-center justify-center"
+                        className="p-1 rounded-md text-text-secondary hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer flex items-center justify-center"
                         aria-label="Workspace Options"
                       >
                         <span className="material-symbols-outlined text-lg leading-none">
@@ -373,7 +373,7 @@ export default function DashboardPage() {
                       {activeMenuId === repo.id && (
                         <div
                           onClick={(e) => e.stopPropagation()}
-                          className="absolute right-0 top-8 z-30 w-40 py-1 rounded-lg bg-surface-container border border-white/[0.12] shadow-2xl backdrop-blur-md animate-fade-in-up"
+                          className="absolute right-0 top-8 z-30 w-40 py-1 rounded-lg bg-white border border-surface-container shadow-xl animate-fade-in-up"
                         >
                           {/* Sync Repo Button */}
                           <button
@@ -384,7 +384,7 @@ export default function DashboardPage() {
                               ["PENDING", "CLONING", "EMBEDDING", "ANALYZING"].includes(repo.status)
                             }
                             onClick={() => handleSyncRepo(repo.id, repo.name)}
-                            className="w-full px-3 py-2 text-xs text-left text-text-primary hover:bg-white/[0.08] transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50 font-medium"
+                            className="w-full px-3 py-2 text-xs text-left text-text-primary hover:bg-surface-container-low transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50 font-medium"
                           >
                             <span
                               className={`material-symbols-outlined text-base text-primary ${
@@ -398,7 +398,7 @@ export default function DashboardPage() {
                             </span>
                           </button>
 
-                          <div className="h-px bg-white/[0.08] my-1" />
+                          <div className="h-px bg-surface-container my-1" />
 
                           {/* Delete Button */}
                           <button
@@ -438,7 +438,7 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="px-2 py-0.5 rounded bg-white/[0.06] border border-white/[0.08] text-[11px] font-mono text-on-surface-variant flex items-center gap-1">
+                    <span className="px-2 py-0.5 rounded bg-surface-container-low border border-surface-container text-[11px] font-mono text-on-surface-variant flex items-center gap-1">
                       <span className="material-symbols-outlined text-[13px]">
                         fork_right
                       </span>
@@ -453,7 +453,7 @@ export default function DashboardPage() {
             </div>
           ) : (
             /* Clean Empty State (no dummy data) */
-            <div className="bg-surface-container-low/40 border border-white/[0.06] border-dashed rounded-xl p-8 text-center flex flex-col items-center justify-center">
+            <div className="bg-surface border border-surface-container border-dashed rounded-xl p-8 text-center flex flex-col items-center justify-center">
               <span className="material-symbols-outlined text-3xl text-text-secondary mb-2">
                 folder_open
               </span>

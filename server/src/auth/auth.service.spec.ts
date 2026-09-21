@@ -48,7 +48,9 @@ const mockJwtService = {
 const mockCloudinaryService = {
   uploadAvatar: jest.fn(),
   deleteImage: jest.fn(),
-  getDefaultAvatarUrl: jest.fn().mockReturnValue('https://ui-avatars.com/api/?name=User'),
+  getDefaultAvatarUrl: jest
+    .fn()
+    .mockReturnValue('https://ui-avatars.com/api/?name=User'),
 };
 
 // ---------------------------------------------------------------------------
@@ -183,7 +185,9 @@ describe('AuthService', () => {
     it('should throw BadRequestException when Cloudinary upload fails', async () => {
       mockPrismaService.user.findUnique.mockResolvedValueOnce(null);
       mockPrismaService.user.findUnique.mockResolvedValueOnce(null);
-      mockCloudinaryService.uploadAvatar.mockRejectedValue(new Error('upload error'));
+      mockCloudinaryService.uploadAvatar.mockRejectedValue(
+        new Error('upload error'),
+      );
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
 
       const mockFile = { buffer: Buffer.from('img') } as Express.Multer.File;
@@ -203,7 +207,11 @@ describe('AuthService', () => {
 
       mockPrismaService.user.findUnique.mockResolvedValueOnce(null); // email check
       mockPrismaService.user.findUnique.mockResolvedValueOnce(null); // username check
-      mockPrismaService.user.create.mockResolvedValue({ ...mockUser, username: 'janedoe', name: 'Jane Doe' });
+      mockPrismaService.user.create.mockResolvedValue({
+        ...mockUser,
+        username: 'janedoe',
+        name: 'Jane Doe',
+      });
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
 
       await service.register(dtoWithWhitespace);
@@ -240,7 +248,10 @@ describe('AuthService', () => {
       mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
-      const result = await service.validateLocalUser('john@example.com', 'password123');
+      const result = await service.validateLocalUser(
+        'john@example.com',
+        'password123',
+      );
 
       expect(result).toBeDefined();
       expect(result).not.toHaveProperty('password');
@@ -250,7 +261,10 @@ describe('AuthService', () => {
     it('should return null when user is not found', async () => {
       mockPrismaService.user.findUnique.mockResolvedValue(null);
 
-      const result = await service.validateLocalUser('nobody@example.com', 'password');
+      const result = await service.validateLocalUser(
+        'nobody@example.com',
+        'password',
+      );
 
       expect(result).toBeNull();
     });
@@ -259,7 +273,10 @@ describe('AuthService', () => {
       mockPrismaService.user.findUnique.mockResolvedValue(mockUser);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
-      const result = await service.validateLocalUser('john@example.com', 'wrongpassword');
+      const result = await service.validateLocalUser(
+        'john@example.com',
+        'wrongpassword',
+      );
 
       expect(result).toBeNull();
     });
@@ -270,7 +287,10 @@ describe('AuthService', () => {
         password: null,
       });
 
-      const result = await service.validateLocalUser('john@example.com', 'password');
+      const result = await service.validateLocalUser(
+        'john@example.com',
+        'password',
+      );
 
       expect(result).toBeNull();
     });
@@ -282,7 +302,11 @@ describe('AuthService', () => {
 
   describe('login()', () => {
     it('should sign a JWT with correct payload and return auth response', async () => {
-      const user = { id: 'user-id-1', username: 'johndoe', email: 'john@example.com' };
+      const user = {
+        id: 'user-id-1',
+        username: 'johndoe',
+        email: 'john@example.com',
+      };
 
       const result = await service.login(user);
 
