@@ -20,6 +20,18 @@ enum IngestionStatus {
   FAILED
 }
 
+enum planTier {
+  FREE
+  PRO
+  PREMIUM
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  INACTIVE
+  CANCELED
+}
+
 enum MessageRole {
   USER
   AI
@@ -37,20 +49,22 @@ enum UserRole {
 }
 
 model User {
-  id           String       @id @default(cuid())
-  username     String?      @unique
-  name         String?
-  email        String       @unique
-  password     String?
-  userRole     UserRole     @default(USER)
-  authProvider AuthProvider @default(CREDENTIALS)
-  avatar       String?
-  chats        Chat[]
-  repos        Repo[]
-  providerId   String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String         @id @default(cuid())
+  username      String?        @unique
+  name          String?
+  email         String         @unique
+  password      String?
+  userRole      UserRole       @default(USER)
+  authProvider  AuthProvider   @default(CREDENTIALS)
+  avatar        String?
+  chats         Chat[]
+  repos         Repo[]
+  subscriptions Subscription[]
+  ledgers       CreditLedger[]
+  providerId    String?
+  creditBalance Int            @default(50)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 }
 
 model Repo {
@@ -62,23 +76,49 @@ model Repo {
   latestCommitHash String?
   status           IngestionStatus @default(PENDING)
 
-  user  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  files File[]
-  apis  ApiEndpoint[]
-  pages PageRoute[]
-  chats Chat[]
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  files    File[]
+  apis     ApiEndpoint[]
+  pages    PageRoute[]
+  chats    Chat[]
   analysis RepoAnalysis?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
+model Subscription {
+  id                   String             @id @default(uuid())
+  userId               String             @unique
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planTier             planTier
+  paypalSubscriptionId String?            @unique
+  paypalPlanId         String?
+  status               SubscriptionStatus
+  paypalAgreementId    String?            @unique
+  currentPeriodEnd     DateTime
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+}
+
+model CreditLedger {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount      Int // Negative for LLM cost, Positive for top-ups
+  reason      String // 'paypal_subscription_renewal', 'llm_generation_qwen'
+  referenceId String?  @unique // Idempotency key (PayPal transaction ID or Request UUID)
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+}
+
 model RepoAnalysis {
   id        String   @id @default(uuid())
   repoId    String   @unique
   repo      Repo     @relation(fields: [repoId], references: [id], onDelete: Cascade)
-  apis      Json     // Array of { method, endpoint, description, file }
-  pages     Json     // Array of { route, description, file }
+  apis      Json // Array of { method, endpoint, description, file }
+  pages     Json // Array of { route, description, file }
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -90,7 +130,7 @@ model File {
   language    String?
   contentHash String?
 
-  repo   Repo          @relation(fields: [repoId], references: [id], onDelete: Cascade)
+  repo   Repo        @relation(fields: [repoId], references: [id], onDelete: Cascade)
   chunks CodeChunk[]
 
   createdAt DateTime @default(now())

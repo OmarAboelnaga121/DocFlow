@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { RepositoryModule } from './repository/repository.module';
 import { ChatModule } from './chat/chat.module';
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { ChatModule } from './chat/chat.module';
     UserModule,
     RepositoryModule,
     ChatModule,
+    PaymentModule,
   ],
   controllers: [],
   providers: [
