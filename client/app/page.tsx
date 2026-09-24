@@ -6,6 +6,7 @@ import TechArchitecture from "@/components/TechArchitecture";
 import UseCasesTabs from "@/components/UseCasesTabs";
 import CtaBanner from "@/components/CtaBanner";
 import Footer from "@/components/Footer";
+import ScrollReveal from "@/components/ScrollReveal";
 
 export default function HomePage() {
   return (
@@ -15,22 +16,34 @@ export default function HomePage() {
 
       <main>
         {/* Hero — value prop + code/chat preview */}
-        <HeroSection />
+        <ScrollReveal>
+          <HeroSection />
+        </ScrollReveal>
 
         {/* Problem vs Solution */}
-        <ProblemSolution />
+        <ScrollReveal>
+          <ProblemSolution />
+        </ScrollReveal>
 
         {/* Core Features — 3-column */}
-        <CoreFeatures />
+        <ScrollReveal>
+          <CoreFeatures />
+        </ScrollReveal>
 
         {/* Technical Architecture stack */}
-        <TechArchitecture />
+        <ScrollReveal>
+          <TechArchitecture />
+        </ScrollReveal>
 
         {/* Interactive Use-Cases Tabs */}
-        <UseCasesTabs />
+        <ScrollReveal>
+          <UseCasesTabs />
+        </ScrollReveal>
 
         {/* Final CTA */}
-        <CtaBanner />
+        <ScrollReveal>
+          <CtaBanner />
+        </ScrollReveal>
       </main>
 
       {/* Site footer */}

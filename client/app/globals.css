@@ -107,6 +107,23 @@ body {
 /* ──────────────────────────────────────────────
    Animations
    ────────────────────────────────────────────── */
+.scroll-reveal {
+  opacity: 0;
+  transform: translate3d(0, 32px, 0);
+  filter: blur(3px);
+  transition:
+    opacity 700ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 700ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 700ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform, filter;
+}
+
+.scroll-reveal[data-revealed="true"] {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  filter: blur(0);
+}
+
 @keyframes fade-in-up {
   from {
     opacity: 0;
@@ -134,6 +151,27 @@ body {
 
 .animate-pulse-glow {
   animation: pulse-glow 3s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .scroll-reveal,
+  .scroll-reveal[data-revealed="true"] {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none;
+  }
+
+  .animate-fade-in-up,
+  .animate-pulse-glow,
+  .animate-marquee-left,
+  .animate-marquee-right {
+    animation: none;
+  }
 }
 
 @keyframes marquee-left {

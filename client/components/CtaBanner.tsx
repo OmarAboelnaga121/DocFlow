@@ -4,10 +4,11 @@ export default function CtaBanner() {
   return (
     <section
       id="trial"
-      className="relative w-full overflow-hidden bg-surface-container-low border-t border-surface-container py-20 lg:py-28"
+      className="relative w-full overflow-hidden border-t border-surface-container bg-[radial-gradient(circle_at_50%_100%,rgba(16,185,129,0.18),transparent_58%),linear-gradient(135deg,rgba(16,185,129,0.08),var(--color-surface-container-low)_48%,rgba(16,185,129,0.05))] py-20 lg:py-28"
     >
       {/* Ambient glowing spotlight */}
       <div className="pointer-events-none absolute bottom-0 left-1/2 -translate-x-1/2 h-80 w-[700px] rounded-full bg-emerald-500/10 blur-3xl animate-pulse-glow" />
+      <div className="pointer-events-none absolute -top-32 -right-32 h-72 w-72 rounded-full bg-emerald-400/10 blur-3xl animate-pulse-glow" />
 
       <div className="mx-auto max-w-[1280px] px-6 md:px-8 relative z-10 text-center">
         <h2 className="text-3xl sm:text-4xl lg:text-[54px] font-extrabold tracking-tight text-on-surface leading-[1.12]">
@@ -29,19 +30,7 @@ export default function CtaBanner() {
             </span>
           </Link>
 
-          {/* Trust points */}
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5 text-xs sm:text-sm text-secondary">
-            <span>14-day unlimited trial</span>
-            <span>•</span>
-            <span>No credit card required</span>
-            <span>•</span>
-            <span className="inline-flex items-center gap-1 font-semibold text-on-surface">
-              <span className="material-symbols-outlined text-emerald-500 text-[18px]">
-                verified_user
-              </span>
-              SOC2 Type II Certified
-            </span>
-          </div>
+          
         </div>
       </div>
     </section>
