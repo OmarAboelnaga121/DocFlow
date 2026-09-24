@@ -58,6 +58,12 @@ const mockPrismaService = {
   repo: {
     findFirst: jest.fn(),
   },
+  user: {
+    update: jest.fn(),
+  },
+  creditLedger: {
+    create: jest.fn(),
+  },
 };
 
 const mockRedisService = {
@@ -170,6 +176,81 @@ describe('ChatService Caching', () => {
         orderBy: { createdAt: 'asc' },
       });
       expect(result).toEqual(mockMessages);
+    });
+  });
+
+  describe('sendMessage()', () => {
+    it('should block generation when the user has insufficient credits and should use the selected model when provided', async () => {
+      mockPrismaService.chat.findUnique.mockResolvedValue({
+        ...mockChat,
+        user: { userRole: 'DEVELOPER', creditBalance: 0 },
+        repo: {
+          id: 'repo-id-1',
+          name: 'DocFlow',
+          branch: 'main',
+          status: 'COMPLETED',
+          url: 'https://github.com/test/repo',
+          analysis: null,
+          files: [],
+        },
+      });
+
+      const performRagSpy = jest
+        .spyOn(service as any, 'performRagSearch')
+        .mockResolvedValue([]);
+
+      await expect(
+        service.sendMessage('user-id-1', 'chat-id-1', {
+          content: 'Explain the repo',
+          model: 'qwen3.7-plus',
+        }),
+      ).rejects.toThrow('Not enough credits');
+
+      expect(performRagSpy).not.toHaveBeenCalled();
+      expect(mockPrismaService.message.create).not.toHaveBeenCalled();
+    });
+
+    it('should charge the selected model cost when a user sends a message', async () => {
+      mockPrismaService.chat.findUnique.mockResolvedValue({
+        ...mockChat,
+        user: { userRole: 'DEVELOPER', creditBalance: 3 },
+        repo: {
+          id: 'repo-id-1',
+          name: 'DocFlow',
+          branch: 'main',
+          status: 'COMPLETED',
+          url: 'https://github.com/test/repo',
+          analysis: null,
+          files: [],
+        },
+      });
+      mockPrismaService.message.create.mockResolvedValue({
+        id: 'ai-msg-1',
+        chatId: 'chat-id-1',
+        role: 'AI',
+        content: 'Answer',
+        context: [],
+      });
+      mockPrismaService.user.update.mockResolvedValue({ id: 'user-id-1', creditBalance: 1 });
+      jest.spyOn(service as any, 'performRagSearch').mockResolvedValue([]);
+
+      await service.sendMessage('user-id-1', 'chat-id-1', {
+        content: 'Explain the repo',
+        model: 'qwen3.7-max',
+      });
+
+      expect(mockPrismaService.creditLedger.create).toHaveBeenCalledWith({
+        data: {
+          userId: 'user-id-1',
+          amount: -3,
+          reason: 'llm_generation_qwen3.7-max',
+          referenceId: expect.stringContaining('chat_message_'),
+        },
+      });
+      expect(mockPrismaService.user.update).toHaveBeenCalledWith({
+        where: { id: 'user-id-1' },
+        data: { creditBalance: { decrement: 3 } },
+      });
     });
   });
 });

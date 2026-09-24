@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   Logger,
@@ -11,6 +12,20 @@ import { RetrievedContextChunkDto } from './dto/retrieved-context-chunk.dto';
 import { MessageRole, UserRole } from '@prisma/client';
 import { OpenAI } from 'openai';
 import { RedisService } from '../redis/redis.service';
+
+const QWEN_MODEL_CREDIT_COST: Record<string, number> = {
+  'qwen3.7-plus': 2,
+  'qwen3.7-max': 3,
+  'qwen3.7-flash': 1,
+  'qwen3.6-plus': 2,
+};
+
+const QWEN_MODEL_LEDGER_REASON: Record<string, string> = {
+  'qwen3.7-plus': 'llm_generation_qwen3.7-plus',
+  'qwen3.7-max': 'llm_generation_qwen3.7-max',
+  'qwen3.7-flash': 'llm_generation_qwen3.7-flash',
+  'qwen3.6-plus': 'llm_generation_qwen3.6-plus',
+};
 
 @Injectable()
 export class ChatService {
@@ -132,13 +147,15 @@ export class ChatService {
   }
 
   async sendMessage(userId: string, chatId: string, dto: SendMessageDto) {
-    // 1. Verify chat existence and ownership with repository analysis and user role
+    // Step 1: The user sends a message to the chat.
+    // Step 2: Validate that the chat exists and belongs to the authenticated user.
     const chat = await this.prisma.chat.findUnique({
       where: { id: chatId },
       include: {
         user: {
           select: {
             userRole: true,
+            creditBalance: true,
           },
         },
         repo: {
@@ -160,7 +177,19 @@ export class ChatService {
       );
     }
 
-    // 2. Save the user message
+    // Step 3: Check that the user still has enough credits before we generate the response.
+    const selectedModel = dto.model || process.env.OPENAI_MODEL || 'qwen3.7-plus';
+    const responseCostCredits =
+      QWEN_MODEL_CREDIT_COST[selectedModel] ?? QWEN_MODEL_CREDIT_COST['qwen3.7-plus'];
+    const userCreditBalance = chat.user?.creditBalance ?? 0;
+
+    if (userCreditBalance < responseCostCredits) {
+      throw new BadRequestException(
+        'Not enough credits to generate a response. Please top up your account.',
+      );
+    }
+
+    // Step 4: Save the incoming user message before processing the request.
     const userMessage = await this.prisma.message.create({
       data: {
         chatId,
@@ -169,10 +198,10 @@ export class ChatService {
       },
     });
 
-    // 3. Perform RAG vector similarity search
+    // Step 5: Retrieval stage - search the repository for the most relevant code context.
     const contextChunks = await this.performRagSearch(chat.repoId, dto.content);
 
-    // 4. Fetch recent conversation history for multi-turn context (excluding current message)
+    // Step 6: Load recent chat history so the reply can stay consistent with prior turns.
     const history = await this.prisma.message.findMany({
       where: {
         chatId,
@@ -183,7 +212,7 @@ export class ChatService {
     });
     history.reverse();
 
-    // 5. Build prompt with high-level repo metadata and retrieved context
+    // Step 7: Build the repository context and final prompt for the LLM.
     let repoOverview = `Repository Name: ${chat.repo.name}\nBranch: ${chat.repo.branch}\nStatus: ${chat.repo.status}\n`;
     if (chat.repo.analysis) {
       const apis =
@@ -228,7 +257,6 @@ export class ChatService {
             .join('\n\n')
         : 'No specific code chunks retrieved for this query.';
 
-    // Adapt system persona based on User Role (DEVELOPER vs BUSINESS)
     const userRole = chat.user?.userRole || UserRole.USER;
     let systemPrompt = '';
 
@@ -269,7 +297,7 @@ export class ChatService {
       },
     ];
 
-    // 6. Generate AI completion
+    // Step 8: Generate the AI response with the selected model.
     let aiContent = '';
     const apiKey = process.env.OPENAI_API_KEY;
 
@@ -278,7 +306,7 @@ export class ChatService {
     } else {
       try {
         const completion = await this.openai.chat.completions.create({
-          model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+          model: selectedModel,
           messages: openAiMessages,
           temperature: 0.2,
         });
@@ -293,7 +321,7 @@ export class ChatService {
       }
     }
 
-    // 7. Save AI message with citation context
+    // Step 9: Save the AI answer and the retrieved code context for this chat.
     const aiMessage = await this.prisma.message.create({
       data: {
         chatId,
@@ -303,10 +331,30 @@ export class ChatService {
       },
     });
 
-    // 8. Invalidate cached chat session and messages list
+    // Step 10: Record the exact usage cost in the credit ledger, deduct the balance, clear caches, and return the final answer.
+    const ledgerReason =
+      QWEN_MODEL_LEDGER_REASON[selectedModel] ||
+      `llm_generation_${selectedModel}`;
+
+    await this.prisma.creditLedger.create({
+      data: {
+        userId,
+        amount: -responseCostCredits,
+        reason: ledgerReason,
+        referenceId: `chat_message_${userMessage.id}`,
+      },
+    });
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        creditBalance: {
+          decrement: responseCostCredits,
+        },
+      },
+    });
     await this.invalidateChatCache(chatId);
 
-    // 9. Return the generated AI response
     return aiMessage;
   }
 
