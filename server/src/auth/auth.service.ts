@@ -11,6 +11,7 @@ import * as bcrypt from 'bcrypt';
 import { GithubUserData } from './DTO/github.dto';
 import { RegisterDto } from './DTO/register.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { AuthenticatedUser } from './types/authenticated-user.type';
 
 @Injectable()
 export class AuthService {
@@ -104,7 +105,7 @@ export class AuthService {
     return result;
   }
 
-  async login(user: any) {
+  async login(user: AuthenticatedUser) {
     const payload = {
       sub: user.id,
       username: user.username,
