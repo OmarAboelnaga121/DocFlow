@@ -599,7 +599,7 @@ export class RepositoryService {
   }
 
   /**
-   * Batch embedding generation (sends up to 25 text chunks per API request).
+   * Batch embedding generation (OpenAI accepts at most 20 inputs per request).
    */
   private async getEmbeddingsBatch(texts: string[]): Promise<number[][]> {
     if (texts.length === 0) return [];
@@ -612,11 +612,11 @@ export class RepositoryService {
     }
 
     try {
-      const BATCH_SIZE = 25;
+      const MAX_BATCH_SIZE = 20;
       const results: number[][] = [];
 
-      for (let i = 0; i < texts.length; i += BATCH_SIZE) {
-        const batch = texts.slice(i, i + BATCH_SIZE);
+      for (let i = 0; i < texts.length; i += MAX_BATCH_SIZE) {
+        const batch = texts.slice(i, i + MAX_BATCH_SIZE);
         const response = await this.openai.embeddings.create({
           model: process.env.EMBEDDING_MODEL || 'text-embedding-v3',
           input: batch,
