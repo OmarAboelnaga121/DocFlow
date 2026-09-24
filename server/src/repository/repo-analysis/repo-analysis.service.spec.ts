@@ -161,10 +161,11 @@ describe('RepoAnalysisService', () => {
         buildOpenAIResponse(''), // empty content
       );
 
-      // Should not throw — error is caught internally
       await expect(
         service.analyzeRepositoryStructure('repo-id-1'),
-      ).resolves.toBeUndefined();
+      ).rejects.toThrow(
+        'Failed to extract repository architecture: OpenAI returned an empty response.',
+      );
       expect(mockPrismaService.repoAnalysis.upsert).not.toHaveBeenCalled();
     });
 
@@ -174,10 +175,9 @@ describe('RepoAnalysisService', () => {
       ]);
       mockChatCompletionsCreate.mockRejectedValue(new Error('Network timeout'));
 
-      // The service catches internally — must not propagate
       await expect(
         service.analyzeRepositoryStructure('repo-id-1'),
-      ).resolves.toBeUndefined();
+      ).rejects.toThrow('Network timeout');
       expect(mockPrismaService.repoAnalysis.upsert).not.toHaveBeenCalled();
     });
 

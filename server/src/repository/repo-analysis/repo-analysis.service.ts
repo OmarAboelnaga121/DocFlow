@@ -11,6 +11,7 @@ export class RepoAnalysisService {
     this.openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY || 'mock-key',
       baseURL: process.env.OPENAI_BASE_URL || undefined,
+      timeout: Number(process.env.OPENAI_TIMEOUT_MS || 120000),
     });
   }
 
@@ -85,6 +86,7 @@ export class RepoAnalysisService {
       this.logger.log(`Analysis complete for repo: ${repoId}`);
     } catch (error) {
       this.logger.error(`Failed to analyze repo ${repoId}:`, error);
+      throw error;
     }
   }
 

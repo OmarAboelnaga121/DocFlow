@@ -193,20 +193,28 @@ export class RepositoryService {
       this.logger.log(
         `[Repo ${repoId}] Analysis complete. Repository ingestion successfully finished.`,
       );
-      await this.prisma.repo.update({
+      const completedRepo = await this.prisma.repo.update({
         where: { id: repoId },
         data: {
           status: 'COMPLETED',
           latestCommitHash,
         },
       });
+      await this.redis.invalidateCache([
+        `repo:${repoId}`,
+        `user-repos:${completedRepo.userId}`,
+      ]);
     } catch (error) {
       this.logger.error(`Error during repository ingestion:`, error);
       // Transition to FAILED state on error
-      await this.prisma.repo.update({
+      const failedRepo = await this.prisma.repo.update({
         where: { id: repoId },
         data: { status: 'FAILED' },
       });
+      await this.redis.invalidateCache([
+        `repo:${repoId}`,
+        `user-repos:${failedRepo.userId}`,
+      ]);
     } finally {
       // Guarantee cleanup of the local cloned repository filesystem
       if (fs.existsSync(clonePath)) {
@@ -480,22 +488,30 @@ export class RepositoryService {
       this.logger.log(
         `[Repo ${repoId}] Resync successfully COMPLETED. HEAD commit: ${latestCommitHash}`,
       );
-      await this.prisma.repo.update({
+      const completedRepo = await this.prisma.repo.update({
         where: { id: repoId },
         data: {
           status: 'COMPLETED',
           latestCommitHash,
         },
       });
+      await this.redis.invalidateCache([
+        `repo:${repoId}`,
+        `user-repos:${completedRepo.userId}`,
+      ]);
     } catch (error) {
       this.logger.error(
         `Error during incremental sync for repository ${repoId}:`,
         error,
       );
-      await this.prisma.repo.update({
+      const failedRepo = await this.prisma.repo.update({
         where: { id: repoId },
         data: { status: 'FAILED' },
       });
+      await this.redis.invalidateCache([
+        `repo:${repoId}`,
+        `user-repos:${failedRepo.userId}`,
+      ]);
     } finally {
       if (fs.existsSync(clonePath)) {
         fs.rmSync(clonePath, { recursive: true, force: true });
