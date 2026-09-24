@@ -37,6 +37,44 @@ export class RepositoryService {
     });
   }
 
+  async calculateCredits(repoUrl: string) {
+    await validateRepositoryUrl(repoUrl);
+
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'docflow-repo-'));
+
+    try {
+      const git = simpleGit();
+      await git.clone(repoUrl, tempDir, ['--depth', '1', '--single-branch']);
+
+      const files = this.getAllFiles(tempDir);
+      const sizeBytes = files.reduce((total, filePath) => {
+        try {
+          return total + fs.statSync(filePath).size;
+        } catch {
+          return total;
+        }
+      }, 0);
+
+      const sizeMb = sizeBytes / (1024 * 1024);
+
+      return {
+        repoUrl,
+        sizeBytes,
+        sizeMb: Number(sizeMb.toFixed(2)),
+        requiredCredits: Math.max(1, Math.ceil(sizeMb)),
+      };
+    } catch (error) {
+      this.logger.error('Repository credit calculation failed:', error);
+      throw new BadRequestException(
+        'Unable to calculate credits for this repository',
+      );
+    } finally {
+      if (fs.existsSync(tempDir)) {
+        fs.rmSync(tempDir, { recursive: true, force: true });
+      }
+    }
+  }
+
   async createRepo(userId: string, repo: CreateRepoDto) {
     // Validate branch name and repository URL (SSRF & command injection prevention)
     validateBranchName(repo.branch);

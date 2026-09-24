@@ -81,7 +81,7 @@ export class PaymentService {
     }
 
     const planId = this.getPlanId(dto.planTier);
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:3000');
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL', 'http://localhost:3001');
     const returnUrl = `${frontendUrl}/billing/success`;
     const cancelUrl = `${frontendUrl}/billing/cancel`;
 

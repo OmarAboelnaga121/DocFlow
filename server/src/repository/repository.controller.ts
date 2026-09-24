@@ -16,6 +16,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { CalculateRepoDto } from './dto/calculate-repo.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { CreateRepoDto } from './dto/create-repo.dto';
 import { RepositoryService } from './repository.service';
@@ -26,6 +27,20 @@ import { RepositoryService } from './repository.service';
 @Controller('repository')
 export class RepositoryController {
   constructor(private readonly repositoryService: RepositoryService) {}
+
+  @Post('calculate-credits')
+  @ApiOperation({
+    summary: 'Estimate credits required to index a repository',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Repository size and required credits calculated',
+  })
+  @ApiResponse({ status: 400, description: 'Invalid repository URL' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async calculateCredits(@Body() body: CalculateRepoDto) {
+    return this.repositoryService.calculateCredits(body.repoUrl);
+  }
 
   @Post()
   @ApiOperation({
