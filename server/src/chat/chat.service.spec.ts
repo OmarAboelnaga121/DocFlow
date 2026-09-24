@@ -1,8 +1,26 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ForbiddenException } from '@nestjs/common';
+const mockChatCompletionsCreate = jest.fn();
+const mockEmbeddingsCreate = jest.fn();
+
+jest.mock('openai', () => ({
+  OpenAI: jest.fn().mockImplementation(() => ({
+    chat: {
+      completions: {
+        create: mockChatCompletionsCreate,
+      },
+    },
+    embeddings: {
+      create: mockEmbeddingsCreate,
+    },
+  })),
+}));
+
 import { ChatService } from './chat.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
+
+process.env.OPENAI_API_KEY = process.env.OPENAI_API_KEY || 'test-api-key';
 
 const mockChat = {
   id: 'chat-id-1',
@@ -80,6 +98,13 @@ describe('ChatService Caching', () => {
   let service: ChatService;
 
   beforeEach(async () => {
+    mockChatCompletionsCreate.mockResolvedValue({
+      choices: [{ message: { content: 'Mock AI answer' } }],
+    });
+    mockEmbeddingsCreate.mockResolvedValue({
+      data: [{ embedding: Array.from({ length: 1536 }, () => 0.1) }],
+    });
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ChatService,

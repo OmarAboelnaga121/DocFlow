@@ -10,17 +10,23 @@ import cookieParser from 'cookie-parser';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  app.enableShutdownHooks();
+
   // 1. Cookie Parser Middleware
   app.use(cookieParser());
 
   const configService = app.get(ConfigService);
-  const frontendUrl =
-    configService.get<string>('FRONTEND_URL') || 'http://localhost:3001';
+  const frontendUrl = configService.get<string>('FRONTEND_URL');
+
+  if (!frontendUrl) {
+    throw new Error('FRONTEND_URL environment variable is required.');
+  }
+
   const allowedOrigins = frontendUrl.includes(',')
     ? frontendUrl.split(',').map((url) => url.trim())
-    : frontendUrl;
+    : [frontendUrl];
 
-  // Enable CORS with credentials for cookies
+  // Enable CORS only for the configured frontend origin(s)
   app.enableCors({
     origin: allowedOrigins,
     credentials: true,
@@ -58,7 +64,13 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, documentFactory);
 
   const port = configService.get<number>('PORT', 3000);
-
   await app.listen(port);
+
+  const shutdown = async () => {
+    await app.close();
+  };
+
+  process.once('SIGINT', shutdown);
+  process.once('SIGTERM', shutdown);
 }
 bootstrap();

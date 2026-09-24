@@ -9,6 +9,7 @@ import { UserModule } from './user/user.module';
 import { RepositoryModule } from './repository/repository.module';
 import { ChatModule } from './chat/chat.module';
 import { PaymentModule } from './payment/payment.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { PaymentModule } from './payment/payment.module';
     ]),
     PrismaModule,
     RedisModule,
+    HealthModule,
     AuthModule,
     UserModule,
     RepositoryModule,

@@ -31,8 +31,15 @@ export class RepositoryService {
     private readonly repoAnalysisService: RepoAnalysisService,
     private readonly redis: RedisService,
   ) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error(
+        'OPENAI_API_KEY is required. Set it before starting the server.',
+      );
+    }
+
     this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY || 'mock-key',
+      apiKey,
       baseURL: process.env.OPENAI_BASE_URL || undefined,
     });
   }
@@ -596,10 +603,11 @@ export class RepositoryService {
    */
   private async getEmbeddingsBatch(texts: string[]): Promise<number[][]> {
     if (texts.length === 0) return [];
+
     const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey || apiKey === 'mock-key') {
-      return texts.map(() =>
-        Array.from({ length: 1536 }, () => Math.random() - 0.5),
+    if (!apiKey) {
+      throw new Error(
+        'OPENAI_API_KEY is required. Set it before starting the server.',
       );
     }
 
@@ -622,12 +630,8 @@ export class RepositoryService {
 
       return results;
     } catch (error) {
-      this.logger.warn(
-        `Batch embedding generation failed, falling back to mock: ${error.message}`,
-      );
-      return texts.map(() =>
-        Array.from({ length: 1536 }, () => Math.random() - 0.5),
-      );
+      this.logger.error('Batch embedding generation failed:', error);
+      throw error;
     }
   }
 

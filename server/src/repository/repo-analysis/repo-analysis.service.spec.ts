@@ -19,6 +19,8 @@ jest.mock('openai', () => {
   };
 });
 
+process.env.OPENAI_API_KEY = process.env.OPENAI_API_KEY || 'test-api-key';
+
 import { RepoAnalysisService } from './repo-analysis.service';
 import { PrismaService } from '../../prisma/prisma.service';
 

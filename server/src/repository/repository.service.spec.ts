@@ -39,10 +39,22 @@ jest.mock('fs', () => ({
   readFileSync: (...args: any[]) => mockFsReadFileSync(...args),
 }));
 
+const mockEmbeddingsCreate = jest.fn();
+
+jest.mock('openai', () => ({
+  OpenAI: jest.fn().mockImplementation(() => ({
+    embeddings: {
+      create: mockEmbeddingsCreate,
+    },
+  })),
+}));
+
 import { RepositoryService } from './repository.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RepoAnalysisService } from './repo-analysis/repo-analysis.service';
 import { RedisService } from '../redis/redis.service';
+process.env.OPENAI_API_KEY = process.env.OPENAI_API_KEY || 'test-api-key';
+
 import { CreateRepoDto } from './dto/create-repo.dto';
 
 // ---------------------------------------------------------------------------
@@ -141,6 +153,10 @@ describe('RepositoryService', () => {
   let service: RepositoryService;
 
   beforeEach(async () => {
+    mockEmbeddingsCreate.mockResolvedValue({
+      data: [{ embedding: Array.from({ length: 1536 }, () => 0.1) }],
+    });
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RepositoryService,

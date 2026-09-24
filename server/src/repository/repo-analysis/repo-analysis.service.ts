@@ -8,8 +8,15 @@ export class RepoAnalysisService {
   private readonly logger = new Logger(RepoAnalysisService.name);
 
   constructor(private readonly prisma: PrismaService) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error(
+        'OPENAI_API_KEY is required. Set it before starting the server.',
+      );
+    }
+
     this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY || 'mock-key',
+      apiKey,
       baseURL: process.env.OPENAI_BASE_URL || undefined,
       timeout: Number(process.env.OPENAI_TIMEOUT_MS || 120000),
     });

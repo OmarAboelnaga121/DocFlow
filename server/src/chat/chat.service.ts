@@ -37,8 +37,15 @@ export class ChatService {
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
   ) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error(
+        'OPENAI_API_KEY is required. Set it before starting the server.',
+      );
+    }
+
     this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY || 'mock-key',
+      apiKey,
       baseURL: process.env.OPENAI_BASE_URL || undefined,
     });
   }
@@ -301,24 +308,25 @@ export class ChatService {
     let aiContent = '';
     const apiKey = process.env.OPENAI_API_KEY;
 
-    if (!apiKey || apiKey === 'mock-key') {
-      aiContent = `[Mock AI Response] Analysis for: "${dto.content}". Context chunks: ${contextChunks.length}.`;
-    } else {
-      try {
-        const completion = await this.openai.chat.completions.create({
-          model: selectedModel,
-          messages: openAiMessages,
-          temperature: 0.2,
-        });
+    if (!apiKey) {
+      throw new Error(
+        'OPENAI_API_KEY is required. Set it before starting the server.',
+      );
+    }
 
-        aiContent =
-          completion.choices[0]?.message?.content ||
-          'Unable to generate a response at this time.';
-      } catch (error) {
-        this.logger.error('OpenAI chat completion failed:', error);
-        aiContent =
-          'An error occurred while generating the response. Please try again.';
-      }
+    try {
+      const completion = await this.openai.chat.completions.create({
+        model: selectedModel,
+        messages: openAiMessages,
+        temperature: 0.2,
+      });
+
+      aiContent =
+        completion.choices[0]?.message?.content ||
+        'Unable to generate a response at this time.';
+    } catch (error) {
+      this.logger.error('OpenAI chat completion failed:', error);
+      throw error;
     }
 
     // Step 9: Save the AI answer and the retrieved code context for this chat.
@@ -500,8 +508,10 @@ export class ChatService {
 
   private async getEmbedding(text: string): Promise<number[]> {
     const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey || apiKey === 'mock-key') {
-      return Array.from({ length: 1536 }, () => Math.random() - 0.5);
+    if (!apiKey) {
+      throw new Error(
+        'OPENAI_API_KEY is required. Set it before starting the server.',
+      );
     }
 
     const model = process.env.EMBEDDING_MODEL || 'text-embedding-v3';
@@ -514,7 +524,7 @@ export class ChatService {
       return response.data[0].embedding;
     } catch (error) {
       this.logger.error('Failed to generate embedding for query:', error);
-      return Array.from({ length: 1536 }, () => Math.random() - 0.5);
+      throw error;
     }
   }
 }
