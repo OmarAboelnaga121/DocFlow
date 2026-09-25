@@ -3,7 +3,6 @@ import {
   RegisterData,
   AuthResponse,
   User,
-  UserRole,
   Repo,
   CreateRepoData,
   Chat,
@@ -348,3 +347,32 @@ export async function syncRepository(
   return result;
 }
 
+export async function createPaymentSession(
+  planTier: "PRO" | "PREMIUM"
+): Promise<{ approvalUrl: string }> {
+  const res = await fetch(`${API_URL}/payment/subscriptions/create`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify({ planTier }),
+  });
+
+  const result = await res.json();
+
+  if (!res.ok) {
+    const errorMsg = Array.isArray(result.message)
+      ? result.message.join(", ")
+      : result.message || "Failed to create payment session";
+    throw new Error(errorMsg);
+  }
+
+  if (!result.approvalUrl || typeof result.approvalUrl !== "string") {
+    throw new Error("Payment session did not include an approval URL");
+  }
+
+  return {
+    approvalUrl: result.approvalUrl,
+  };
+}
