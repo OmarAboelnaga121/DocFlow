@@ -1,0 +1,13 @@
+process.env.NODE_ENV = 'test';
+process.env.DATABASE_URL = 'postgresql://postgres:postgres@localhost:5432/docflow';
+process.env.FRONTEND_URL = 'http://localhost:3001';
+process.env.JWT_SECRET = 'test-jwt-secret';
+process.env.OPENAI_API_KEY = 'test-api-key';
+process.env.GITHUB_CLIENT_ID = 'test-github-client-id';
+process.env.GITHUB_CLIENT_SECRET = 'test-github-client-secret';
+process.env.GITHUB_CALLBACK_URL = 'http://localhost:3000/auth/github/callback';
+process.env.CLOUDINARY_CLOUD_NAME = 'test-cloud';
+process.env.CLOUDINARY_API_KEY = 'test-cloudinary-key';
+process.env.CLOUDINARY_API_SECRET = 'test-cloudinary-secret';
+process.env.PAYPAL_CLIENT_ID = 'test-paypal-client-id';
+process.env.PAYPAL_CLIENT_SECRET = 'test-paypal-client-secret';

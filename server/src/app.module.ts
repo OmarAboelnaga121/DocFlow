@@ -10,11 +10,13 @@ import { RepositoryModule } from './repository/repository.module';
 import { ChatModule } from './chat/chat.module';
 import { PaymentModule } from './payment/payment.module';
 import { HealthModule } from './health/health.module';
+import { validateEnvironment } from './config/env.validation';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      validate: validateEnvironment,
     }),
     ThrottlerModule.forRoot([
       {
