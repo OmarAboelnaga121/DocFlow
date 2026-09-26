@@ -316,12 +316,17 @@ export class RepositoryService {
       where: { id: repoId },
       data: { status: 'PENDING' },
     });
+    await this.redis.invalidateCache([
+      `repo:${repoId}`,
+      `user-repos:${userId}`,
+    ]);
 
     this.performSyncRepository(
       repo.id,
       repo.url,
       repo.branch,
       remoteCommitHash,
+      repo.userId,
     ).catch((err) => {
       this.logger.error(
         `Background incremental sync failed for repository ${repo.id}:`,
@@ -349,6 +354,7 @@ export class RepositoryService {
     url: string,
     branch: string,
     knownCommitHash?: string | null,
+    userId?: string,
   ) {
     const clonePath = path.join(os.tmpdir(), `docflow-sync-${repoId}`);
 
@@ -365,6 +371,12 @@ export class RepositoryService {
         where: { id: repoId },
         data: { status: 'CLONING' },
       });
+      if (userId) {
+        await this.redis.invalidateCache([
+          `repo:${repoId}`,
+          `user-repos:${userId}`,
+        ]);
+      }
 
       // Clone repository branch
       const git = simpleGit();
@@ -460,6 +472,12 @@ export class RepositoryService {
         where: { id: repoId },
         data: { status: 'EMBEDDING' },
       });
+      if (userId) {
+        await this.redis.invalidateCache([
+          `repo:${repoId}`,
+          `user-repos:${userId}`,
+        ]);
+      }
 
       // Process deleted files
       if (deletedFileIds.length > 0) {
@@ -520,6 +538,12 @@ export class RepositoryService {
         where: { id: repoId },
         data: { status: 'ANALYZING' },
       });
+      if (userId) {
+        await this.redis.invalidateCache([
+          `repo:${repoId}`,
+          `user-repos:${userId}`,
+        ]);
+      }
 
       // Re-run architectural extraction for updated repository state
       await this.repoAnalysisService.analyzeRepositoryStructure(repoId);
