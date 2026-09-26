@@ -135,20 +135,28 @@ export class RepositoryService {
     await this.redis.invalidateCache(`user-repos:${userId}`);
 
     // 3. Perform the ingestion process in the background
-    this.ingestRepository(repository.id, repo.url, repo.branch || 'main').catch(
-      (err) => {
-        this.logger.error(
-          `Background ingestion failed for repository ${repository.id}:`,
-          err,
-        );
-      },
-    );
+    this.ingestRepository(
+      repository.id,
+      repo.url,
+      repo.branch || 'main',
+      userId,
+    ).catch((err) => {
+      this.logger.error(
+        `Background ingestion failed for repository ${repository.id}:`,
+        err,
+      );
+    });
 
     // 4. Return the pending repository metadata immediately
     return repository;
   }
 
-  private async ingestRepository(repoId: string, url: string, branch: string) {
+  private async ingestRepository(
+    repoId: string,
+    url: string,
+    branch: string,
+    userId?: string,
+  ) {
     const clonePath = path.join(os.tmpdir(), `docflow-clone-${repoId}`);
 
     try {
@@ -162,6 +170,12 @@ export class RepositoryService {
         where: { id: repoId },
         data: { status: 'CLONING' },
       });
+      if (userId) {
+        await this.redis.invalidateCache([
+          `repo:${repoId}`,
+          `user-repos:${userId}`,
+        ]);
+      }
 
       // Clone repository using shallow clone (depth 1)
       const git = simpleGit();
@@ -183,6 +197,12 @@ export class RepositoryService {
         where: { id: repoId },
         data: { status: 'EMBEDDING' },
       });
+      if (userId) {
+        await this.redis.invalidateCache([
+          `repo:${repoId}`,
+          `user-repos:${userId}`,
+        ]);
+      }
 
       // Get all text/code files recursively
       const filePaths = this.getAllFiles(clonePath);
@@ -225,6 +245,12 @@ export class RepositoryService {
         where: { id: repoId },
         data: { status: 'ANALYZING' },
       });
+      if (userId) {
+        await this.redis.invalidateCache([
+          `repo:${repoId}`,
+          `user-repos:${userId}`,
+        ]);
+      }
 
       // Analyze the repository structure to extract backend endpoints and frontend page routes
       await this.repoAnalysisService.analyzeRepositoryStructure(repoId);
@@ -311,6 +337,13 @@ export class RepositoryService {
       };
     }
 
+    const creditEstimate = await this.calculateCredits(repo.url);
+    await this.deductCredits(
+      userId,
+      creditEstimate.requiredCredits,
+      `repo_resync_${repoId}_${crypto.randomUUID()}`,
+    );
+
     // Transition to PENDING and launch differential sync in background
     const updatedRepo = await this.prisma.repo.update({
       where: { id: repoId },
@@ -339,6 +372,39 @@ export class RepositoryService {
       upToDate: false,
       repo: updatedRepo,
     };
+  }
+
+  private async deductCredits(
+    userId: string,
+    credits: number,
+    referenceId: string,
+  ) {
+    await this.prisma.$transaction(async (tx) => {
+      const updatedUsers = await tx.user.updateMany({
+        where: {
+          id: userId,
+          creditBalance: { gte: credits },
+        },
+        data: {
+          creditBalance: { decrement: credits },
+        },
+      });
+
+      if (updatedUsers.count !== 1) {
+        throw new BadRequestException(
+          `Not enough credits to resync this repository. Required: ${credits}.`,
+        );
+      }
+
+      await tx.creditLedger.create({
+        data: {
+          userId,
+          amount: -credits,
+          reason: 'repository_resync',
+          referenceId,
+        },
+      });
+    });
   }
 
   /**
