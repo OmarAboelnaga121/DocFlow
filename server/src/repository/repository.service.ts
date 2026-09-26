@@ -83,6 +83,39 @@ export class RepositoryService {
   }
 
   async createRepo(userId: string, repo: CreateRepoDto) {
+    // Check for auhenticated user existence
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    // Check if the user has reached the maximum number of repositories for their plan
+    const subscription = await this.prisma.subscription.findUnique({
+      where: { userId },
+      select: { planTier: true, status: true },
+    });
+
+    const planTier =
+      subscription && subscription.status === 'ACTIVE'
+        ? subscription.planTier
+        : 'FREE';
+
+    const repoLimit =
+      planTier === 'PRO' ? 7 : planTier === 'PREMIUM' ? 50 : 2;
+
+    const userRepos = await this.prisma.repo.count({
+      where: { userId },
+    });
+
+    if (userRepos >= repoLimit) {
+      throw new BadRequestException(
+        `You have reached the maximum number of repositories for your ${planTier.toLowerCase()} plan (${repoLimit}).`,
+      );
+    }
+
     // Validate branch name and repository URL (SSRF & command injection prevention)
     validateBranchName(repo.branch);
     await validateRepositoryUrl(repo.url);

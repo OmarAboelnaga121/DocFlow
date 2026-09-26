@@ -89,12 +89,19 @@ const mockCodeChunk = {
 };
 
 const mockPrismaService = {
+  user: {
+    findUnique: jest.fn(),
+  },
   repo: {
     create: jest.fn(),
     update: jest.fn(),
     findUnique: jest.fn(),
     findMany: jest.fn(),
+    count: jest.fn(),
     delete: jest.fn(),
+  },
+  subscription: {
+    findUnique: jest.fn(),
   },
   file: {
     create: jest.fn(),
@@ -176,6 +183,9 @@ describe('RepositoryService', () => {
       },
     );
     mockRedisService.invalidateCache.mockResolvedValue(true);
+    mockPrismaService.user.findUnique.mockResolvedValue({ id: 'user-id-1' });
+    mockPrismaService.repo.count.mockResolvedValue(0);
+    mockPrismaService.subscription.findUnique.mockResolvedValue(null);
 
     // Default fs behaviour — no stale clone dir
     mockFsExistsSync.mockReturnValue(false);
@@ -253,6 +263,26 @@ describe('RepositoryService', () => {
       // Should be near-instant (< 100ms), not blocked by async ingestion
       expect(elapsed).toBeLessThan(100);
       expect(result.status).toBe('PENDING');
+    });
+
+    it('should enforce plan-based repository limits: FREE=2, PRO=7, PREMIUM=50', async () => {
+      const cases = [
+        { planTier: 'FREE', repoCount: 2, limit: 2 },
+        { planTier: 'PRO', repoCount: 7, limit: 7 },
+        { planTier: 'PREMIUM', repoCount: 50, limit: 50 },
+      ];
+
+      for (const testCase of cases) {
+        mockPrismaService.subscription.findUnique.mockResolvedValue({
+          planTier: testCase.planTier,
+          status: 'ACTIVE',
+        });
+        mockPrismaService.repo.count.mockResolvedValue(testCase.repoCount);
+
+        await expect(service.createRepo('user-id-1', createRepoDto)).rejects.toThrow(
+          `maximum number of repositories for your ${testCase.planTier.toLowerCase()} plan`,
+        );
+      }
     });
 
     it('should NOT reject when background ingestion fails', async () => {
