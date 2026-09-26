@@ -19,52 +19,65 @@ export default function FormattedMessage({ content }: FormattedMessageProps) {
 
   // Helper to parse inline markdown (bold, code, citations, links) with unique key prefixes
   const renderInline = (text: string, prefix: string) => {
-    // 1. Split on inline code (`code`)
-    const codeParts = text.split(/(`[^`]+`)/g);
+    // Parse bold first so inline code inside bold text does not break the markers.
+    const boldParts = text.split(/(\*\*.+?\*\*)/g);
 
-    return codeParts.map((part, pIdx) => {
-      const codeKey = `${prefix}-c${pIdx}`;
-      if (part.startsWith("`") && part.endsWith("`") && part.length > 2) {
-        const codeText = part.slice(1, -1);
+    return boldParts.map((bPart, bIdx) => {
+      const boldKey = `${prefix}-b${bIdx}`;
+      if (bPart.startsWith("**") && bPart.endsWith("**") && bPart.length > 4) {
         return (
-          <code
-            key={codeKey}
-            className="font-mono text-[11px] bg-surface-container text-primary px-1.5 py-0.5 rounded border border-surface-container-high font-medium"
-          >
-            {codeText}
-          </code>
+          <strong key={boldKey} className="font-semibold text-on-surface">
+            {renderInline(bPart.slice(2, -2), `${boldKey}-content`)}
+          </strong>
         );
       }
 
-      // 2. Split on bold (**text**)
-      const boldParts = part.split(/(\*\*[^*]+\*\*)/g);
+      const codeParts = bPart.split(/(`[^`]+`)/g);
 
-      return boldParts.map((bPart, bIdx) => {
-        const boldKey = `${codeKey}-b${bIdx}`;
-        if (bPart.startsWith("**") && bPart.endsWith("**") && bPart.length > 4) {
+      return codeParts.map((part, pIdx) => {
+        const codeKey = `${boldKey}-c${pIdx}`;
+        if (part.startsWith("`") && part.endsWith("`") && part.length > 2) {
           return (
-            <strong key={boldKey} className="font-semibold text-on-surface">
-              {bPart.slice(2, -2)}
-            </strong>
+            <code
+              key={codeKey}
+              className="font-mono text-[11px] bg-surface-container text-primary px-1.5 py-0.5 rounded border border-surface-container-high font-medium"
+            >
+              {part.slice(1, -1)}
+            </code>
           );
         }
 
-        // 3. Highlight citation patterns like [src/path:12-40]
-        const citationParts = bPart.split(/(\[[a-zA-Z0-9_\-./]+:\d+(?:–\d+|-?\d+)?\])/g);
+        const emphasisParts = part.split(/(\*[^*]+\*|_[^_]+_|~~[^~]+~~)/g);
 
-        return citationParts.map((cPart, cIdx) => {
-          const citKey = `${boldKey}-cit${cIdx}`;
-          if (cPart.startsWith("[") && cPart.endsWith("]") && cPart.includes(":")) {
-            return (
-              <span
-                key={citKey}
-                className="font-mono text-[10px] text-secondary bg-secondary/10 px-1.5 py-0.5 rounded border border-secondary/20 mx-0.5"
-              >
-                {cPart}
-              </span>
-            );
+        return emphasisParts.map((emphasisPart, eIdx) => {
+          const emphasisKey = `${codeKey}-em${eIdx}`;
+          if (emphasisPart.startsWith("~~") && emphasisPart.endsWith("~~")) {
+            return <del key={emphasisKey}>{emphasisPart.slice(2, -2)}</del>;
           }
-          return <span key={citKey}>{cPart}</span>;
+
+          if (
+            (emphasisPart.startsWith("*") && emphasisPart.endsWith("*")) ||
+            (emphasisPart.startsWith("_") && emphasisPart.endsWith("_"))
+          ) {
+            return <em key={emphasisKey}>{emphasisPart.slice(1, -1)}</em>;
+          }
+
+          const citationParts = emphasisPart.split(/(\[[a-zA-Z0-9_\-./]+:\d+(?:–\d+|-?\d+)?\])/g);
+
+          return citationParts.map((cPart, cIdx) => {
+            const citKey = `${emphasisKey}-cit${cIdx}`;
+            if (cPart.startsWith("[") && cPart.endsWith("]") && cPart.includes(":")) {
+              return (
+                <span
+                  key={citKey}
+                  className="font-mono text-[10px] text-secondary bg-secondary/10 px-1.5 py-0.5 rounded border border-secondary/20 mx-0.5"
+                >
+                  {cPart}
+                </span>
+              );
+            }
+            return <span key={citKey}>{cPart}</span>;
+          });
         });
       });
     });

@@ -71,7 +71,7 @@ export class ChatService {
       );
     }
 
-    return this.prisma.chat.create({
+    const chat = await this.prisma.chat.create({
       data: {
         userId,
         repoId: createChatDto.repoId,
@@ -88,6 +88,10 @@ export class ChatService {
         },
       },
     });
+
+    await this.redis.invalidateCache(`repo:${createChatDto.repoId}`);
+
+    return chat;
   }
 
   async getChatById(userId: string, chatId: string) {

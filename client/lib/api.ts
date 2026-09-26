@@ -11,6 +11,31 @@ import {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
+export const CHAT_MODELS = [
+  {
+    value: "qwen3.7-plus",
+    label: "Qwen Plus",
+    description: "Balanced quality and speed",
+  },
+  {
+    value: "qwen3.7-max",
+    label: "Qwen Max",
+    description: "Best for complex reasoning",
+  },
+  {
+    value: "qwen3.7-flash",
+    label: "Qwen Flash",
+    description: "Fast responses for simple questions",
+  },
+  {
+    value: "qwen3.6-plus",
+    label: "Qwen 3.6 Plus",
+    description: "Strong general-purpose model",
+  },
+] as const;
+
+export type ChatModel = (typeof CHAT_MODELS)[number]["value"];
+
 export async function loginUser(data: LoginData): Promise<AuthResponse> {
   const res = await fetch(`${API_URL}/auth/login`, {
     method: "POST",
@@ -286,7 +311,8 @@ export async function getChatMessages(chatId: string): Promise<ChatMessage[]> {
 
 export async function sendMessage(
   chatId: string,
-  content: string
+  content: string,
+  model?: ChatModel
 ): Promise<ChatMessage> {
   const res = await fetch(`${API_URL}/chat/${chatId}/messages`, {
     method: "POST",
@@ -294,7 +320,7 @@ export async function sendMessage(
       "Content-Type": "application/json",
     },
     credentials: "include",
-    body: JSON.stringify({ content }),
+    body: JSON.stringify({ content, ...(model ? { model } : {}) }),
   });
 
   const result = await res.json();

@@ -124,6 +124,25 @@ describe('ChatService Caching', () => {
     mockRedisService.invalidateCache.mockResolvedValue(true);
   });
 
+  describe('createChat()', () => {
+    it('invalidates the repository cache after creating a chat', async () => {
+      mockPrismaService.repo.findFirst.mockResolvedValue({
+        id: 'repo-id-1',
+        userId: 'user-id-1',
+      });
+      mockPrismaService.chat.create.mockResolvedValue(mockChat);
+
+      await service.createChat('user-id-1', {
+        repoId: 'repo-id-1',
+        title: 'Authentication',
+      });
+
+      expect(mockRedisService.invalidateCache).toHaveBeenCalledWith(
+        'repo:repo-id-1',
+      );
+    });
+  });
+
   describe('getChatById()', () => {
     it('should return cached chat without querying database on cache hit', async () => {
       mockRedisService.getOrSet.mockResolvedValue(mockChat);

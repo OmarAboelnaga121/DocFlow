@@ -1,17 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, useMemo, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useCallback, useEffect, useState, useMemo, useRef } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faBolt,
+  faBrain,
+  faGaugeHigh,
+  faSliders,
+} from "@fortawesome/free-solid-svg-icons";
+import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import {
   getUserProfile,
   getChatById,
   getRepositoryById,
-  createChat,
   sendMessage,
+  CHAT_MODELS,
+  ChatModel,
 } from "@/lib/api";
 import { User, Repo, Chat, ChatMessage, ApiItem, PageItem } from "@/types";
-import Image from "next/image";
 import FormattedMessage from "@/components/FormattedMessage";
 
 type TabType = "chat" | "apis" | "pages";
@@ -22,21 +30,37 @@ interface TabItem {
   icon: string;
 }
 
+interface Citation {
+  filePath?: string;
+  file?: { path?: string };
+  startLine?: number;
+  endLine?: number;
+  content?: string;
+}
+
 const TABS: TabItem[] = [
   { id: "chat", label: "Chat", icon: "chat_bubble" },
   { id: "apis", label: "APIs", icon: "api" },
   { id: "pages", label: "Pages", icon: "description" },
 ];
 
+const MODEL_ICONS: Record<ChatModel, IconDefinition> = {
+  "qwen3.7-plus": faGaugeHigh,
+  "qwen3.7-max": faBrain,
+  "qwen3.7-flash": faBolt,
+  "qwen3.6-plus": faSliders,
+};
+
 export default function ChatWorkspacePage() {
   const router = useRouter();
   const { chatId } = useParams();
+  const searchParams = useSearchParams();
+  const initialPrompt = searchParams.get("prompt")?.trim() || "";
 
   const [user, setUser] = useState<User | null>(null);
   const [chat, setChat] = useState<Chat | null>(null);
   const [repo, setRepo] = useState<Repo | null>(null);
   const [chats, setChats] = useState<Chat[]>([]);
-  const [isCreatingChat, setIsCreatingChat] = useState(false);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>("chat");
@@ -45,10 +69,13 @@ export default function ChatWorkspacePage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [selectedModel, setSelectedModel] = useState<ChatModel>("qwen3.7-plus");
+  const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const [expandedCitations, setExpandedCitations] = useState<Record<string, boolean>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const sentInitialPromptRef = useRef<string | null>(null);
 
   // Filters for APIs & Pages
   const [apiSearch, setApiSearch] = useState("");
@@ -132,7 +159,7 @@ export default function ChatWorkspacePage() {
     }
   }, [messages, isSending, activeTab]);
 
-  const handleSendMessage = async (textToSend?: string) => {
+  const handleSendMessage = useCallback(async (textToSend?: string) => {
     const text = (textToSend || inputMessage).trim();
     if (!text || !chatId || isSending) return;
 
@@ -152,19 +179,39 @@ export default function ChatWorkspacePage() {
     setIsSending(true);
 
     try {
-      const aiResponse = await sendMessage(chatId as string, text);
+      const aiResponse = await sendMessage(chatId as string, text, selectedModel);
       if (aiResponse) {
         setMessages((prev) => [...prev, aiResponse]);
       }
-    } catch (err: any) {
-      setSendError(err.message || "Failed to get AI response. Please try again.");
+    } catch (err) {
+      setSendError(
+        err instanceof Error
+          ? err.message
+          : "Failed to get AI response. Please try again."
+      );
     } finally {
       setIsSending(false);
       if (textareaRef.current) {
         textareaRef.current.style.height = "auto";
       }
     }
-  };
+  }, [chatId, inputMessage, isSending, selectedModel]);
+
+  useEffect(() => {
+    if (
+      !initialPrompt ||
+      !chatId ||
+      isLoadingData ||
+      messages.length > 0 ||
+      sentInitialPromptRef.current === initialPrompt
+    ) {
+      return;
+    }
+
+    sentInitialPromptRef.current = initialPrompt;
+    window.history.replaceState(null, "", window.location.pathname);
+    void handleSendMessage(initialPrompt);
+  }, [initialPrompt, chatId, isLoadingData, messages.length, handleSendMessage]);
 
   const toggleCitation = (msgId: string) => {
     setExpandedCitations((prev) => ({
@@ -252,6 +299,7 @@ export default function ChatWorkspacePage() {
 
   // Actual chats from API (or active chat if single session loaded)
   const displayChats = chats.length > 0 ? chats : chat ? [chat] : [];
+  const activeModel = CHAT_MODELS.find((model) => model.value === selectedModel);
 
   return (
     <div className="h-screen w-full flex bg-background text-on-background overflow-hidden font-sans">
@@ -396,7 +444,7 @@ export default function ChatWorkspacePage() {
           {/* Active Context / Chat Info */}
           <div className="hidden sm:flex items-center gap-2 text-xs font-mono text-text-secondary">
             {chat?.title && (
-              <span className="text-on-background max-w-[200px] truncate">
+              <span className="text-on-background max-w-50 truncate">
                 {chat.title}
               </span>
             )}
@@ -410,7 +458,7 @@ export default function ChatWorkspacePage() {
 
         {/* Tab Content Container */}
         <section className="flex-1 min-h-0 overflow-hidden flex flex-col">
-          {/* ── CHAT TAB ── */}
+          {/* ── CHAT TAB ── */} 
           {activeTab === "chat" && (
             <div id="tab-content-chat" className="flex-1 min-h-0 flex flex-col h-full overflow-hidden">
               {/* Messages Stream */}
@@ -456,7 +504,9 @@ export default function ChatWorkspacePage() {
                   messages.map((msg, idx) => {
                     const isUser = msg.role === "USER";
                     const isExpanded = !!expandedCitations[msg.id];
-                    const citations = Array.isArray(msg.context) ? msg.context : [];
+                    const citations: Citation[] = Array.isArray(msg.context)
+                      ? msg.context
+                      : [];
 
                     return (
                       <div
@@ -527,7 +577,7 @@ export default function ChatWorkspacePage() {
 
                               {isExpanded && (
                                 <div className="mt-2 space-y-2 max-h-56 overflow-y-auto pr-1">
-                                  {citations.map((chunk: any, cIdx: number) => (
+                                  {citations.map((chunk, cIdx) => (
                                     <div
                                       key={cIdx}
                                       className="p-2.5 rounded-lg bg-surface-container-low border border-surface-container text-[11px] font-mono"
@@ -601,6 +651,87 @@ export default function ChatWorkspacePage() {
                   className="max-w-4xl mx-auto flex flex-col gap-2"
                 >
                   <div className="bg-surface-container-low border border-surface-container focus-within:border-primary/70 focus-within:ring-1 focus-within:ring-primary/30 rounded-xl p-2 flex items-end gap-2 transition-all">
+                    <div className="relative shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setIsModelMenuOpen((open) => !open)}
+                        disabled={isSending}
+                        aria-expanded={isModelMenuOpen}
+                        aria-haspopup="listbox"
+                        className="h-8 rounded-lg px-1.5 flex items-center gap-1.5 text-[11px] font-mono text-text-secondary hover:text-primary hover:bg-surface-container transition-colors disabled:opacity-40"
+                      >
+                        <span className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10 text-primary">
+                          {activeModel && (
+                            <FontAwesomeIcon
+                              icon={MODEL_ICONS[activeModel.value]}
+                              className="text-[13px]"
+                            />
+                          )}
+                        </span>
+                        <span className="hidden sm:inline">
+                          {activeModel?.label}
+                        </span>
+                        <span className="material-symbols-outlined text-sm">
+                          {isModelMenuOpen ? "keyboard_arrow_up" : "keyboard_arrow_down"}
+                        </span>
+                      </button>
+
+                      {isModelMenuOpen && (
+                        <div
+                          role="listbox"
+                          aria-label="Choose AI model"
+                          className="absolute bottom-full left-0 z-20 mb-2 w-72 overflow-hidden rounded-xl border border-surface-container bg-white p-1.5 shadow-xl"
+                        >
+                          <div className="px-2.5 py-2 text-[10px] font-mono uppercase tracking-wider text-text-secondary">
+                            Choose model
+                          </div>
+                          {CHAT_MODELS.map((model) => {
+                            const isSelected = model.value === selectedModel;
+
+                            return (
+                              <button
+                                key={model.value}
+                                type="button"
+                                role="option"
+                                aria-selected={isSelected}
+                                onClick={() => {
+                                  setSelectedModel(model.value);
+                                  setIsModelMenuOpen(false);
+                                }}
+                                className={`w-full rounded-lg px-2.5 py-2 text-left transition-colors ${
+                                  isSelected
+                                    ? "bg-primary/10 text-primary"
+                                    : "text-text-primary hover:bg-surface-container-low"
+                                }`}
+                              >
+                                <span className="flex items-center gap-2.5">
+                                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-container-low text-primary">
+                                    <FontAwesomeIcon
+                                      icon={MODEL_ICONS[model.value]}
+                                      className="text-[14px]"
+                                    />
+                                  </span>
+                                  <span className="min-w-0 flex-1">
+                                    <span className="flex items-center justify-between gap-2 text-xs font-semibold">
+                                      <span>{model.label}</span>
+                                      {isSelected && (
+                                        <span className="material-symbols-outlined text-sm text-primary">
+                                          check
+                                        </span>
+                                      )}
+                                    </span>
+                                    <span className="mt-0.5 block text-[10px] text-text-secondary">
+                                      {model.description}
+                                    </span>
+                                  </span>
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
                     <textarea
                       ref={textareaRef}
                       value={inputMessage}

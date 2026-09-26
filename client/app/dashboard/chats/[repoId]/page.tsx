@@ -1,10 +1,13 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getUserProfile, getRepositoryById, createChat } from "@/lib/api";
+import {
+  getUserProfile,
+  getRepositoryById,
+  createChat,
+} from "@/lib/api";
 import { User, Repo, Chat } from "@/types";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -20,12 +23,12 @@ export default function ChatsPage() {
   const [isLoadingRepo, setIsLoadingRepo] = useState(true);
 
   // New Chat form state
-  const [chatTitle, setChatTitle] = useState("");
+  const [initialPrompt, setInitialPrompt] = useState("");
   const [isCreatingChat, setIsCreatingChat] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const quickPrompts = [
+  const suggestedPrompts = [
     "Explain overall architecture",
     "List all API endpoints",
     "How does authentication work?",
@@ -49,7 +52,7 @@ export default function ChatsPage() {
             return;
           }
         }
-      } catch (err) {
+      } catch {
         if (isMounted) {
           setUser(null);
           router.replace("/login");
@@ -67,9 +70,13 @@ export default function ChatsPage() {
             setChats(repoData.chats);
           }
         }
-      } catch (err: any) {
+      } catch (err) {
         if (isMounted) {
-          setErrorMessage(err.message || "Failed to load repository workspace.");
+          setErrorMessage(
+            err instanceof Error
+              ? err.message
+              : "Failed to load repository workspace."
+          );
         }
       } finally {
         if (isMounted) setIsLoadingRepo(false);
@@ -85,7 +92,7 @@ export default function ChatsPage() {
 
   const handleCreateChat = async (e?: React.FormEvent, customTitle?: string) => {
     if (e) e.preventDefault();
-    const titleToUse = (customTitle || chatTitle).trim() || "New Discussion";
+    const prompt = (customTitle || initialPrompt).trim();
 
     if (!repoId) return;
 
@@ -94,28 +101,27 @@ export default function ChatsPage() {
     setIsCreatingChat(true);
 
     try {
+      const chatTitle = prompt
+        ? prompt.split(/\s+/).slice(0, 6).join(" ").replace(/[?.!,]+$/, "")
+        : "New Discussion";
       const newChat = await createChat({
         repoId: repoId as string,
-        title: titleToUse,
+        title: chatTitle,
       });
 
-      setSuccessMessage(`Session "${titleToUse}" created!`);
-      setChatTitle("");
-
-      // Refresh repository/chats
-      const updatedRepo = await getRepositoryById(repoId as string);
-      if (updatedRepo && Array.isArray(updatedRepo.chats)) {
-        setChats(updatedRepo.chats);
-      } else if (newChat) {
-        setChats((prev) => [newChat, ...prev]);
-      }
+      setInitialPrompt("");
 
       if (newChat && newChat.id) {
-        router.push(`/dashboard/chats/chat/${newChat.id}`);
+        const promptQuery = prompt
+          ? `?prompt=${encodeURIComponent(prompt)}`
+          : "";
+        router.push(`/dashboard/chats/chat/${newChat.id}${promptQuery}`);
       }
-    } catch (err: any) {
+    } catch (err) {
       setErrorMessage(
-        err.message || "Failed to create new chat session. Please try again."
+        err instanceof Error
+          ? err.message
+          : "Failed to create new chat session. Please try again."
       );
     } finally {
       setIsCreatingChat(false);
@@ -211,22 +217,22 @@ export default function ChatsPage() {
               Start a New AI Conversation
             </h2>
             <p className="text-xs text-text-secondary mt-1">
-              Ask questions, generate flow diagrams, explore architecture, or debug code in this repository.
+              Start with a question about this repository. You can explore architecture, APIs, or implementation details in the conversation.
             </p>
           </div>
 
           <form onSubmit={(e) => handleCreateChat(e)} className="flex flex-col gap-3">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-              {/* Chat Title / Query Input */}
+              {/* First message input */}
               <div className="md:col-span-9 bg-surface-container-low border border-surface-container focus-within:border-primary/70 focus-within:ring-1 focus-within:ring-primary/30 rounded-xl p-1.5 pl-4 flex items-center gap-3 transition-all">
                 <span className="material-symbols-outlined text-text-secondary text-[22px] shrink-0">
                   edit_note
                 </span>
                 <input
                   type="text"
-                  value={chatTitle}
-                  onChange={(e) => setChatTitle(e.target.value)}
-                  placeholder="Conversation Topic (e.g. Auth Architecture, REST Endpoints, Database Schema...)"
+                  value={initialPrompt}
+                  onChange={(e) => setInitialPrompt(e.target.value)}
+                  placeholder="Ask your first question (e.g. How does authentication work?)"
                   className="w-full bg-transparent text-sm text-text-primary placeholder-[#64748b] outline-none font-sans"
                   disabled={isCreatingChat}
                 />
@@ -254,15 +260,15 @@ export default function ChatsPage() {
               </div>
             </div>
 
-            {/* Quick Starter Prompts */}
+            {/* Suggested first messages */}
             <div className="mt-2 flex items-center gap-2 flex-wrap">
-              <span className="text-[11px] font-mono text-text-secondary">Suggested topics:</span>
-              {quickPrompts.map((prompt, idx) => (
+              <span className="text-[11px] font-mono text-text-secondary">Suggested questions:</span>
+              {suggestedPrompts.map((prompt, idx) => (
                 <button
                   key={idx}
                   type="button"
                   onClick={() => {
-                    setChatTitle(prompt);
+                    setInitialPrompt(prompt);
                   }}
                   className="text-[11px] text-text-secondary hover:text-primary bg-surface hover:bg-surface-container border border-surface-container px-2.5 py-1 rounded-lg transition-all cursor-pointer"
                 >
@@ -358,7 +364,7 @@ export default function ChatsPage() {
                 No chat sessions yet
               </p>
               <p className="text-xs text-text-secondary mt-1 max-w-sm">
-                Type a conversation topic or select one of the suggested prompts above to start exploring your codebase with AI.
+                Ask a first question or select one of the suggested prompts above to start exploring your codebase with AI.
               </p>
             </div>
           )}

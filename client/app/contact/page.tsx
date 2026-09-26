@@ -12,8 +12,8 @@ export default function ContactPage() {
         </h1>
         <p className="max-w-2xl text-center mb-8 text-text-secondary leading-relaxed">
           Have questions or feedback? Reach out via email at
-          <a href="mailto:support@docflow.com" className="ml-2 text-secondary hover:underline">
-            support@docflow.com
+          <a href="mailto:docflow.work@gmail.com" className="ml-2 text-secondary hover:underline">
+            docflow.work@gmail.com
           </a>.
         </p>
         <Link href="/" className="mt-4 text-secondary hover:text-on-surface transition-colors">
