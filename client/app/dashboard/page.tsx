@@ -181,12 +181,30 @@ export default function DashboardPage() {
   };
 
   const handleSyncRepo = async (id: string, name: string) => {
+    const repoToSync = repos.find((repo) => repo.id === id);
+    const repoUrl = repoToSync?.url;
+
     setActiveMenuId(null);
     setSyncingId(id);
     setErrorMessage(null);
     setSuccessMessage(null);
 
+    if (!repoUrl) {
+      setSyncingId(null);
+      setErrorMessage(`Could not determine the repository URL for "${name}".`);
+      return;
+    }
+
     try {
+      const creditEstimate = await calculateRepositoryCredits(repoUrl);
+      const confirmed = window.confirm(
+        `This repository requires ${creditEstimate.requiredCredits} credits to sync. Continue syncing it?`
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
       const res = await syncRepository(id);
       if (res.upToDate) {
         setSuccessMessage(`Repository "${name}" is already up to date with remote.`);
