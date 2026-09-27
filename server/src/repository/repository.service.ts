@@ -167,8 +167,11 @@ export class RepositoryService {
       return createdRepository;
     });
 
-    // 2. Invalidate cached repository list for this user
-    await this.redis.invalidateCache(`user-repos:${userId}`);
+    // 2. Invalidate cached user and repo metadata after credit deduction
+    await this.redis.invalidateCache([
+      `user:${userId}`,
+      `user-repos:${userId}`,
+    ]);
 
     // 3. Perform the ingestion process in the background
     this.ingestRepository(
@@ -386,6 +389,7 @@ export class RepositoryService {
       data: { status: 'PENDING' },
     });
     await this.redis.invalidateCache([
+      `user:${userId}`,
       `repo:${repoId}`,
       `user-repos:${userId}`,
     ]);

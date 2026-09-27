@@ -112,6 +112,7 @@ const mockPrismaService = {
   file: {
     create: jest.fn(),
     deleteMany: jest.fn(),
+    findMany: jest.fn(),
   },
   codeChunk: {
     create: jest.fn(),
@@ -200,6 +201,7 @@ describe('RepositoryService', () => {
     mockPrismaService.creditLedger.create.mockResolvedValue({});
     mockPrismaService.repo.count.mockResolvedValue(0);
     mockPrismaService.subscription.findUnique.mockResolvedValue(null);
+    mockPrismaService.file.findMany.mockResolvedValue([]);
 
     // Default fs behaviour — no stale clone dir
     mockFsMkdtempSync.mockReturnValue('/tmp/docflow-credit-estimate');
@@ -246,6 +248,20 @@ describe('RepositoryService', () => {
         }),
       });
       expect(result).toEqual(mockRepo);
+    });
+
+    it('should invalidate the cached user profile when credits are deducted on repo creation', async () => {
+      mockPrismaService.repo.create.mockResolvedValue(mockRepo);
+      mockPrismaService.repo.update.mockResolvedValue({
+        ...mockRepo,
+        status: 'COMPLETED',
+      });
+
+      await service.createRepo('user-id-1', createRepoDto);
+
+      expect(mockRedisService.invalidateCache).toHaveBeenCalledWith(
+        expect.arrayContaining(['user:user-id-1']),
+      );
     });
 
     it('should use the provided branch instead of the default main', async () => {
@@ -343,6 +359,22 @@ describe('RepositoryService', () => {
         service.createRepo('user-id-1', injectionDto),
       ).rejects.toThrow(BadRequestException);
       expect(mockPrismaService.repo.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('syncRepo()', () => {
+    it('should invalidate the cached user profile after credits are deducted during a sync', async () => {
+      const repo = { ...mockRepo, status: 'COMPLETED', latestCommitHash: 'old-hash' };
+
+      mockPrismaService.repo.findUnique.mockResolvedValue(repo);
+      mockPrismaService.repo.update.mockResolvedValue(repo);
+      mockGitListRemote.mockResolvedValue('new-hash refs/heads/main');
+
+      await service.syncRepo('repo-id-1', 'user-id-1');
+
+      expect(mockRedisService.invalidateCache).toHaveBeenCalledWith(
+        expect.arrayContaining(['user:user-id-1']),
+      );
     });
   });
 
