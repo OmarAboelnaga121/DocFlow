@@ -176,6 +176,30 @@ export async function createRepository(data: CreateRepoData): Promise<Repo> {
   return result;
 }
 
+export async function calculateRepositoryCredits(
+  repoUrl: string
+): Promise<{ repoUrl: string; sizeBytes: number; sizeMb: number; requiredCredits: number }> {
+  const res = await fetch(`${API_URL}/repository/calculate-credits`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify({ repoUrl }),
+  });
+
+  const result = await res.json();
+
+  if (!res.ok) {
+    const errorMsg = Array.isArray(result.message)
+      ? result.message.join(", ")
+      : result.message || "Failed to calculate repository credits";
+    throw new Error(errorMsg);
+  }
+
+  return result;
+}
+
 export async function getUserRepositories(): Promise<Repo[]> {
   const res = await fetch(`${API_URL}/repository`, {
     method: "GET",
@@ -401,4 +425,82 @@ export async function createPaymentSession(
   return {
     approvalUrl: result.approvalUrl,
   };
+}
+
+export async function activateSubscription(
+  subscriptionId: string
+): Promise<{
+  message: string;
+  subscriptionId: string;
+  tier: string;
+  status: string;
+  currentPeriodEnd: string | null;
+  creditBalance: number;
+}> {
+  const res = await fetch(`${API_URL}/payment/subscriptions/activate`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify({ subscriptionId }),
+  });
+
+  const result = await res.json();
+
+  if (!res.ok) {
+    const errorMsg = Array.isArray(result.message)
+      ? result.message.join(", ")
+      : result.message || "Failed to activate subscription";
+    throw new Error(errorMsg);
+  }
+
+  return result;
+}
+
+export async function getCurrentSubscription(): Promise<{
+  subscription: {
+    planTier: string;
+    status: string;
+    currentPeriodEnd: string | null;
+  };
+  creditBalance: number;
+}> {
+  const res = await fetch(`${API_URL}/payment/subscriptions/current`, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  const result = await res.json();
+
+  if (!res.ok) {
+    const errorMsg = Array.isArray(result.message)
+      ? result.message.join(", ")
+      : result.message || "Failed to fetch subscription";
+    throw new Error(errorMsg);
+  }
+
+  return result;
+}
+
+export async function cancelSubscription(reason?: string): Promise<{ message: string; status: string; planTier: string }> {
+  const res = await fetch(`${API_URL}/payment/subscriptions/cancel`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(reason ? { reason } : {}),
+  });
+
+  const result = await res.json();
+
+  if (!res.ok) {
+    const errorMsg = Array.isArray(result.message)
+      ? result.message.join(", ")
+      : result.message || "Failed to cancel subscription";
+    throw new Error(errorMsg);
+  }
+
+  return result;
 }

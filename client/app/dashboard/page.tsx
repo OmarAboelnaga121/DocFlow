@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import {
   getUserProfile,
   getUserRepositories,
+  calculateRepositoryCredits,
   createRepository,
   deleteRepository,
   syncRepository,
@@ -126,6 +127,15 @@ export default function DashboardPage() {
     setIsImporting(true);
 
     try {
+      const creditEstimate = await calculateRepositoryCredits(cleanUrl);
+      const confirmed = window.confirm(
+        `This repository requires ${creditEstimate.requiredCredits} credits. Continue importing it?`
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
       await createRepository({
         url: cleanUrl,
         name: cleanName,

@@ -119,16 +119,52 @@ export class RepositoryService {
     // Validate branch name and repository URL (SSRF & command injection prevention)
     validateBranchName(repo.branch);
     await validateRepositoryUrl(repo.url);
+    const targetBranch = await this.resolveRepositoryBranch(
+      repo.url,
+      repo.branch,
+    );
+    const creditEstimate = await this.calculateCredits(repo.url);
+    const creditReferenceId = `repo_create_${crypto.randomUUID()}`;
 
-    // 1. Create the repository entry in PENDING status
-    const repository = await this.prisma.repo.create({
-      data: {
-        name: repo.name,
-        branch: repo.branch || 'main',
-        url: repo.url,
-        userId: userId,
-        status: 'PENDING',
+    // Create the repository and charge credits atomically.
+    const repository = await this.prisma.$transaction(async (tx) => {
+      const updatedUsers = await tx.user.updateMany({
+        where: {
+          id: userId,
+          creditBalance: { gte: creditEstimate.requiredCredits },
+        },
+        data: {
+          creditBalance: { decrement: creditEstimate.requiredCredits },
+        },
+      });
+
+      if (updatedUsers.count !== 1) {
+        throw new BadRequestException(
+          `Not enough credits to create this repository. Required: ${creditEstimate.requiredCredits}.`,
+        );
+      }
+
+      const createdRepository = await tx.repo.create({
+        data: {
+          name: repo.name,
+          branch: targetBranch,
+          url: repo.url,
+          userId: userId,
+          status: 'PENDING',
+        },
       },
+      );
+
+      await tx.creditLedger.create({
+        data: {
+          userId,
+          amount: -creditEstimate.requiredCredits,
+          reason: 'repository_creation',
+          referenceId: creditReferenceId,
+        },
+      });
+
+      return createdRepository;
     });
 
     // 2. Invalidate cached repository list for this user
@@ -138,7 +174,7 @@ export class RepositoryService {
     this.ingestRepository(
       repository.id,
       repo.url,
-      repo.branch || 'main',
+      targetBranch,
       userId,
     ).catch((err) => {
       this.logger.error(
@@ -652,6 +688,36 @@ export class RepositoryService {
   /**
    * Resolves the latest remote commit SHA for a specific branch without cloning.
    */
+  private async resolveRepositoryBranch(
+    url: string,
+    requestedBranch?: string,
+  ): Promise<string> {
+    const branch = requestedBranch || 'main';
+    const git = simpleGit();
+    const branchOutput = await git.listRemote(['--heads', url, branch]);
+
+    if (branchOutput.trim()) {
+      return branch;
+    }
+
+    if (branch !== 'main') {
+      throw new BadRequestException(
+        `Remote branch "${branch}" was not found in the repository`,
+      );
+    }
+
+    const headOutput = await git.listRemote(['--symref', url, 'HEAD']);
+    const match = headOutput.match(/ref:\s+refs\/heads\/([^\s]+)\s+HEAD/);
+
+    if (match?.[1]) {
+      return match[1];
+    }
+
+    throw new BadRequestException(
+      'Unable to determine the repository default branch',
+    );
+  }
+
   private async getRemoteLatestCommit(
     url: string,
     branch: string,

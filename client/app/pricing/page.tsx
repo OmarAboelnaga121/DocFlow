@@ -121,7 +121,14 @@ export default function PricingPage() {
       }
 
       // create a payment session for the selected plan
-      const planTier = planName === "Pro" ? "PRO" : "PREMIUM";
+      const normalizedPlan = planName.toLowerCase();
+      const planTier = normalizedPlan === "pro" ? "PRO" : normalizedPlan === "premium" ? "PREMIUM" : null;
+
+      if (!planTier) {
+        window.alert("This plan is not available for checkout right now.");
+        return;
+      }
+
       const { approvalUrl } = await createPaymentSession(planTier);
 
       // redirect the user to the payment session URL

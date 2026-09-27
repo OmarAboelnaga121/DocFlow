@@ -25,6 +25,7 @@ jest.mock('simple-git', () => {
 });
 
 // Mock fs to prevent real filesystem access
+const mockFsMkdtempSync = jest.fn();
 const mockFsExistsSync = jest.fn();
 const mockFsRmSync = jest.fn();
 const mockFsReaddirSync = jest.fn();
@@ -32,6 +33,7 @@ const mockFsStatSync = jest.fn();
 const mockFsReadFileSync = jest.fn();
 
 jest.mock('fs', () => ({
+  mkdtempSync: (...args: any[]) => mockFsMkdtempSync(...args),
   existsSync: (...args: any[]) => mockFsExistsSync(...args),
   rmSync: (...args: any[]) => mockFsRmSync(...args),
   readdirSync: (...args: any[]) => mockFsReaddirSync(...args),
@@ -91,6 +93,10 @@ const mockCodeChunk = {
 const mockPrismaService = {
   user: {
     findUnique: jest.fn(),
+    updateMany: jest.fn(),
+  },
+  creditLedger: {
+    create: jest.fn(),
   },
   repo: {
     create: jest.fn(),
@@ -176,6 +182,12 @@ describe('RepositoryService', () => {
     service = module.get<RepositoryService>(RepositoryService);
 
     jest.clearAllMocks();
+    jest.spyOn(service, 'calculateCredits').mockResolvedValue({
+      repoUrl: 'https://github.com/octocat/Hello-World.git',
+      sizeBytes: 0,
+      sizeMb: 0,
+      requiredCredits: 1,
+    });
 
     mockRedisService.getOrSet.mockImplementation(
       async (_key: string, _ttl: number, fetcher: () => Promise<unknown>) => {
@@ -184,10 +196,13 @@ describe('RepositoryService', () => {
     );
     mockRedisService.invalidateCache.mockResolvedValue(true);
     mockPrismaService.user.findUnique.mockResolvedValue({ id: 'user-id-1' });
+    mockPrismaService.user.updateMany.mockResolvedValue({ count: 1 });
+    mockPrismaService.creditLedger.create.mockResolvedValue({});
     mockPrismaService.repo.count.mockResolvedValue(0);
     mockPrismaService.subscription.findUnique.mockResolvedValue(null);
 
     // Default fs behaviour — no stale clone dir
+    mockFsMkdtempSync.mockReturnValue('/tmp/docflow-credit-estimate');
     mockFsExistsSync.mockReturnValue(false);
     // Default: no files in clone dir (prevents deep ingestion loops)
     mockFsReaddirSync.mockReturnValue([]);
