@@ -358,6 +358,9 @@ export default function UserProfilePage() {
                       <span className="text-outline-variant">•</span>
                       <span>{user.email}</span>
                     </p>
+                    <p className="text-sm text-text-secondary font-mono flex items-center gap-2">
+                      <span>{user.creditBalance} credits</span>
+                    </p>
 
                     <p className="text-xs text-text-secondary">
                       Member since{" "}
@@ -369,6 +372,7 @@ export default function UserProfilePage() {
                         })
                         : "Recent"}
                     </p>
+
                   </div>
                 </div>
 

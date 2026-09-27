@@ -177,8 +177,9 @@ export async function validateRepositoryUrl(rawUrl: string): Promise<void> {
     if (err instanceof BadRequestException) {
       throw err;
     }
+    const message = err instanceof Error ? err.message : String(err);
     throw new BadRequestException(
-      `Failed to resolve repository host "${lowerHostname}": ${err.message}`,
+      `Failed to resolve repository host "${lowerHostname}": ${message}`,
     );
   }
 }

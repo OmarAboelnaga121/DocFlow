@@ -22,6 +22,7 @@ export interface User {
   userRole?: UserRole | string;
   role?: UserRole | string;
   authProvider?: string;
+  creditBalance?: number;
   createdAt?: string;
   updatedAt?: string;
 }

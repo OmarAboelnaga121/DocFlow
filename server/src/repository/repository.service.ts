@@ -741,8 +741,9 @@ export class RepositoryService {
       }
       return null;
     } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
       this.logger.warn(
-        `Could not check remote commit hash for ${url} (${branch}): ${error.message}`,
+        `Could not check remote commit hash for ${url} (${branch}): ${message}`,
       );
       return null;
     }
