@@ -94,31 +94,43 @@ export default function Footer() {
       </div>
 
       {/* Bottom Bar */}
-      <div className="mt-10 pt-6 px-6 md:px-8 max-w-[1440px] mx-auto flex flex-col sm:flex-row justify-between items-center gap-4 text-xs border-t border-border-hairline text-text-secondary/80">
+      <div className="mt-10 pt-6 px-6 md:px-8 max-w-[1440px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-xs border-t border-border-hairline text-text-secondary">
         <p>
-          © 2026 DocFlow Inc. Built by{" "}
+          &copy; 2026 DocFlow Inc. Built by{" "}
           <a
             href="https://github.com/OmarAboelnaga121"
             target="_blank"
             rel="noopener noreferrer"
-            className="transition-colors hover:text-on-surface"
+            className="font-medium text-text-primary hover:text-primary transition-colors"
           >
             Omar Wael
           </a>
           . All rights reserved.
         </p>
-        <div className="flex gap-6">
+        <div className="flex flex-wrap items-center justify-center gap-5">
           <Link
             href="/legal#privacy"
-            className="transition-colors hover:text-on-surface"
+            className="transition-colors hover:text-primary"
           >
             Privacy Policy
           </Link>
           <Link
             href="/legal#terms"
-            className="transition-colors hover:text-on-surface"
+            className="transition-colors hover:text-primary"
           >
             Terms of Service
+          </Link>
+          <Link
+            href="/legal#refund"
+            className="transition-colors hover:text-primary"
+          >
+            Refund Policy
+          </Link>
+          <Link
+            href="/legal#cookies"
+            className="transition-colors hover:text-primary"
+          >
+            Cookie Notice
           </Link>
         </div>
       </div>

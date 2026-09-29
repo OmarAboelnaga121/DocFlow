@@ -14,6 +14,7 @@ export default function RegisterPage() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [hasConsented, setHasConsented] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -64,6 +65,11 @@ export default function RegisterPage() {
 
     if (password.length < 6) {
       setError("Password must be at least 6 characters long.");
+      return;
+    }
+
+    if (!hasConsented) {
+      setError("Please accept the Terms of Service and Privacy Policy, and confirm you are at least 18 years old to proceed.");
       return;
     }
 
@@ -353,26 +359,59 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary hover:text-on-surface focus:outline-none transition-colors"
-                  tabIndex={-1}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary hover:text-on-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded p-1 transition-colors"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  <span className="material-symbols-outlined text-lg leading-none">
+                  <span className="material-symbols-outlined text-lg leading-none" aria-hidden="true">
                     {showPassword ? "visibility_off" : "visibility"}
                   </span>
                 </button>
               </div>
-              <p className="text-[11px] text-secondary">
+              <p className="text-[11px] text-text-secondary">
                 Minimum 6 characters
               </p>
+            </div>
+
+            {/* Form Consent & Age Checkbox */}
+            <div className="flex items-start gap-2.5 pt-1">
+              <input
+                id="consent-checkbox"
+                type="checkbox"
+                checked={hasConsented}
+                onChange={(e) => setHasConsented(e.target.checked)}
+                required
+                className="mt-0.5 h-4 w-4 rounded border-surface-container text-primary focus:ring-primary focus:ring-offset-0 cursor-pointer accent-primary shrink-0"
+              />
+              <label
+                htmlFor="consent-checkbox"
+                className="text-xs text-text-secondary leading-snug cursor-pointer select-none"
+              >
+                I agree to the{" "}
+                <Link
+                  href="/legal#terms"
+                  target="_blank"
+                  className="font-medium text-text-primary underline hover:text-primary transition-colors"
+                >
+                  Terms of Service
+                </Link>{" "}
+                and{" "}
+                <Link
+                  href="/legal#privacy"
+                  target="_blank"
+                  className="font-medium text-text-primary underline hover:text-primary transition-colors"
+                >
+                  Privacy Policy
+                </Link>
+                , and I confirm I am at least 18 years old.
+              </label>
             </div>
 
             {/* Submit Button */}
             <button
               type="submit"
               id="register-submit-btn"
-              disabled={isLoading}
-              className="mt-2 w-full h-11 rounded-md font-semibold text-sm transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed shadow-md bg-primary-container text-white hover:bg-emerald-600"
+              disabled={isLoading || !hasConsented}
+              className="mt-2 w-full h-11 rounded-md font-semibold text-sm transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm bg-emerald-600 hover:bg-emerald-700 text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
             >
               {isLoading && (
                 <span className="w-4 h-4 border-2 border-surface-container-lowest border-t-transparent rounded-full animate-spin" />
@@ -394,22 +433,22 @@ export default function RegisterPage() {
             </p>
           </div>
 
-          {/* Terms & Privacy Policy */}
+          {/* Additional Disclosures */}
           <div className="mt-4 text-center">
-            <p className="text-[11px] text-text-secondary/70 leading-relaxed">
-              By signing up, you agree to our{" "}
+            <p className="text-[11px] text-text-secondary leading-relaxed">
+              Protected by DocFlow secure authentication. Review our{" "}
               <Link
-                href="#"
-                className="text-text-secondary hover:text-on-background underline underline-offset-2"
+                href="/legal#refund"
+                className="text-text-secondary hover:text-primary underline underline-offset-2"
               >
-                Terms of Service
+                Refund Policy
               </Link>{" "}
               and{" "}
               <Link
-                href="#"
-                className="text-text-secondary hover:text-on-background underline underline-offset-2"
+                href="/legal#cookies"
+                className="text-text-secondary hover:text-primary underline underline-offset-2"
               >
-                Privacy Policy
+                Cookie Notice
               </Link>
               .
             </p>

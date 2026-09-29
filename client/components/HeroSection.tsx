@@ -62,7 +62,7 @@ export default function HeroSection() {
               <Link
                 href="/register"
                 id="hero-trial-btn"
-                className="inline-flex items-center justify-center rounded-lg bg-emerald-500 px-7 py-3.5 text-sm font-bold text-white shadow-[0_4px_16px_rgba(16,185,129,0.35)] transition-all hover:bg-emerald-600 hover:shadow-[0_6px_22px_rgba(16,185,129,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+                className="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-7 py-3.5 text-sm font-bold text-white shadow-[0_4px_16px_rgba(5,150,105,0.35)] transition-all hover:bg-emerald-700 hover:shadow-[0_6px_22px_rgba(5,150,105,0.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
               >
                 Start Free Trial
                 <span className="material-symbols-outlined ml-1.5 text-[18px]">
@@ -73,7 +73,7 @@ export default function HeroSection() {
               <Link
                 href="/dashboard"
                 id="hero-demo-btn"
-                className="inline-flex items-center justify-center rounded-lg bg-white border border-surface-container-high px-6 py-3.5 text-sm font-semibold text-text-primary shadow-sm transition-all hover:bg-surface-container-low focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+                className="inline-flex items-center justify-center rounded-lg bg-white border border-surface-container-high px-6 py-3.5 text-sm font-semibold text-text-primary shadow-sm transition-all hover:bg-surface-container-low focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
               >
                 <span className="material-symbols-outlined mr-2 text-[20px] text-text-secondary">
                   play_circle
@@ -82,38 +82,38 @@ export default function HeroSection() {
               </Link>
             </div>
 
-            {/* Hero Stats Row */}
+            {/* Hero Architectural Capabilities */}
             <div className="mt-10 grid grid-cols-3 border-t border-surface-container pt-8 w-full divide-x divide-surface-container-highest">
               <div className="flex items-center gap-2 sm:gap-3 pr-2 sm:pr-4">
-                <span className="font-mono text-xl sm:text-2xl font-bold text-text-primary tracking-tight whitespace-nowrap">
-                  99.98%
+                <span className="font-mono text-base sm:text-lg font-bold text-text-primary tracking-tight whitespace-nowrap">
+                  AST Parser
                 </span>
                 <span className="text-[11px] sm:text-xs leading-tight text-text-secondary">
-                  AST Sync
+                  Automated
                   <br />
-                  Reliability
+                  Code Extraction
                 </span>
               </div>
 
               <div className="flex items-center gap-2 sm:gap-3 px-2 sm:px-4">
-                <span className="font-mono text-xl sm:text-2xl font-bold text-text-primary tracking-tight whitespace-nowrap">
-                  &lt; 140ms
+                <span className="font-mono text-base sm:text-lg font-bold text-text-primary tracking-tight whitespace-nowrap">
+                  pgvector
                 </span>
                 <span className="text-[11px] sm:text-xs leading-tight text-text-secondary">
                   Semantic
                   <br />
-                  Search
+                  RAG Retrieval
                 </span>
               </div>
 
               <div className="flex items-center gap-2 sm:gap-3 pl-2 sm:pl-4">
-                <span className="font-mono text-xl sm:text-2xl font-bold text-text-primary tracking-tight whitespace-nowrap">
-                  0 Drift
+                <span className="font-mono text-base sm:text-lg font-bold text-text-primary tracking-tight whitespace-nowrap">
+                  Automated
                 </span>
                 <span className="text-[11px] sm:text-xs leading-tight text-text-secondary">
-                  Continuous
+                  Incremental
                   <br />
-                  AST Sync
+                  Git Sync
                 </span>
               </div>
             </div>
@@ -148,7 +148,7 @@ export default function HeroSection() {
                   <span className="text-emerald-700 font-medium">RevenueQuery</span>
                   {"\n"}): <span className="text-teal-600 font-medium">Promise</span>&lt;
                   <span className="text-emerald-700 font-medium">RevenueMetrics</span>&gt; &#123;
-                  {"\n"}  <span className="text-slate-400">// Automatic pipeline trigger via AST</span>
+                  {"\n"}  <span className="text-slate-400">{"// Automatic pipeline trigger via AST"}</span>
                   {"\n"}  <span className="text-purple-600 font-semibold">const</span> ledger ={" "}
                   <span className="text-purple-600 font-semibold">await</span> db.ledger.aggregate(&#123;
                   {"\n"}    <span className="text-blue-600">where</span>: &#123; fiscalYear: params.year &#125;,

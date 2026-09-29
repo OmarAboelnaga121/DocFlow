@@ -31,7 +31,7 @@ export default function CtaBanner() {
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <Link
               href="/register"
-              className="inline-flex items-center justify-center rounded-xl bg-emerald-500 px-7 py-3.5 text-sm font-bold text-white shadow-[0_10px_30px_rgba(16,185,129,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+              className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-7 py-3.5 text-sm font-bold text-white shadow-[0_10px_30px_rgba(5,150,105,0.28)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
             >
               Start free trial
               <span className="material-symbols-outlined ml-2 text-[18px]">arrow_forward</span>

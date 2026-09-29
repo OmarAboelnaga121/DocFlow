@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { getUserProfile, updateUserProfile, updateUserRole, logoutUser } from "@/lib/api";
+import { getUserProfile, updateUserProfile, updateUserRole, logoutUser, cancelSubscription } from "@/lib/api";
 import { User, UserRole } from "@/types";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -35,6 +35,8 @@ export default function UserProfilePage() {
 
   // Part 4: Logout State
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isCancellingSub, setIsCancellingSub] = useState(false);
+  const [subscriptionNotice, setSubscriptionNotice] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -250,6 +252,25 @@ export default function UserProfilePage() {
       router.replace("/login");
     } finally {
       setIsLoggingOut(false);
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    const confirm = window.confirm(
+      "Are you sure you want to cancel your active subscription? Your plan access will remain until the end of your prepaid period."
+    );
+    if (!confirm) return;
+
+    setIsCancellingSub(true);
+    setSubscriptionNotice(null);
+    try {
+      const res = await cancelSubscription("User requested cancellation via settings");
+      setSubscriptionNotice(res.message || "Subscription canceled successfully.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to cancel subscription";
+      setSubscriptionNotice(message);
+    } finally {
+      setIsCancellingSub(false);
     }
   };
 
@@ -911,47 +932,136 @@ export default function UserProfilePage() {
               </form>
             )}
 
-            {/* Part 4: Simple Session Logout */}
+            {/* Part 4: Account, Subscription, and Privacy Settings */}
             {activeTab === "account" && (
-              <div className="rounded-2xl bg-white border border-surface-container p-6 md:p-8 space-y-6 shadow-sm">
-                <div className="border-b border-surface-container pb-4">
-                  <h2 className="text-lg font-semibold text-text-primary">Account Session</h2>
-                  <p className="text-xs text-text-secondary mt-1">
-                    Manage your active authentication session on this device.
-                  </p>
-                </div>
-
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-xl bg-surface-container-low border border-surface-container">
-                  <div className="space-y-1">
-                    <p className="text-sm font-semibold text-text-primary flex items-center gap-2">
-                      <span className="material-symbols-outlined text-primary text-[18px]">
-                        verified_user
-                      </span>
-                      Signed in as <span className="font-mono text-primary">{user.email}</span>
-                    </p>
-                    <p className="text-xs text-text-secondary">
-                      Logging out will terminate your current session and clear your authentication cookies.
+              <div className="space-y-6">
+                {/* Subscription Management */}
+                <div className="rounded-2xl bg-white border border-surface-container p-6 md:p-8 space-y-6 shadow-sm">
+                  <div className="border-b border-surface-container pb-4">
+                    <h2 className="text-lg font-semibold text-text-primary">Subscription & Billing</h2>
+                    <p className="text-xs text-text-secondary mt-1">
+                      Manage your subscription plan, view allowances, or cancel auto-renewal at any time.
                     </p>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    disabled={isLoggingOut}
-                    className="px-5 py-2.5 rounded-xl bg-error/10 hover:bg-error/20 border border-error/30 text-error text-xs font-semibold font-mono tracking-wide transition-all disabled:opacity-40 disabled:pointer-events-none cursor-pointer flex items-center gap-2 self-start sm:self-auto shrink-0 shadow-sm"
-                  >
-                    {isLoggingOut ? (
-                      <>
-                        <span className="w-3.5 h-3.5 border-2 border-error border-t-transparent rounded-full animate-spin" />
-                        Logging Out...
-                      </>
-                    ) : (
-                      <>
-                        <span className="material-symbols-outlined text-[16px]">logout</span>
-                        Log Out
-                      </>
-                    )}
-                  </button>
+                  {subscriptionNotice && (
+                    <div className="p-3.5 rounded-xl bg-primary/10 border border-primary/20 text-xs font-mono text-primary flex items-center gap-2">
+                      <span className="material-symbols-outlined text-sm">info</span>
+                      {subscriptionNotice}
+                    </div>
+                  )}
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-xl bg-surface-container-low border border-surface-container">
+                    <div className="space-y-1">
+                      <p className="text-sm font-semibold text-text-primary flex items-center gap-2">
+                        <span className="material-symbols-outlined text-primary text-[18px]">
+                          credit_card
+                        </span>
+                        Subscription Controls
+                      </p>
+                      <p className="text-xs text-text-secondary max-w-lg leading-relaxed">
+                        In accordance with consumer protection standards, you can cancel your subscription with zero penalties. Access continues until your prepaid cycle concludes. Review our{" "}
+                        <Link href="/legal#refund" className="text-primary underline">
+                          Refund Policy
+                        </Link>
+                        .
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-3 shrink-0">
+                      <Link
+                        href="/pricing"
+                        className="px-4 py-2 rounded-xl border border-surface-container bg-white hover:bg-surface-container-low text-text-primary text-xs font-semibold transition-colors"
+                      >
+                        Change Plan
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={handleCancelSubscription}
+                        disabled={isCancellingSub}
+                        className="px-4 py-2 rounded-xl border border-error/30 bg-error/5 hover:bg-error/15 text-error text-xs font-semibold transition-colors disabled:opacity-50"
+                      >
+                        {isCancellingSub ? "Cancelling..." : "Cancel Subscription"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* GDPR / CCPA Data Subject Rights & Deletion Request */}
+                <div className="rounded-2xl bg-white border border-surface-container p-6 md:p-8 space-y-6 shadow-sm">
+                  <div className="border-b border-surface-container pb-4">
+                    <h2 className="text-lg font-semibold text-text-primary">Data Protection & Privacy Rights</h2>
+                    <p className="text-xs text-text-secondary mt-1">
+                      Exercise your statutory rights under GDPR (Art. 17 Right to Erasure) and CCPA.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-xl bg-surface-container-low border border-surface-container">
+                    <div className="space-y-1">
+                      <p className="text-sm font-semibold text-text-primary flex items-center gap-2">
+                        <span className="material-symbols-outlined text-primary text-[18px]">
+                          shield
+                        </span>
+                        Request Account & Data Deletion
+                      </p>
+                      <p className="text-xs text-text-secondary max-w-lg leading-relaxed">
+                        Request permanent purging of your account credentials, connected repositories, vector embeddings, and chat history.
+                      </p>
+                    </div>
+
+                    <a
+                      href={`mailto:docflow.work@gmail.com?subject=GDPR%20Data%20Deletion%20Request%20-%20${encodeURIComponent(user.email)}&body=Please%20permanently%20delete%20my%20DocFlow%20account%20and%20all%20associated%20codebase%20data%20for%20account:%20${encodeURIComponent(user.email)}.`}
+                      className="px-4 py-2.5 rounded-xl border border-surface-container bg-white hover:bg-surface-container-low text-text-primary text-xs font-semibold flex items-center gap-2 transition-colors self-start sm:self-auto shrink-0 shadow-sm"
+                    >
+                      <span className="material-symbols-outlined text-base text-text-secondary">
+                        mail
+                      </span>
+                      Send Deletion Request
+                    </a>
+                  </div>
+                </div>
+
+                {/* Session Logout */}
+                <div className="rounded-2xl bg-white border border-surface-container p-6 md:p-8 space-y-6 shadow-sm">
+                  <div className="border-b border-surface-container pb-4">
+                    <h2 className="text-lg font-semibold text-text-primary">Account Session</h2>
+                    <p className="text-xs text-text-secondary mt-1">
+                      Manage your active authentication session on this device.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-xl bg-surface-container-low border border-surface-container">
+                    <div className="space-y-1">
+                      <p className="text-sm font-semibold text-text-primary flex items-center gap-2">
+                        <span className="material-symbols-outlined text-primary text-[18px]">
+                          verified_user
+                        </span>
+                        Signed in as <span className="font-mono text-primary">{user.email}</span>
+                      </p>
+                      <p className="text-xs text-text-secondary">
+                        Logging out will terminate your current session and clear your authentication cookies.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      disabled={isLoggingOut}
+                      className="px-5 py-2.5 rounded-xl bg-error/10 hover:bg-error/20 border border-error/30 text-error text-xs font-semibold font-mono tracking-wide transition-all disabled:opacity-40 disabled:pointer-events-none cursor-pointer flex items-center gap-2 self-start sm:self-auto shrink-0 shadow-sm"
+                    >
+                      {isLoggingOut ? (
+                        <>
+                          <span className="w-3.5 h-3.5 border-2 border-error border-t-transparent rounded-full animate-spin" />
+                          Logging Out...
+                        </>
+                      ) : (
+                        <>
+                          <span className="material-symbols-outlined text-[16px]">logout</span>
+                          Log Out
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
