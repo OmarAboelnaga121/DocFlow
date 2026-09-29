@@ -296,5 +296,49 @@ describe('ChatService Caching', () => {
         data: { creditBalance: { decrement: 3 } },
       });
     });
+
+    it('should use an iterative agent loop to reach a final answer when more search is needed', async () => {
+      mockPrismaService.chat.findUnique.mockResolvedValue({
+        ...mockChat,
+        user: { userRole: 'DEVELOPER', creditBalance: 3 },
+        repo: {
+          id: 'repo-id-1',
+          name: 'DocFlow',
+          branch: 'main',
+          status: 'COMPLETED',
+          url: 'https://github.com/test/repo',
+          analysis: null,
+          files: [],
+        },
+      });
+      mockPrismaService.message.create.mockResolvedValue({
+        id: 'ai-msg-1',
+        chatId: 'chat-id-1',
+        role: 'AI',
+        content: 'Here is the final answer',
+        context: [],
+      });
+      mockPrismaService.user.update.mockResolvedValue({ id: 'user-id-1', creditBalance: 1 });
+      jest.spyOn(service as any, 'performRagSearch').mockResolvedValue([
+        { id: 'chunk-1', content: 'JWT auth flow', startLine: 10, endLine: 20, filePath: 'src/auth.ts', similarity: 0.99 },
+      ]);
+
+      const openAiCreate = jest.spyOn((service as any).openai.chat.completions, 'create')
+        .mockResolvedValueOnce({
+          choices: [{ message: { content: JSON.stringify({ action: 'SEARCH', query: 'jwt auth flow' }) } }],
+        })
+        .mockResolvedValueOnce({
+          choices: [{ message: { content: JSON.stringify({ action: 'FINAL_ANSWER', response: 'Here is the final answer' }) } }],
+        });
+
+      const result = await service.sendMessage('user-id-1', 'chat-id-1', {
+        content: 'Explain the auth flow',
+        model: 'qwen3.7-flash',
+      }, 2);
+
+      expect(result.content).toBe('Here is the final answer');
+      expect(openAiCreate).toHaveBeenCalledTimes(2);
+      expect((service as any).performRagSearch).toHaveBeenCalledWith('repo-id-1', 'jwt auth flow');
+    });
   });
 });

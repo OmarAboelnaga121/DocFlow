@@ -2,9 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { loginUser } from "@/lib/api";
+import { getUserProfile, loginUser } from "@/lib/api";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -36,6 +36,28 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
+
+  // Check auth: redirect authenticated users to dashboard
+  useEffect(() => {
+    let isMounted = true;
+
+    async function checkAuth() {
+      try {
+        const profile = await getUserProfile();
+        if (isMounted && profile?.id) {
+          router.replace("/dashboard");
+        }
+      } catch {
+        // Unauthenticated; remain on login page
+      }
+    }
+
+    checkAuth();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [router]);
 
   return (
     <div className="min-h-screen w-full grid grid-cols-1 lg:grid-cols-2 bg-background text-on-background">

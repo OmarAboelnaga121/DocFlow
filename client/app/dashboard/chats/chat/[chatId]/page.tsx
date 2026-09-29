@@ -9,6 +9,14 @@ import {
   faBrain,
   faGaugeHigh,
   faSliders,
+  faFolder,
+  faChevronRight,
+  faComments,
+  faCode,
+  faFileLines,
+  faCodeBranch,
+  faCircleCheck,
+  faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import {
@@ -27,7 +35,7 @@ type TabType = "chat" | "apis" | "pages";
 interface TabItem {
   id: TabType;
   label: string;
-  icon: string;
+  icon: IconDefinition;
 }
 
 interface Citation {
@@ -39,9 +47,9 @@ interface Citation {
 }
 
 const TABS: TabItem[] = [
-  { id: "chat", label: "Chat", icon: "chat_bubble" },
-  { id: "apis", label: "APIs", icon: "api" },
-  { id: "pages", label: "Pages", icon: "description" },
+  { id: "chat", label: "Chat", icon: faComments },
+  { id: "apis", label: "APIs", icon: faCode },
+  { id: "pages", label: "Pages", icon: faFileLines },
 ];
 
 const MODEL_ICONS: Record<ChatModel, IconDefinition> = {
@@ -72,6 +80,7 @@ export default function ChatWorkspacePage() {
   const [selectedModel, setSelectedModel] = useState<ChatModel>("qwen3.7-plus");
   const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
+  const [agentStatusIndex, setAgentStatusIndex] = useState(0);
   const [expandedCitations, setExpandedCitations] = useState<Record<string, boolean>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -159,12 +168,44 @@ export default function ChatWorkspacePage() {
     }
   }, [messages, isSending, activeTab]);
 
+  const agentStatusMessages = [
+    { phase: "Thinking", detail: "Reading your request and identifying the relevant repository area..." },
+    { phase: "Planning", detail: "Breaking the request into smaller questions to investigate..." },
+    { phase: "Searching repository", detail: "Searching files for matching code and references..." },
+    { phase: "Inspecting backend", detail: "Checking controllers, services, and routes related to your question..." },
+    { phase: "Inspecting data", detail: "Looking for the data models and configuration behind this behavior..." },
+    { phase: "Tracing code", detail: "Following how the relevant modules connect across the codebase..." },
+    { phase: "Following request flow", detail: "Connecting the frontend request to the backend response..." },
+    { phase: "Reviewing context", detail: "Comparing the strongest matches and checking supporting context..." },
+    { phase: "Checking edge cases", detail: "Looking for related files and integration details that may affect the answer..." },
+    { phase: "Filtering results", detail: "Removing unrelated matches and keeping the useful evidence..." },
+    { phase: "Reasoning", detail: "Connecting the implementation details to the repository architecture..." },
+    { phase: "Verifying", detail: "Cross-checking the explanation against the code and available references..." },
+    { phase: "Drafting answer", detail: "Preparing a concise explanation grounded in the codebase..." },
+    { phase: "Finishing", detail: "Organizing the findings into a clear answer..." },
+  ];
+
+  useEffect(() => {
+    if (!isSending) {
+      return;
+    }
+
+    const statusTimer = window.setInterval(() => {
+      setAgentStatusIndex((currentIndex) =>
+        Math.min(currentIndex + 1, agentStatusMessages.length - 1)
+      );
+    }, 3200);
+
+    return () => window.clearInterval(statusTimer);
+  }, [isSending, agentStatusMessages.length]);
+
   const handleSendMessage = useCallback(async (textToSend?: string) => {
     const text = (textToSend || inputMessage).trim();
     if (!text || !chatId || isSending) return;
 
     setSendError(null);
     setInputMessage("");
+    setAgentStatusIndex(0);
 
     // Optimistic User Message
     const tempUserMsg: ChatMessage = {
@@ -306,39 +347,41 @@ export default function ChatWorkspacePage() {
       {/* ───────────────────────────────────────────────────────────
           1. LEFT SECTION (Sidebar)
           ─────────────────────────────────────────────────────────── */}
-      <aside className="w-64 md:w-72 shrink-0 bg-surface border-r border-border-hairline flex flex-col h-full select-none overflow-hidden">
-        {/* Top Fixed Section */}
-        <div className="p-4 pb-2 shrink-0 flex flex-col">
+      <aside className="w-64 md:w-72 shrink-0 bg-surface-container-lowest border-r border-border-hairline flex flex-col h-full select-none overflow-hidden shadow-[1px_0_8px_rgba(0,0,0,0.03)]">
+        <div className="flex flex-col flex-1 min-h-0">
           {/* Brand Header */}
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center px-1 py-1 hover:opacity-80 transition-opacity"
-          >
-            <span className="text-lg font-bold text-primary tracking-tight font-sans">
+          <div className="h-16 shrink-0 flex items-center gap-2 px-4">
+            <Link
+              href="/dashboard"
+              className="text-lg font-semibold text-text-primary tracking-tight hover:text-primary transition-colors"
+            >
               DocFlow
+            </Link>
+            <span className="ml-auto px-1.5 py-0.5 rounded bg-surface-container-high text-[10px] font-mono text-text-secondary">
+              v2.0
             </span>
-          </Link>
+          </div>
 
-          {/* New Analysis / New Chat Action Button */}
-          <button
-            type="button"
-            onClick={() => {
-              router.push(`/dashboard/chats/${chat?.repoId}`);
-            }}
-            className="w-full mt-3 bg-primary-container hover:bg-primary text-white font-mono font-medium text-xs py-2 px-4 rounded-lg flex items-center justify-center gap-1.5 transition-all shadow-sm active:scale-[0.99] cursor-pointer disabled:opacity-50"
-          >
-            <span className="text-sm font-bold leading-none">+</span>
-            <span>New Chat</span>
-          </button>
-        </div>
+          {/* New Chat Action */}
+          <div className="px-4 pb-4">
+            <button
+              type="button"
+              onClick={() => {
+                router.push(`/dashboard/chats/${chat?.repoId}`);
+              }}
+              className="w-full bg-primary hover:bg-primary-container text-white font-medium text-xs py-2.5 px-4 rounded-lg flex items-center justify-center gap-1.5 transition-colors shadow-sm active:scale-[0.99] cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[18px]">add</span>
+              <span>New Chat</span>
+            </button>
+          </div>
 
-        {/* Scrollable Middle Section (Recent Chats) */}
-        <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3">
-          <h2 className="text-[11px] font-mono tracking-wider text-text-secondary uppercase px-1 mb-2 sticky top-0 bg-surface/95 backdrop-blur-xs py-0.5 z-10">
-            Recent Chats
-          </h2>
-
-          <nav className="flex flex-col gap-1 mt-1">
+          {/* Workspace Navigation */}
+          <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-4">
+            <h2 className="text-[11px] font-semibold tracking-wider text-text-secondary uppercase px-1 mb-2">
+              Recent Chats
+            </h2>
+            <nav className="flex flex-col gap-1">
             {displayChats.length > 0 ? (
               displayChats.map((c) => {
                 const isCurrentChat = c.id === chatId;
@@ -374,6 +417,7 @@ export default function ChatWorkspacePage() {
             )}
           </nav>
         </div>
+        </div>
 
         {/* Bottom Fixed Section (Settings & Support) */}
         <div className="p-4 pt-3 border-t border-border-hairline shrink-0 flex flex-col bg-surface">
@@ -403,10 +447,51 @@ export default function ChatWorkspacePage() {
           2. RIGHT SECTION (Workspace & Tabs)
           ─────────────────────────────────────────────────────────── */}
       <main className="flex-1 flex flex-col h-full overflow-hidden bg-background">
-        {/* Top Tab Navigation Bar */}
-        <header className="h-14 shrink-0 bg-surface border-b border-border-hairline px-6 flex items-center justify-between">
-          {/* 3 Tabs: [chat, apis, pages] */}
-          <div className="flex items-center gap-2">
+        {/* Top Header: Breadcrumbs & System Status */}
+        <header className="h-13 shrink-0 bg-surface border-b border-border-hairline px-4 sm:px-6 flex items-center justify-between gap-3">
+          {/* Breadcrumb Hierarchy */}
+          <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+            <Link
+              href={chat?.repoId || repo?.id ? `/dashboard/chats/${chat?.repoId || repo?.id}` : "/dashboard"}
+              className="flex items-center gap-2 text-text-secondary hover:text-primary transition-colors shrink-0 group"
+              title="Return to repository discussions"
+            >
+              <FontAwesomeIcon icon={faFolder} className="text-text-secondary group-hover:text-primary text-xs transition-colors" />
+              <span className="text-xs font-medium tracking-tight">
+                {repo?.name || chat?.repo?.name || "Codebase"}
+              </span>
+            </Link>
+
+            <FontAwesomeIcon icon={faChevronRight} className="text-[9px] text-text-secondary/40 shrink-0" />
+
+            <span className="text-xs font-semibold text-text-primary truncate">
+              {chat?.title || "Discussion"}
+            </span>
+          </div>
+
+          {/* Right Action & Status (Search, Notifications & Share explicitly omitted) */}
+          <div className="flex items-center gap-3 shrink-0">
+            {/* Active Status Badge */}
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-[11px] font-mono font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Cluster: Active</span>
+            </div>
+
+            {/* User Profile Avatar Link */}
+            <Link
+              href="/dashboard/user"
+              className="w-8 h-8 rounded-full bg-surface-container hover:bg-surface-container-high border border-border-hairline flex items-center justify-center text-text-secondary hover:text-primary transition-all shadow-xs"
+              title={user?.name || user?.email || "Account Settings"}
+            >
+              <FontAwesomeIcon icon={faUser} className="text-xs" />
+            </Link>
+          </div>
+        </header>
+
+        {/* Sub-Navigation: Tabs & Repository Info */}
+        <div className="h-11 shrink-0 bg-surface border-b border-border-hairline px-4 sm:px-6 flex items-center justify-between">
+          {/* Navigation Tabs */}
+          <nav className="flex items-center gap-1 sm:gap-2 h-full -mb-px">
             {TABS.map((tab) => {
               const isActive = activeTab === tab.id;
               const count =
@@ -421,40 +506,50 @@ export default function ChatWorkspacePage() {
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-mono transition-all cursor-pointer ${
+                  className={`h-full flex items-center gap-2 px-3.5 text-xs font-medium border-b-2 transition-all cursor-pointer ${
                     isActive
-                      ? "bg-surface-container-low text-primary border border-surface-container shadow-xs"
-                      : "text-text-secondary hover:text-on-surface hover:bg-surface-container-low"
+                      ? "border-primary text-primary font-semibold"
+                      : "border-transparent text-text-secondary hover:text-on-surface hover:border-surface-container-high"
                   }`}
                 >
-                  <span className="material-symbols-outlined text-[16px]">
-                    {tab.icon}
-                  </span>
+                  <FontAwesomeIcon icon={tab.icon} className="text-[13px]" />
                   <span>{tab.label}</span>
                   {count !== null && count > 0 && (
-                    <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-surface-container text-on-background">
+                    <span
+                      className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-medium transition-colors ${
+                        isActive
+                          ? "bg-primary/10 text-primary"
+                          : "bg-surface-container text-text-secondary"
+                      }`}
+                    >
                       {count}
                     </span>
                   )}
                 </button>
               );
             })}
-          </div>
+          </nav>
 
-          {/* Active Context / Chat Info */}
-          <div className="hidden sm:flex items-center gap-2 text-xs font-mono text-text-secondary">
-            {chat?.title && (
-              <span className="text-on-background max-w-50 truncate">
-                {chat.title}
+          {/* Repository Branch / Spec Meta */}
+          <div className="flex items-center gap-2 text-xs font-mono">
+            {/* Active Spec / Sync Status */}
+            <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono text-text-secondary bg-surface-container-low/60 border border-border-hairline">
+              <FontAwesomeIcon icon={faCircleCheck} className="text-emerald-500 text-[11px]" />
+              <span className="truncate max-w-36 text-text-primary font-medium">
+                {repo?.name ? `${repo.name}.spec` : "workspace"}
               </span>
-            )}
-            {chat?.repo && (
-              <span className="px-2 py-0.5 rounded bg-surface-container-low border border-surface-container text-[11px] text-primary">
-                {chat.repo.name}
+              <span className="text-[10px] text-emerald-600 font-semibold">• Synced</span>
+            </div>
+
+            {/* Git Branch Badge */}
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono text-text-secondary bg-surface-container-low/60 border border-border-hairline">
+              <FontAwesomeIcon icon={faCodeBranch} className="text-text-secondary text-[11px]" />
+              <span className="text-text-primary font-medium">
+                {repo?.branch || "main"}
               </span>
-            )}
+            </div>
           </div>
-        </header>
+        </div>
 
         {/* Tab Content Container */}
         <section className="flex-1 min-h-0 overflow-hidden flex flex-col">
@@ -614,9 +709,14 @@ export default function ChatWorkspacePage() {
                       <span className="material-symbols-outlined text-base">smart_toy</span>
                     </div>
 
-                    <div className="bg-white border border-surface-container rounded-2xl rounded-tl-xs p-4 flex items-center gap-3 text-xs text-text-secondary font-mono shadow-xs">
-                      <span className="inline-block w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                      <span>Synthesizing repository context and reasoning...</span>
+                    <div className="bg-white border border-surface-container rounded-2xl rounded-tl-xs p-4 flex items-start gap-3 text-xs text-text-secondary font-mono shadow-xs">
+                      <span className="inline-block w-4 h-4 mt-0.5 border-2 border-primary border-t-transparent rounded-full animate-spin shrink-0" />
+                      <div className="flex flex-col gap-1 min-w-0">
+                        <span className="font-semibold text-text-primary">
+                          {agentStatusMessages[agentStatusIndex].phase}
+                        </span>
+                        <span>{agentStatusMessages[agentStatusIndex].detail}</span>
+                      </div>
                     </div>
                   </div>
                 )}

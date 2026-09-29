@@ -157,7 +157,7 @@ export class ChatService {
     );
   }
 
-  async sendMessage(userId: string, chatId: string, dto: SendMessageDto) {
+  async sendMessage(userId: string, chatId: string, dto: SendMessageDto, maxIterations = 3) {
     // Step 1: The user sends a message to the chat.
     // Step 2: Validate that the chat exists and belongs to the authenticated user.
     const chat = await this.prisma.chat.findUnique({
@@ -208,6 +208,20 @@ export class ChatService {
         content: dto.content,
       },
     });
+
+    if (!chat.title || chat.title === 'New Chat') {
+      const generatedTitle = dto.content
+        .trim()
+        .split(/\s+/)
+        .slice(0, 6)
+        .join(' ')
+        .replace(/[?.!,]+$/, '') || 'New Chat';
+
+      await this.prisma.chat.update({
+        where: { id: chatId },
+        data: { title: generatedTitle },
+      });
+    }
 
     // Step 5: Retrieval stage - search the repository for the most relevant code context.
     const contextChunks = await this.performRagSearch(chat.repoId, dto.content);
@@ -294,8 +308,11 @@ export class ChatService {
 6. **Structured Clarity:** Format responses using clear headings, concise bullet points for workflows, and logical separation between architecture explanation and code specifics.`;
     }
 
-    const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-      { role: 'system', content: systemPrompt },
+    const agentMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+      {
+        role: 'system',
+        content: `${systemPrompt}\n\nYou are acting as an autonomous repository investigation agent.\nYour allowed actions are:\n- SEARCH: search the codebase with a precise query\n- FINAL_ANSWER: return the final answer to the user\nRespond as JSON with the shape { "action": "SEARCH" | "FINAL_ANSWER", "query": "...", "response": "..." }.`,
+      },
       ...history.map((m) => ({
         role: (m.role === MessageRole.USER
           ? 'user'
@@ -304,11 +321,11 @@ export class ChatService {
       })),
       {
         role: 'user',
-        content: `Repository Overview:\n${repoOverview}\n\nRetrieved Code Context:\n${formattedChunks}\n\nUser Question:\n${dto.content}`,
+        content: `Repository Overview:\n${repoOverview}\n\nRetrieved Code Context:\n${formattedChunks}\n\nUser Question:\n${dto.content}\n\nIf you do not have enough evidence, use SEARCH. If you do, use FINAL_ANSWER.`,
       },
     ];
 
-    // Step 8: Generate the AI response with the selected model.
+    // Step 8: Use an iterative agent loop to search the repo as needed before answering.
     let aiContent = '';
     const apiKey = process.env.OPENAI_API_KEY;
 
@@ -319,15 +336,75 @@ export class ChatService {
     }
 
     try {
-      const completion = await this.openai.chat.completions.create({
-        model: selectedModel,
-        messages: openAiMessages,
-        temperature: 0.2,
-      });
+      let iteration = 0;
 
-      aiContent =
-        completion.choices[0]?.message?.content ||
-        'Unable to generate a response at this time.';
+      while (iteration < maxIterations) {
+        iteration += 1;
+
+        const completion = await this.openai.chat.completions.create({
+          model: selectedModel,
+          messages: agentMessages,
+          temperature: 0.2,
+          response_format: { type: 'json_object' },
+        });
+
+        const rawContent =
+          completion.choices[0]?.message?.content ||
+          '{"action":"FINAL_ANSWER","response":"Unable to generate a response at this time."}';
+
+        agentMessages.push({ role: 'assistant', content: rawContent });
+
+        let decision: {
+          action?: string;
+          query?: string;
+          response?: string;
+        };
+
+        try {
+          decision = JSON.parse(rawContent) as typeof decision;
+        } catch {
+          decision = {
+            action: 'FINAL_ANSWER',
+            response: 'Unable to generate a valid structured response.',
+          };
+        }
+
+        if (decision.action === 'FINAL_ANSWER') {
+          aiContent = decision.response || 'Unable to generate a response at this time.';
+          break;
+        }
+
+        if (decision.action === 'SEARCH') {
+          const searchQuery = decision.query || dto.content;
+          const searchResults = await this.performRagSearch(chat.repoId, searchQuery);
+
+          agentMessages.push({
+            role: 'user',
+            content: `TOOL_RESULT:\n${
+              searchResults.length > 0
+                ? searchResults
+                    .map(
+                      (chunk) =>
+                        `[${chunk.filePath}:${chunk.startLine}-${chunk.endLine}]\n${chunk.content}`,
+                    )
+                    .join('\n\n')
+                : 'No matching code chunks found.'
+            }\n\nIf you now have enough evidence, return FINAL_ANSWER. Otherwise, use SEARCH again with a more targeted query.`,
+          });
+          continue;
+        }
+
+        agentMessages.push({
+          role: 'user',
+          content:
+            'ERROR: Invalid action type. You must use SEARCH or FINAL_ANSWER.',
+        });
+      }
+
+      if (!aiContent) {
+        aiContent =
+          'I was unable to determine the full answer within the allowed reasoning steps.';
+      }
     } catch (error) {
       this.logger.error('OpenAI chat completion failed:', error);
       throw error;

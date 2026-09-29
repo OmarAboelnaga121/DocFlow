@@ -11,6 +11,7 @@ import {
   createRepository,
   deleteRepository,
   syncRepository,
+  createChat,
 } from "@/lib/api";
 import { User, Repo } from "@/types";
 import Navbar from "@/components/Navbar";

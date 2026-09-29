@@ -2,9 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { registerUser } from "@/lib/api";
+import { getUserProfile, registerUser } from "@/lib/api";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -87,7 +87,7 @@ export default function RegisterPage() {
         });
       }
 
-      router.push("/dashboard");
+      router.push("/roleChoises");
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "Registration failed. Please try again.";
@@ -96,6 +96,28 @@ export default function RegisterPage() {
       setIsLoading(false);
     }
   };
+
+  // Check auth: redirect authenticated users to dashboard
+    useEffect(() => {
+      let isMounted = true;
+  
+      async function checkAuth() {
+        try {
+          const profile = await getUserProfile();
+          if (isMounted && profile?.id) {
+            router.replace("/dashboard");
+          }
+        } catch {
+          // Unauthenticated; remain on login page
+        }
+      }
+  
+      checkAuth();
+  
+      return () => {
+        isMounted = false;
+      };
+    }, [router]);
 
   return (
     <div className="min-h-screen w-full grid grid-cols-1 lg:grid-cols-2 bg-background text-on-background">
