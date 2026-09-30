@@ -87,11 +87,10 @@ export default function UseCasesTabs() {
                   role="tab"
                   aria-selected={isSelected}
                   onClick={() => setActiveTab(t.id)}
-                  className={`rounded-lg px-6 py-2 font-semibold text-sm transition-all cursor-pointer ${
-                    isSelected
-                      ? "bg-surface-container-lowest text-on-surface shadow-sm"
-                      : "text-secondary hover:text-on-surface font-medium"
-                  }`}
+                  className={`rounded-lg px-6 py-2 font-semibold text-sm transition-all cursor-pointer ${isSelected
+                    ? "bg-surface-container-lowest text-on-surface shadow-sm"
+                    : "text-secondary hover:text-on-surface font-medium"
+                    }`}
                 >
                   {t.label}
                 </button>
