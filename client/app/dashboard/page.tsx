@@ -372,7 +372,7 @@ export default function DashboardPage() {
               {repos.map((repo) => (
                 <div
                   key={repo.id}
-                  onClick={() => router.push(`/dashboard/chats/${repo.id}`)}
+                  onClick={() => router.push(`/dashboard/chats/chat/${repo.id}`)}
                   className="relative bg-white border border-surface-container hover:border-primary/50 hover:bg-surface-container-low rounded-xl p-5 transition-all flex flex-col justify-between group shadow-sm cursor-pointer"
                 >
                   <div className="flex items-start justify-between gap-2 mb-3">
@@ -416,9 +416,8 @@ export default function DashboardPage() {
                             className="w-full px-3 py-2 text-xs text-left text-text-primary hover:bg-surface-container-low transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50 font-medium"
                           >
                             <span
-                              className={`material-symbols-outlined text-base text-primary ${
-                                syncingId === repo.id ? "animate-spin" : ""
-                              }`}
+                              className={`material-symbols-outlined text-base text-primary ${syncingId === repo.id ? "animate-spin" : ""
+                                }`}
                             >
                               sync
                             </span>

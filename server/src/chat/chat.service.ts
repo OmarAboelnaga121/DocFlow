@@ -209,20 +209,6 @@ export class ChatService {
       },
     });
 
-    if (!chat.title || chat.title === 'New Chat') {
-      const generatedTitle = dto.content
-        .trim()
-        .split(/\s+/)
-        .slice(0, 6)
-        .join(' ')
-        .replace(/[?.!,]+$/, '') || 'New Chat';
-
-      await this.prisma.chat.update({
-        where: { id: chatId },
-        data: { title: generatedTitle },
-      });
-    }
-
     // Step 5: Retrieval stage - search the repository for the most relevant code context.
     const contextChunks = await this.performRagSearch(chat.repoId, dto.content);
 
@@ -275,11 +261,11 @@ export class ChatService {
     const formattedChunks =
       contextChunks.length > 0
         ? contextChunks
-            .map(
-              (chunk, idx) =>
-                `[Source ${idx + 1}] File: ${chunk.filePath} (Lines ${chunk.startLine}-${chunk.endLine}):\n${chunk.content}`,
-            )
-            .join('\n\n')
+          .map(
+            (chunk, idx) =>
+              `[Source ${idx + 1}] File: ${chunk.filePath} (Lines ${chunk.startLine}-${chunk.endLine}):\n${chunk.content}`,
+          )
+          .join('\n\n')
         : 'No specific code chunks retrieved for this query.';
 
     const userRole = chat.user?.userRole || UserRole.USER;
@@ -380,16 +366,15 @@ export class ChatService {
 
           agentMessages.push({
             role: 'user',
-            content: `TOOL_RESULT:\n${
-              searchResults.length > 0
+            content: `TOOL_RESULT:\n${searchResults.length > 0
                 ? searchResults
-                    .map(
-                      (chunk) =>
-                        `[${chunk.filePath}:${chunk.startLine}-${chunk.endLine}]\n${chunk.content}`,
-                    )
-                    .join('\n\n')
+                  .map(
+                    (chunk) =>
+                      `[${chunk.filePath}:${chunk.startLine}-${chunk.endLine}]\n${chunk.content}`,
+                  )
+                  .join('\n\n')
                 : 'No matching code chunks found.'
-            }\n\nIf you now have enough evidence, return FINAL_ANSWER. Otherwise, use SEARCH again with a more targeted query.`,
+              }\n\nIf you now have enough evidence, return FINAL_ANSWER. Otherwise, use SEARCH again with a more targeted query.`,
           });
           continue;
         }
@@ -442,9 +427,31 @@ export class ChatService {
         },
       },
     });
+
+    let updatedTitle = chat.title;
+    if (!chat.title || chat.title === 'New Chat') {
+      const generatedTitle =
+        dto.content
+          .trim()
+          .split(/\s+/)
+          .slice(0, 6)
+          .join(' ')
+          .replace(/[?.!,]+$/, '') || 'New Chat';
+
+      await this.prisma.chat.update({
+        where: { id: chatId },
+        data: { title: generatedTitle },
+      });
+      updatedTitle = generatedTitle;
+      await this.redis.invalidateCache(`repo:${chat.repoId}`);
+    }
+
     await this.invalidateChatCache(chatId);
 
-    return aiMessage;
+    return {
+      ...aiMessage,
+      chatTitle: updatedTitle,
+    };
   }
 
   private async performRagSearch(

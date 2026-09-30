@@ -23,6 +23,7 @@ import {
   getUserProfile,
   getChatById,
   getRepositoryById,
+  createChat,
   sendMessage,
   CHAT_MODELS,
   ChatModel,
@@ -145,7 +146,20 @@ export default function ChatWorkspacePage() {
             }
           }
         } catch {
-          // Fallback or handle not found
+          // If chatId was not a chat session ID, try fetching it as a repository ID for starting a new chat
+          try {
+            const repoData = await getRepositoryById(chatId as string);
+            if (isMounted && repoData) {
+              setRepo(repoData);
+              setChat(null);
+              setMessages([]);
+              if (Array.isArray(repoData.chats)) {
+                setChats(repoData.chats);
+              }
+            }
+          } catch {
+            // Neither chat nor repo found
+          }
         }
       }
 
@@ -201,7 +215,8 @@ export default function ChatWorkspacePage() {
 
   const handleSendMessage = useCallback(async (textToSend?: string) => {
     const text = (textToSend || inputMessage).trim();
-    if (!text || !chatId || isSending) return;
+    const currentRepoId = repo?.id || chat?.repoId || (chatId as string);
+    if (!text || (!chat && !currentRepoId) || isSending) return;
 
     setSendError(null);
     setInputMessage("");
@@ -210,7 +225,7 @@ export default function ChatWorkspacePage() {
     // Optimistic User Message
     const tempUserMsg: ChatMessage = {
       id: `temp-${Date.now()}`,
-      chatId: chatId as string,
+      chatId: chat?.id || (chatId as string),
       role: "USER",
       content: text,
       createdAt: new Date().toISOString(),
@@ -220,9 +235,44 @@ export default function ChatWorkspacePage() {
     setIsSending(true);
 
     try {
-      const aiResponse = await sendMessage(chatId as string, text, selectedModel);
+      let activeChatId = chat?.id;
+      let activeChat = chat;
+
+      // If we don't have an active chat session yet, create it on first message dispatch
+      if (!activeChatId) {
+        const createdChat = await createChat({
+          repoId: currentRepoId,
+          title: "New Chat",
+        });
+        activeChatId = createdChat.id;
+        activeChat = createdChat;
+        setChat(createdChat);
+      }
+
+      const aiResponse = await sendMessage(activeChatId, text, selectedModel);
       if (aiResponse) {
         setMessages((prev) => [...prev, aiResponse]);
+        const finalTitle = aiResponse.chatTitle || activeChat?.title || "Discussion";
+
+        // Update active chat title in state
+        const updatedChat: Chat = {
+          ...(activeChat || {}),
+          id: activeChatId,
+          repoId: currentRepoId,
+          title: finalTitle,
+        } as Chat;
+        setChat(updatedChat);
+
+        // Add or update this chat in the recent chats list with its finalized title
+        setChats((prev) => {
+          const filtered = prev.filter((c) => c.id !== activeChatId);
+          return [{ ...updatedChat, messages: [aiResponse] }, ...filtered];
+        });
+
+        // Silently update browser URL if we were on the repoId route
+        if (chatId !== activeChatId) {
+          window.history.replaceState(null, "", `/dashboard/chats/chat/${activeChatId}`);
+        }
       }
     } catch (err) {
       setSendError(
@@ -236,7 +286,7 @@ export default function ChatWorkspacePage() {
         textareaRef.current.style.height = "auto";
       }
     }
-  }, [chatId, inputMessage, isSending, selectedModel]);
+  }, [chat, repo, chatId, inputMessage, isSending, selectedModel]);
 
   useEffect(() => {
     if (
@@ -323,6 +373,32 @@ export default function ChatWorkspacePage() {
     }
   };
 
+  // Filter out unstarted "New Chat" sessions from Recent Chats
+  const displayChats = useMemo(() => {
+    const list = chats.length > 0 ? chats : chat ? [chat] : [];
+    return list.filter((c) => {
+      if (c.title === "New Chat" && (!c.messages || c.messages.length === 0)) {
+        return false;
+      }
+      return true;
+    });
+  }, [chats, chat]);
+
+  const handleNewChat = useCallback(() => {
+    const targetRepoId = repo?.id || chat?.repoId;
+    if (!targetRepoId) return;
+    setChat(null);
+    setMessages([]);
+    setInputMessage("");
+    setSendError(null);
+    router.push(`/dashboard/chats/chat/${targetRepoId}`);
+  }, [repo?.id, chat?.repoId, router]);
+
+  const activeModel = useMemo(
+    () => CHAT_MODELS.find((model) => model.value === selectedModel),
+    [selectedModel]
+  );
+
   if (isLoadingAuth) {
     return (
       <div className="h-screen w-full flex items-center justify-center bg-background text-on-background">
@@ -337,10 +413,6 @@ export default function ChatWorkspacePage() {
   if (!user) {
     return null;
   }
-
-  // Actual chats from API (or active chat if single session loaded)
-  const displayChats = chats.length > 0 ? chats : chat ? [chat] : [];
-  const activeModel = CHAT_MODELS.find((model) => model.value === selectedModel);
 
   return (
     <div className="h-screen w-full flex bg-background text-on-background overflow-hidden font-sans">
@@ -366,9 +438,7 @@ export default function ChatWorkspacePage() {
           <div className="px-4 pb-4">
             <button
               type="button"
-              onClick={() => {
-                router.push(`/dashboard/chats/${chat?.repoId}`);
-              }}
+              onClick={handleNewChat}
               className="w-full bg-primary hover:bg-primary-container text-white font-medium text-xs py-2.5 px-4 rounded-lg flex items-center justify-center gap-1.5 transition-colors shadow-sm active:scale-[0.99] cursor-pointer"
             >
               <span className="material-symbols-outlined text-[18px]">add</span>
@@ -382,41 +452,39 @@ export default function ChatWorkspacePage() {
               Recent Chats
             </h2>
             <nav className="flex flex-col gap-1">
-            {displayChats.length > 0 ? (
-              displayChats.map((c) => {
-                const isCurrentChat = c.id === chatId;
-                const titleText = c.title || "Untitled Discussion";
+              {displayChats.length > 0 ? (
+                displayChats.map((c) => {
+                  const isCurrentChat = c.id === chatId;
+                  const titleText = c.title || "Untitled Discussion";
 
-                return (
-                  <Link
-                    key={c.id}
-                    href={`/dashboard/chats/chat/${c.id}`}
-                    className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-mono transition-all group ${
-                      isCurrentChat
-                        ? "bg-surface-container-low text-primary font-medium border border-surface-container"
-                        : "text-text-secondary hover:text-on-surface hover:bg-surface-container-low"
-                    }`}
-                  >
-                    <span
-                      className={`material-symbols-outlined text-[16px] shrink-0 transition-colors ${
-                        isCurrentChat
-                          ? "text-primary"
-                          : "text-text-secondary group-hover:text-primary"
-                      }`}
+                  return (
+                    <Link
+                      key={c.id}
+                      href={`/dashboard/chats/chat/${c.id}`}
+                      className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-mono transition-all group ${isCurrentChat
+                          ? "bg-surface-container-low text-primary font-medium border border-surface-container"
+                          : "text-text-secondary hover:text-on-surface hover:bg-surface-container-low"
+                        }`}
                     >
-                      chat_bubble_outline
-                    </span>
-                    <span className="truncate">{titleText}</span>
-                  </Link>
-                );
-              })
-            ) : (
-              <div className="px-2.5 py-3 text-[11px] font-mono text-text-secondary italic">
-                No chats yet
-              </div>
-            )}
-          </nav>
-        </div>
+                      <span
+                        className={`material-symbols-outlined text-[16px] shrink-0 transition-colors ${isCurrentChat
+                            ? "text-primary"
+                            : "text-text-secondary group-hover:text-primary"
+                          }`}
+                      >
+                        chat_bubble_outline
+                      </span>
+                      <span className="truncate">{titleText}</span>
+                    </Link>
+                  );
+                })
+              ) : (
+                <div className="px-2.5 py-3 text-[11px] font-mono text-text-secondary italic">
+                  No chats yet
+                </div>
+              )}
+            </nav>
+          </div>
         </div>
 
         {/* Bottom Fixed Section (Settings & Support) */}
@@ -498,29 +566,27 @@ export default function ChatWorkspacePage() {
                 tab.id === "apis"
                   ? apis.length
                   : tab.id === "pages"
-                  ? pages.length
-                  : null;
+                    ? pages.length
+                    : null;
 
               return (
                 <button
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`h-full flex items-center gap-2 px-3.5 text-xs font-medium border-b-2 transition-all cursor-pointer ${
-                    isActive
+                  className={`h-full flex items-center gap-2 px-3.5 text-xs font-medium border-b-2 transition-all cursor-pointer ${isActive
                       ? "border-primary text-primary font-semibold"
                       : "border-transparent text-text-secondary hover:text-on-surface hover:border-surface-container-high"
-                  }`}
+                    }`}
                 >
                   <FontAwesomeIcon icon={tab.icon} className="text-[13px]" />
                   <span>{tab.label}</span>
                   {count !== null && count > 0 && (
                     <span
-                      className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-medium transition-colors ${
-                        isActive
+                      className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-medium transition-colors ${isActive
                           ? "bg-primary/10 text-primary"
                           : "bg-surface-container text-text-secondary"
-                      }`}
+                        }`}
                     >
                       {count}
                     </span>
@@ -553,7 +619,7 @@ export default function ChatWorkspacePage() {
 
         {/* Tab Content Container */}
         <section className="flex-1 min-h-0 overflow-hidden flex flex-col">
-          {/* ── CHAT TAB ── */} 
+          {/* ── CHAT TAB ── */}
           {activeTab === "chat" && (
             <div id="tab-content-chat" className="flex-1 min-h-0 flex flex-col h-full overflow-hidden">
               {/* Messages Stream */}
@@ -606,17 +672,15 @@ export default function ChatWorkspacePage() {
                     return (
                       <div
                         key={`msg-${msg.id || idx}-${idx}`}
-                        className={`flex gap-3 max-w-4xl ${
-                          isUser ? "ml-auto flex-row-reverse" : "mr-auto"
-                        }`}
+                        className={`flex gap-3 max-w-4xl ${isUser ? "ml-auto flex-row-reverse" : "mr-auto"
+                          }`}
                       >
                         {/* Avatar */}
                         <div
-                          className={`w-8 h-8 rounded-lg shrink-0 flex items-center justify-center text-xs font-bold ${
-                            isUser
+                          className={`w-8 h-8 rounded-lg shrink-0 flex items-center justify-center text-xs font-bold ${isUser
                               ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
                               : "bg-primary-container/20 text-primary border border-primary-container/30"
-                          }`}
+                            }`}
                         >
                           {isUser ? (
                             <span className="material-symbols-outlined text-base">person</span>
@@ -627,11 +691,10 @@ export default function ChatWorkspacePage() {
 
                         {/* Content Box */}
                         <div
-                          className={`flex flex-col gap-2 max-w-[85%] md:max-w-[78%] rounded-2xl p-4 text-xs shadow-xs ${
-                            isUser
+                          className={`flex flex-col gap-2 max-w-[85%] md:max-w-[78%] rounded-2xl p-4 text-xs shadow-xs ${isUser
                               ? "bg-primary/10 text-text-primary border border-primary/25 rounded-tr-xs"
                               : "bg-white text-on-background border border-surface-container rounded-tl-xs shadow-xs"
-                          }`}
+                            }`}
                         >
                           {/* Role Tag & Timestamp */}
                           <div className="flex items-center justify-between gap-3 text-[10px] font-mono text-text-secondary pb-1 border-b border-surface-container">
@@ -641,9 +704,9 @@ export default function ChatWorkspacePage() {
                             <span>
                               {msg.createdAt
                                 ? new Date(msg.createdAt).toLocaleTimeString([], {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })
                                 : ""}
                             </span>
                           </div>
@@ -798,11 +861,10 @@ export default function ChatWorkspacePage() {
                                   setSelectedModel(model.value);
                                   setIsModelMenuOpen(false);
                                 }}
-                                className={`w-full rounded-lg px-2.5 py-2 text-left transition-colors ${
-                                  isSelected
+                                className={`w-full rounded-lg px-2.5 py-2 text-left transition-colors ${isSelected
                                     ? "bg-primary/10 text-primary"
                                     : "text-text-primary hover:bg-surface-container-low"
-                                }`}
+                                  }`}
                               >
                                 <span className="flex items-center gap-2.5">
                                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-container-low text-primary">
@@ -924,11 +986,10 @@ export default function ChatWorkspacePage() {
                         key={m}
                         type="button"
                         onClick={() => setApiMethodFilter(m)}
-                        className={`px-2 py-0.5 rounded transition-all cursor-pointer ${
-                          apiMethodFilter === m
+                        className={`px-2 py-0.5 rounded transition-all cursor-pointer ${apiMethodFilter === m
                             ? "bg-surface-container-high text-primary font-bold shadow-xs"
                             : "text-text-secondary hover:text-on-background"
-                        }`}
+                          }`}
                       >
                         {m}
                       </button>

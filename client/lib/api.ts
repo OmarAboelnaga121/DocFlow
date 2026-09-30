@@ -337,7 +337,7 @@ export async function sendMessage(
   chatId: string,
   content: string,
   model?: ChatModel
-): Promise<ChatMessage> {
+): Promise<ChatMessage & { chatTitle?: string }> {
   const res = await fetch(`${API_URL}/chat/${chatId}/messages`, {
     method: "POST",
     headers: {
