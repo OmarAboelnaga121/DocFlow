@@ -520,7 +520,7 @@ export default function ChatWorkspacePage() {
           {/* Breadcrumb Hierarchy */}
           <div className="flex items-center gap-2 min-w-0 overflow-hidden">
             <Link
-              href={chat?.repoId || repo?.id ? `/dashboard/chats/${chat?.repoId || repo?.id}` : "/dashboard"}
+              href="/dashboard"
               className="flex items-center gap-2 text-text-secondary hover:text-primary transition-colors shrink-0 group"
               title="Return to repository discussions"
             >
