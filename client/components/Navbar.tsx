@@ -2,9 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState, useRef } from "react";
-import { getUserProfile } from "@/lib/api";
+import { useEffect, useState } from "react";
+import { getUserProfile, logoutUser } from "@/lib/api";
 import { User } from "@/types";
+import UserNavDropdown from "@/components/UserNavDropdown";
 
 const NAV_LINKS = [
   { label: "Product", href: "/#product" },
@@ -16,8 +17,6 @@ const NAV_LINKS = [
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [imageError, setImageError] = useState(false);
@@ -48,24 +47,7 @@ export default function Navbar() {
     };
   }, []);
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setUserDropdownOpen(false);
-      }
-    };
 
-    if (userDropdownOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [userDropdownOpen]);
 
   const displayName =
     user?.name || user?.username || user?.email?.split("@")[0] || "User";
@@ -104,77 +86,9 @@ export default function Navbar() {
       {/* Auth Actions / Profile */}
       <div className="hidden md:flex items-center gap-4">
         {isLoadingAuth ? (
-          <div className="h-9 w-28 rounded-full bg-white/[0.05] animate-pulse" />
+          <div className="h-8.5 w-8.5 rounded-full bg-surface-container animate-pulse" />
         ) : user ? (
-          <div className="relative w-48" ref={dropdownRef}>
-            <button
-              type="button"
-              id="navbar-profile-btn"
-              onClick={() => setUserDropdownOpen((prev) => !prev)}
-              aria-expanded={userDropdownOpen}
-              className={`w-full flex items-center justify-between gap-2.5 px-3 py-1.5 rounded-full bg-surface-container-low border transition-all duration-200 group cursor-pointer shadow-sm ${
-                userDropdownOpen
-                  ? "border-primary bg-surface-variant ring-1 ring-primary/40"
-                  : "border-border-hairline hover:border-primary/60 hover:bg-surface-variant"
-              }`}
-            >
-              <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                {user.avatar && !imageError ? (
-                  <div className="relative w-7 h-7 rounded-full overflow-hidden shrink-0">
-                    <Image
-                      src={user.avatar}
-                      alt={displayName}
-                      fill
-                      sizes="28px"
-                      className="object-cover"
-                      onError={() => setImageError(true)}
-                    />
-                  </div>
-                ) : (
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-primary-container to-primary text-surface-container-lowest font-bold text-xs flex items-center justify-center shrink-0">
-                    {userInitials}
-                  </div>
-                )}
-                <span className="text-sm font-medium text-on-background group-hover:text-text-primary transition-colors truncate text-left">
-                  {displayName}
-                </span>
-              </div>
-              <span
-                className={`material-symbols-outlined text-base text-text-secondary group-hover:text-primary transition-transform duration-200 leading-none shrink-0 ${
-                  userDropdownOpen ? "rotate-180 text-primary" : ""
-                }`}
-              >
-                expand_more
-              </span>
-            </button>
-
-            {/* Dropdown Menu */}
-            {userDropdownOpen && (
-              <div className="absolute left-0 right-0 w-full top-full mt-2 rounded-xl bg-surface border border-border-hairline shadow-2xl backdrop-blur-xl p-1.5 z-50 flex flex-col gap-1 animate-in fade-in slide-in-from-top-2 duration-150">
-                <Link
-                  href="/dashboard"
-                  onClick={() => setUserDropdownOpen(false)}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-surface-container-low transition-colors"
-                >
-                  <span className="material-symbols-outlined text-[18px] text-primary">
-                    dashboard
-                  </span>
-                  Dashboard
-                </Link>
-
-                <Link
-                  href="/dashboard/user"
-                  onClick={() => setUserDropdownOpen(false)}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-surface-container-low transition-colors"
-                >
-                  <span className="material-symbols-outlined text-[18px] text-secondary">
-                    person
-                  </span>
-                  User Profile
-                </Link>
-              </div>
-            )}
-          </div>
+          <UserNavDropdown user={user} />
         ) : (
           <>
             <Link
@@ -276,6 +190,29 @@ export default function Navbar() {
                   chevron_right
                 </span>
               </Link>
+
+              <button
+                type="button"
+                onClick={async () => {
+                  setMenuOpen(false);
+                  try {
+                    await logoutUser();
+                  } finally {
+                    window.location.href = "/login";
+                  }
+                }}
+                className="flex items-center justify-between p-3 rounded-lg bg-rose-500/5 border border-rose-500/20 text-xs font-medium text-rose-500 hover:bg-rose-500/10 transition-all cursor-pointer"
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="material-symbols-outlined text-[18px]">
+                    logout
+                  </span>
+                  <span>Log Out</span>
+                </div>
+                <span className="material-symbols-outlined text-sm">
+                  chevron_right
+                </span>
+              </button>
             </div>
           ) : (
             <>

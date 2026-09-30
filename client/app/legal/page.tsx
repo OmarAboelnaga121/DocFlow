@@ -257,7 +257,7 @@ export default function LegalPage() {
                 </h2>
                 <div className="space-y-3 text-text-secondary leading-relaxed text-sm bg-surface-variant/70 border border-surface-container rounded-xl p-5">
                   <p><strong className="text-text-primary">Operating Entity:</strong> DocFlow Inc.</p>
-                  <p><strong className="text-text-primary">Lead Maintainer:</strong> Omar Wael</p>
+                  <p><strong className="text-text-primary">Lead Maintainer:</strong><Link href="https://www.omar-wael.site" target="_blank" rel="noopener noreferrer" className="text-primary underline">Omar Wael</Link></p>
                   <p><strong className="text-text-primary">Official Contact:</strong> <a href="mailto:docflow.work@gmail.com" className="text-primary underline">docflow.work@gmail.com</a></p>
                   <p><strong className="text-text-primary">Repository:</strong> <a href="https://github.com/OmarAboelnaga121/DocFlow" target="_blank" rel="noopener noreferrer" className="text-primary underline">github.com/OmarAboelnaga121/DocFlow</a></p>
                   <p className="text-xs text-text-secondary/80">DocFlow is governed in accordance with international data protection principles and standard commercial e-commerce safeguards.</p>

@@ -98,7 +98,7 @@ export default function Footer() {
         <p>
           &copy; 2026 DocFlow Inc. Built by{" "}
           <a
-            href="https://github.com/OmarAboelnaga121"
+            href="https://omar-wael.site"
             target="_blank"
             rel="noopener noreferrer"
             className="font-medium text-text-primary hover:text-primary transition-colors"

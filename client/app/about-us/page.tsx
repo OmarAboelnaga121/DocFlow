@@ -15,7 +15,7 @@ export default function AboutUsPage() {
           Our mission is to accelerate development by providing powerful search, analytics, and collaboration tools.
         </p>
         <p className="text-sm mb-6 text-on-surface-variant">
-          Created by Omar Wael – passionate about building developer‑first experiences.
+          Created by <Link href="https://www.omar-wael.site" target="_blank" rel="noopener noreferrer" className="text-primary underline">Omar Wael</Link> – passionate about building developer‑first experiences.
         </p>
         <Link href="/" className="mt-2 text-secondary hover:text-on-surface transition-colors">
           ← Back to Home

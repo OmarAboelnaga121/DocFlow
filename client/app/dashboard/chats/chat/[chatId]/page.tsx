@@ -16,7 +16,6 @@ import {
   faFileLines,
   faCodeBranch,
   faCircleCheck,
-  faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import {
@@ -30,6 +29,7 @@ import {
 } from "@/lib/api";
 import { User, Repo, Chat, ChatMessage, ApiItem, PageItem } from "@/types";
 import FormattedMessage from "@/components/FormattedMessage";
+import UserNavDropdown from "@/components/UserNavDropdown";
 
 type TabType = "chat" | "apis" | "pages";
 
@@ -545,14 +545,8 @@ export default function ChatWorkspacePage() {
               <span>Cluster: Active</span>
             </div>
 
-            {/* User Profile Avatar Link */}
-            <Link
-              href="/dashboard/user"
-              className="w-8 h-8 rounded-full bg-surface-container hover:bg-surface-container-high border border-border-hairline flex items-center justify-center text-text-secondary hover:text-primary transition-all shadow-xs"
-              title={user?.name || user?.email || "Account Settings"}
-            >
-              <FontAwesomeIcon icon={faUser} className="text-xs" />
-            </Link>
+            {/* User Profile Avatar / Dropdown */}
+            {user && <UserNavDropdown user={user} />}
           </div>
         </header>
 
