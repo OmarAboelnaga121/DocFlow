@@ -16,6 +16,7 @@ import {
   faFileLines,
   faCodeBranch,
   faCircleCheck,
+  faDatabase,
 } from "@fortawesome/free-solid-svg-icons";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import {
@@ -30,8 +31,9 @@ import {
 import { User, Repo, Chat, ChatMessage, ApiItem, PageItem } from "@/types";
 import FormattedMessage from "@/components/FormattedMessage";
 import UserNavDropdown from "@/components/UserNavDropdown";
+import SchemaCanvas from "@/components/SchemaCanvas";
 
-type TabType = "chat" | "apis" | "pages";
+type TabType = "chat" | "apis" | "pages" | "databases";
 
 interface TabItem {
   id: TabType;
@@ -51,6 +53,7 @@ const TABS: TabItem[] = [
   { id: "chat", label: "Chat", icon: faComments },
   { id: "apis", label: "APIs", icon: faCode },
   { id: "pages", label: "Pages", icon: faFileLines },
+  { id: "databases", label: "Databases", icon: faDatabase },
 ];
 
 const MODEL_ICONS: Record<ChatModel, IconDefinition> = {
@@ -1168,6 +1171,27 @@ export default function ChatWorkspacePage() {
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* ── DATABASES TAB ── */}
+          {activeTab === "databases" && (
+            <div id="tab-content-databases" className="flex-1 min-h-0 flex flex-col p-6 overflow-hidden">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-border-hairline mb-4 shrink-0">
+                <div>
+                  <h2 className="text-lg font-bold text-text-primary tracking-tight flex items-center gap-2">
+                    <FontAwesomeIcon icon={faDatabase} className="text-primary text-base" />
+                    <span>Database Schema</span>
+                  </h2>
+                  <p className="text-xs text-text-secondary mt-1">
+                    Interactive visualization of database models, relations, and schema structure.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex-1 min-h-0 w-full border border-surface-container rounded-xl overflow-hidden bg-white shadow-xs">
+                <SchemaCanvas className="w-full h-full" />
+              </div>
             </div>
           )}
         </section>
