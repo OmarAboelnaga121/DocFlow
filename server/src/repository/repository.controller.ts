@@ -86,6 +86,22 @@ export class RepositoryController {
     return this.repositoryService.getRepoById(id, userId);
   }
 
+  @Get(':id/schema')
+  @ApiOperation({ summary: 'Get extracted database schema for a repository' })
+  @ApiResponse({
+    status: 200,
+    description: 'Repository database schema retrieved successfully',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Repository not found' })
+  async getRepoSchema(
+    @CurrentUser('id') userId: string,
+    @Param('id') id: string,
+  ) {
+    return this.repositoryService.getRepoSchema(id, userId);
+  }
+
   @Post(':id/sync')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Trigger incremental sync for a repository' })

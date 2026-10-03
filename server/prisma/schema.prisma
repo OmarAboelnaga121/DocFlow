@@ -82,6 +82,7 @@ model Repo {
   pages    PageRoute[]
   chats    Chat[]
   analysis RepoAnalysis?
+  schema   DatabaseSchema?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -204,4 +205,49 @@ model Message {
   chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
+}
+
+model DatabaseSchema {
+  id        String           @id @default(cuid())
+  repoId    String           @unique
+  repo      Repo             @relation(fields: [repoId], references: [id], onDelete: Cascade)
+  tables    DatabaseTable[]
+  relations SchemaRelation[]
+  metadata  Json? // Canvas viewport state or generation metadata
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model DatabaseTable {
+  id          String         @id @default(cuid())
+  schemaId    String
+  schema      DatabaseSchema @relation(fields: [schemaId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  positionX   Float?
+  positionY   Float?
+  columns     Json // SchemaColumn[]: [{ name, type, isPrimaryKey, isForeignKey, isNullable, isUnique, defaultValue, references }]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schemaId, name])
+  @@index([schemaId])
+}
+
+model SchemaRelation {
+  id           String         @id @default(cuid())
+  schemaId     String
+  schema       DatabaseSchema @relation(fields: [schemaId], references: [id], onDelete: Cascade)
+  sourceTable  String
+  sourceColumn String
+  targetTable  String
+  targetColumn String
+  cardinality  String? // 'one-to-one' | 'one-to-many' | 'many-to-many'
+  label        String?
+
+  createdAt DateTime @default(now())
+
+  @@index([schemaId])
 }

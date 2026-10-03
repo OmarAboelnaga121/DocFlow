@@ -28,7 +28,7 @@ import {
   CHAT_MODELS,
   ChatModel,
 } from "@/lib/api";
-import { User, Repo, Chat, ChatMessage, ApiItem, PageItem } from "@/types";
+import { User, Repo, Chat, ChatMessage, ApiItem, PageItem, DatabaseSchema } from "@/types";
 import FormattedMessage from "@/components/FormattedMessage";
 import UserNavDropdown from "@/components/UserNavDropdown";
 import SchemaCanvas from "@/components/SchemaCanvas";
@@ -57,10 +57,10 @@ const TABS: TabItem[] = [
 ];
 
 const MODEL_ICONS: Record<ChatModel, IconDefinition> = {
+  "qwen3.8-max": faBrain,
+  "qwen3.8-flash": faBolt,
   "qwen3.7-plus": faGaugeHigh,
-  "qwen3.7-max": faBrain,
-  "qwen3.7-flash": faBolt,
-  "qwen3.6-plus": faSliders,
+  "qwen3.7-flash": faSliders,
 };
 
 export default function ChatWorkspacePage() {
@@ -81,7 +81,7 @@ export default function ChatWorkspacePage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<ChatModel>("qwen3.7-plus");
+  const [selectedModel, setSelectedModel] = useState<ChatModel>("qwen3.8-flash");
   const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const [agentStatusIndex, setAgentStatusIndex] = useState(0);
@@ -328,6 +328,14 @@ export default function ChatWorkspacePage() {
       return repo.analysis.pages;
     }
     return [];
+  }, [repo]);
+
+  // Extracted Database Schema from repo
+  const databaseSchema: DatabaseSchema | null = useMemo(() => {
+    if (repo?.schema && Array.isArray(repo.schema.tables)) {
+      return repo.schema;
+    }
+    return null;
   }, [repo]);
 
   // Filtered APIs based on search and method
@@ -1182,6 +1190,16 @@ export default function ChatWorkspacePage() {
                   <h2 className="text-lg font-bold text-text-primary tracking-tight flex items-center gap-2">
                     <FontAwesomeIcon icon={faDatabase} className="text-primary text-base" />
                     <span>Database Schema</span>
+                    {databaseSchema?.tables && databaseSchema.tables.length > 0 && (
+                      <span className="px-2.5 py-0.5 text-xs font-semibold bg-primary/10 text-primary rounded-full">
+                        {databaseSchema.tables.length} {databaseSchema.tables.length === 1 ? "Table" : "Tables"}
+                      </span>
+                    )}
+                    {databaseSchema?.relations && databaseSchema.relations.length > 0 && (
+                      <span className="px-2.5 py-0.5 text-xs font-semibold bg-emerald-500/10 text-emerald-600 rounded-full">
+                        {databaseSchema.relations.length} {databaseSchema.relations.length === 1 ? "Relation" : "Relations"}
+                      </span>
+                    )}
                   </h2>
                   <p className="text-xs text-text-secondary mt-1">
                     Interactive visualization of database models, relations, and schema structure.
@@ -1189,9 +1207,35 @@ export default function ChatWorkspacePage() {
                 </div>
               </div>
 
-              <div className="flex-1 min-h-0 w-full border border-surface-container rounded-xl overflow-hidden bg-white shadow-xs">
-                <SchemaCanvas className="w-full h-full" />
-              </div>
+              {databaseSchema && databaseSchema.tables.length > 0 ? (
+                <div className="flex-1 min-h-0 w-full border border-surface-container rounded-xl overflow-hidden bg-white shadow-xs">
+                  <SchemaCanvas schema={databaseSchema} className="w-full h-full" />
+                </div>
+              ) : repo?.status === "ANALYZING" || repo?.status === "EMBEDDING" ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-center p-8 border border-dashed border-border-hairline rounded-xl bg-surface-container/30">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3 animate-pulse">
+                    <FontAwesomeIcon icon={faDatabase} className="text-primary text-lg" />
+                  </div>
+                  <h3 className="text-sm font-semibold text-text-primary mb-1">
+                    Analyzing database schema...
+                  </h3>
+                  <p className="text-xs text-text-muted max-w-sm">
+                    DocFlow is extracting models, entities, and relationships from the repository.
+                  </p>
+                </div>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center text-center p-8 border border-dashed border-border-hairline rounded-xl bg-surface-container/30">
+                  <div className="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center mb-3">
+                    <FontAwesomeIcon icon={faDatabase} className="text-text-muted text-lg" />
+                  </div>
+                  <h3 className="text-sm font-semibold text-text-primary mb-1">
+                    No database schema detected
+                  </h3>
+                  <p className="text-xs text-text-muted max-w-sm">
+                    No Prisma, SQL, or ORM entity models were identified during repository analysis.
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </section>

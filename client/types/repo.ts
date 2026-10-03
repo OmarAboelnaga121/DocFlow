@@ -1,3 +1,5 @@
+import { DatabaseSchema } from "./schema";
+
 export type IngestionStatus =
   | "PENDING"
   | "CLONING"
@@ -71,6 +73,7 @@ export interface Repo {
   files?: RepoFile[];
   chats?: Chat[];
   analysis?: RepoAnalysis | null;
+  schema?: DatabaseSchema | null;
 }
 
 export interface CreateRepoData {

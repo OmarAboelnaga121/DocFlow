@@ -14,17 +14,19 @@ import { OpenAI } from 'openai';
 import { RedisService } from '../redis/redis.service';
 
 const QWEN_MODEL_CREDIT_COST: Record<string, number> = {
-  'qwen3.7-plus': 2,
-  'qwen3.7-max': 3,
-  'qwen3.7-flash': 1,
-  'qwen3.6-plus': 2,
+  'qwen3.8-max': 6,
+  'qwen3.8-flash': 3,
+  'qwen3.7-plus': 4,
+  'qwen3.7-flash': 2,
+  'qwen3.7-max': 5,
 };
 
 const QWEN_MODEL_LEDGER_REASON: Record<string, string> = {
+  'qwen3.8-max': 'llm_generation_qwen3.8-max',
+  'qwen3.8-flash': 'llm_generation_qwen3.8-flash',
   'qwen3.7-plus': 'llm_generation_qwen3.7-plus',
-  'qwen3.7-max': 'llm_generation_qwen3.7-max',
   'qwen3.7-flash': 'llm_generation_qwen3.7-flash',
-  'qwen3.6-plus': 'llm_generation_qwen3.6-plus',
+  'qwen3.7-max': 'llm_generation_qwen3.7-max',
 };
 
 @Injectable()
@@ -157,7 +159,7 @@ export class ChatService {
     );
   }
 
-  async sendMessage(userId: string, chatId: string, dto: SendMessageDto, maxIterations = 3) {
+  async sendMessage(userId: string, chatId: string, dto: SendMessageDto, maxIterations = 4) {
     // Step 1: The user sends a message to the chat.
     // Step 2: Validate that the chat exists and belongs to the authenticated user.
     const chat = await this.prisma.chat.findUnique({
@@ -189,9 +191,9 @@ export class ChatService {
     }
 
     // Step 3: Check that the user still has enough credits before we generate the response.
-    const selectedModel = dto.model || process.env.OPENAI_MODEL || 'qwen3.7-plus';
+    const selectedModel = dto.model || process.env.OPENAI_MODEL || 'qwen3.8-flash';
     const responseCostCredits =
-      QWEN_MODEL_CREDIT_COST[selectedModel] ?? QWEN_MODEL_CREDIT_COST['qwen3.7-plus'];
+      QWEN_MODEL_CREDIT_COST[selectedModel] ?? QWEN_MODEL_CREDIT_COST['qwen3.8-flash'];
     const userCreditBalance = chat.user?.creditBalance ?? 0;
 
     if (userCreditBalance < responseCostCredits) {
@@ -355,14 +357,26 @@ export class ChatService {
           };
         }
 
-        if (decision.action === 'FINAL_ANSWER') {
-          aiContent = decision.response || 'Unable to generate a response at this time.';
+        const action = (decision.action || '').toUpperCase().trim();
+        const responseText =
+          decision.response ||
+          (decision as any).answer ||
+          (decision as any).content ||
+          (decision as any).message;
+
+        if (action === 'FINAL_ANSWER' || (!action && responseText)) {
+          aiContent = responseText || 'Unable to generate a response at this time.';
           break;
         }
 
-        if (decision.action === 'SEARCH') {
+        if (action === 'SEARCH') {
           const searchQuery = decision.query || dto.content;
           const searchResults = await this.performRagSearch(chat.repoId, searchQuery);
+
+          const isLastIteration = iteration >= maxIterations;
+          const followUpInstruction = isLastIteration
+            ? 'This was your final search step. You must now synthesize and return your FINAL_ANSWER based on all context gathered.'
+            : 'If you now have enough evidence, return FINAL_ANSWER. Otherwise, use SEARCH again with a more targeted query.';
 
           agentMessages.push({
             role: 'user',
@@ -374,7 +388,7 @@ export class ChatService {
                   )
                   .join('\n\n')
                 : 'No matching code chunks found.'
-              }\n\nIf you now have enough evidence, return FINAL_ANSWER. Otherwise, use SEARCH again with a more targeted query.`,
+              }\n\n${followUpInstruction}`,
           });
           continue;
         }
@@ -384,6 +398,35 @@ export class ChatService {
           content:
             'ERROR: Invalid action type. You must use SEARCH or FINAL_ANSWER.',
         });
+      }
+
+      // If loop exited after search steps without a FINAL_ANSWER break, synthesize using all gathered context
+      if (!aiContent) {
+        try {
+          const synthesisCompletion = await this.openai.chat.completions.create({
+            model: selectedModel,
+            messages: [
+              ...agentMessages,
+              {
+                role: 'user',
+                content:
+                  'Synthesize a comprehensive, high-quality final answer to the user question using all code context and search results gathered above. Return JSON with { "action": "FINAL_ANSWER", "response": "<your full answer>" }.',
+              },
+            ],
+            temperature: 0.2,
+            response_format: { type: 'json_object' },
+          });
+
+          const raw = synthesisCompletion.choices[0]?.message?.content || '{}';
+          const parsed = JSON.parse(raw);
+          aiContent =
+            parsed.response ||
+            parsed.answer ||
+            parsed.content ||
+            (raw.startsWith('{') ? '' : raw);
+        } catch (synthErr) {
+          this.logger.warn('Fallback synthesis failed:', synthErr);
+        }
       }
 
       if (!aiContent) {
@@ -602,7 +645,7 @@ export class ChatService {
       );
     }
 
-    const model = process.env.EMBEDDING_MODEL || 'text-embedding-v3';
+    const model = process.env.EMBEDDING_MODEL || 'qwen3.7-text-embedding';
 
     try {
       const response = await this.openai.embeddings.create({

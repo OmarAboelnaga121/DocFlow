@@ -812,7 +812,7 @@ export class RepositoryService {
       for (let i = 0; i < texts.length; i += MAX_BATCH_SIZE) {
         const batch = texts.slice(i, i + MAX_BATCH_SIZE);
         const response = await this.openai.embeddings.create({
-          model: process.env.EMBEDDING_MODEL || 'text-embedding-v3',
+          model: process.env.EMBEDDING_MODEL || 'qwen3.7-text-embedding',
           input: batch,
         });
 
@@ -1030,6 +1030,12 @@ export class RepositoryService {
               orderBy: { updatedAt: 'desc' },
             },
             analysis: true,
+            schema: {
+              include: {
+                tables: true,
+                relations: true,
+              },
+            },
           },
         });
 
@@ -1048,6 +1054,12 @@ export class RepositoryService {
     }
 
     return repo;
+  }
+
+  // GET repo schema - tables and relations
+  async getRepoSchema(repoId: string, userId?: string) {
+    const repo = await this.getRepoById(repoId, userId);
+    return repo.schema || { tables: [], relations: [] };
   }
 
   // GET all repos for a user

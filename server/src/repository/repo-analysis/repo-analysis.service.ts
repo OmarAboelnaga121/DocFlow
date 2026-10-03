@@ -90,6 +90,18 @@ export class RepoAnalysisService {
         analysis.pages,
       );
 
+      // 6. Extract database schema and sync DatabaseTable / SchemaRelation records
+      if (this.prisma.databaseSchema) {
+        try {
+          await this.analyzeDatabaseSchema(repoId);
+        } catch (schemaError) {
+          this.logger.warn(
+            `Database schema extraction failed for repo ${repoId}:`,
+            schemaError,
+          );
+        }
+      }
+
       this.logger.log(`Analysis complete for repo: ${repoId}`);
     } catch (error) {
       this.logger.error(`Failed to analyze repo ${repoId}:`, error);
@@ -99,7 +111,7 @@ export class RepoAnalysisService {
 
   private async extractArchitectureWithAI(codeContext: string) {
     const response = await this.openai.chat.completions.create({
-      model: process.env.OPENAI_MODEL || 'gpt-4o-mini', // Cost-effective for large contexts
+      model: process.env.OPENAI_MODEL || 'qwen3.7-flash',
       messages: [
         {
           role: 'system',
@@ -237,5 +249,255 @@ export class RepoAnalysisService {
     if (pageData.length > 0) {
       await this.prisma.pageRoute.createMany({ data: pageData });
     }
+  }
+
+  async analyzeDatabaseSchema(repoId: string) {
+    this.logger.log(`Starting database schema analysis for repo: ${repoId}`);
+
+    // 1. Fetch schema, migration, or entity definition files
+    const schemaFiles = await this.prisma.file.findMany({
+      where: {
+        repoId,
+        OR: [
+          { path: { endsWith: '.prisma' } },
+          { path: { endsWith: '.sql' } },
+          { path: { contains: 'schema' } },
+          { path: { contains: 'entity' } },
+          { path: { contains: 'entities' } },
+          { path: { contains: 'model' } },
+          { path: { contains: 'models' } },
+          { path: { contains: 'migration' } },
+        ],
+      },
+      include: {
+        chunks: {
+          orderBy: {
+            startLine: 'asc',
+          },
+        },
+      },
+    });
+
+    if (!schemaFiles.length) {
+      this.logger.warn(`No schema or entity files found for repo: ${repoId}`);
+      return null;
+    }
+
+    // 2. Reconstruct file contents from chunks
+    let combinedContext = '';
+    for (const file of schemaFiles) {
+      const fileContent = file.chunks.map((c) => c.content).join('\n');
+      combinedContext += `\n--- FILE: ${file.path} ---\n${fileContent}\n`;
+    }
+
+    const maxChars = 300000;
+    if (combinedContext.length > maxChars) {
+      combinedContext = combinedContext.substring(0, maxChars);
+    }
+
+    // 3. Extract tables and relations with OpenAI structured outputs
+    const extraction = await this.extractDatabaseSchemaWithAI(combinedContext);
+
+    // 4. Upsert DatabaseSchema and sync tables and relations inside a transaction
+    const dbSchema = await this.prisma.databaseSchema.upsert({
+      where: { repoId },
+      create: { repoId },
+      update: {},
+    });
+
+    await this.prisma.$transaction([
+      this.prisma.databaseTable.deleteMany({
+        where: { schemaId: dbSchema.id },
+      }),
+      this.prisma.schemaRelation.deleteMany({
+        where: { schemaId: dbSchema.id },
+      }),
+      this.prisma.databaseTable.createMany({
+        data: extraction.tables.map((tbl: any, idx: number) => ({
+          schemaId: dbSchema.id,
+          name: tbl.name,
+          description: tbl.description || null,
+          positionX: 50 + (idx % 3) * 360,
+          positionY: 60 + Math.floor(idx / 3) * 340,
+          columns: tbl.columns,
+        })),
+      }),
+      this.prisma.schemaRelation.createMany({
+        data: extraction.relations.map((rel: any) => ({
+          schemaId: dbSchema.id,
+          sourceTable: rel.sourceTable,
+          sourceColumn: rel.sourceColumn,
+          targetTable: rel.targetTable,
+          targetColumn: rel.targetColumn,
+          cardinality: rel.cardinality || 'one-to-many',
+          label:
+            rel.label ||
+            (rel.cardinality === 'one-to-many'
+              ? '1:N'
+              : rel.cardinality === 'many-to-many'
+                ? 'M:N'
+                : '1:1'),
+        })),
+      }),
+    ]);
+
+    this.logger.log(
+      `Database schema extracted for repo ${repoId}: ${extraction.tables.length} tables, ${extraction.relations.length} relations`,
+    );
+
+    return dbSchema;
+  }
+
+  private async extractDatabaseSchemaWithAI(codeContext: string) {
+    const response = await this.openai.chat.completions.create({
+      model: process.env.OPENAI_MODEL || 'qwen3.7-flash',
+      messages: [
+        {
+          role: 'system',
+          content:
+            'You are a principal database architect. Analyze the provided schema definitions, migrations, and entities. Extract the complete relational database schema: all tables with columns (primary keys, foreign keys, types, nullable, unique, default values) and inter-table relationships. Return ONLY valid JSON adhering strictly to the schema.',
+        },
+        {
+          role: 'user',
+          content: codeContext,
+        },
+      ],
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          name: 'database_schema_extraction',
+          schema: {
+            type: 'object',
+            properties: {
+              tables: {
+                type: 'array',
+                description: 'Relational database tables discovered in the code.',
+                items: {
+                  type: 'object',
+                  properties: {
+                    name: {
+                      type: 'string',
+                      description: 'Name of the database table or model',
+                    },
+                    description: {
+                      type: 'string',
+                      description: 'Summary of the table purpose and domain',
+                    },
+                    columns: {
+                      type: 'array',
+                      description: 'Columns belonging to this table',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          name: {
+                            type: 'string',
+                            description: 'Column name',
+                          },
+                          type: {
+                            type: 'string',
+                            description:
+                              'Data type (e.g. String, Int, DateTime, Uuid, Boolean, Enum)',
+                          },
+                          isPrimaryKey: {
+                            type: 'boolean',
+                            description: 'Whether this column is the primary key',
+                          },
+                          isForeignKey: {
+                            type: 'boolean',
+                            description:
+                              'Whether this column references another table',
+                          },
+                          isNullable: {
+                            type: 'boolean',
+                            description:
+                              'Whether this column accepts null values',
+                          },
+                          isUnique: {
+                            type: 'boolean',
+                            description:
+                              'Whether this column has a unique constraint',
+                          },
+                          defaultValue: {
+                            type: ['string', 'null'],
+                            description: 'Default value as string or null if none',
+                          },
+                        },
+                        required: [
+                          'name',
+                          'type',
+                          'isPrimaryKey',
+                          'isForeignKey',
+                          'isNullable',
+                          'isUnique',
+                          'defaultValue',
+                        ],
+                        additionalProperties: false,
+                      },
+                    },
+                  },
+                  required: ['name', 'description', 'columns'],
+                  additionalProperties: false,
+                },
+              },
+              relations: {
+                type: 'array',
+                description: 'Foreign key relationships connecting tables',
+                items: {
+                  type: 'object',
+                  properties: {
+                    sourceTable: {
+                      type: 'string',
+                      description: 'Source table containing the foreign key',
+                    },
+                    sourceColumn: {
+                      type: 'string',
+                      description: 'Foreign key column on the source table',
+                    },
+                    targetTable: {
+                      type: 'string',
+                      description: 'Referenced target table',
+                    },
+                    targetColumn: {
+                      type: 'string',
+                      description:
+                        'Referenced primary or unique key column on the target table',
+                    },
+                    cardinality: {
+                      type: 'string',
+                      enum: ['one-to-one', 'one-to-many', 'many-to-many'],
+                    },
+                    label: {
+                      type: 'string',
+                      description:
+                        'Display label for the relation (e.g. 1:N, M:N, 1:1)',
+                    },
+                  },
+                  required: [
+                    'sourceTable',
+                    'sourceColumn',
+                    'targetTable',
+                    'targetColumn',
+                    'cardinality',
+                    'label',
+                  ],
+                  additionalProperties: false,
+                },
+              },
+            },
+            required: ['tables', 'relations'],
+            additionalProperties: false,
+          },
+          strict: true,
+        },
+      },
+    });
+
+    const result = response.choices[0].message.content;
+    if (!result) {
+      throw new Error(
+        'Failed to extract database schema: OpenAI returned an empty response.',
+      );
+    }
+    return JSON.parse(result);
   }
 }

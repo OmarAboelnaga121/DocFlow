@@ -2,10 +2,11 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsIn, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export const QWEN_CHAT_MODELS = [
+  'qwen3.8-max',
+  'qwen3.8-flash',
   'qwen3.7-plus',
-  'qwen3.7-max',
   'qwen3.7-flash',
-  'qwen3.6-plus',
+  'qwen3.7-max',
 ] as const;
 
 export type QwenChatModel = (typeof QWEN_CHAT_MODELS)[number];
@@ -28,7 +29,8 @@ export class SendMessageDto {
   @IsOptional()
   @IsString({ message: 'Model must be a string' })
   @IsIn(QWEN_CHAT_MODELS, {
-    message: 'Model must be one of: qwen3.7-plus, qwen3.7-max, qwen3.7-flash, qwen3.6-plus',
+    message:
+      'Model must be one of: qwen3.8-max, qwen3.8-flash, qwen3.7-plus, qwen3.7-flash',
   })
   model?: QwenChatModel;
 }

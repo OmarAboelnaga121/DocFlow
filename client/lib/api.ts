@@ -7,30 +7,31 @@ import {
   CreateRepoData,
   Chat,
   ChatMessage,
+  DatabaseSchema,
 } from "@/types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 export const CHAT_MODELS = [
   {
+    value: "qwen3.8-max",
+    label: "Qwen 3.8 Max",
+    description: "Premier coding & complex reasoning",
+  },
+  {
+    value: "qwen3.8-flash",
+    label: "Qwen 3.8 Flash",
+    description: "High-speed intelligence & fast answers",
+  },
+  {
     value: "qwen3.7-plus",
-    label: "Qwen Plus",
+    label: "Qwen 3.7 Plus",
     description: "Balanced quality and speed",
   },
   {
-    value: "qwen3.7-max",
-    label: "Qwen Max",
-    description: "Best for complex reasoning",
-  },
-  {
     value: "qwen3.7-flash",
-    label: "Qwen Flash",
-    description: "Fast responses for simple questions",
-  },
-  {
-    value: "qwen3.6-plus",
-    label: "Qwen 3.6 Plus",
-    description: "Strong general-purpose model",
+    label: "Qwen 3.7 Flash",
+    description: "Lightweight, ultra-fast responses",
   },
 ] as const;
 
@@ -248,6 +249,24 @@ export async function getRepositoryById(id: string): Promise<Repo> {
     const errorMsg = Array.isArray(result.message)
       ? result.message.join(", ")
       : result.message || "Failed to fetch repository";
+    throw new Error(errorMsg);
+  }
+
+  return result;
+}
+
+export async function getRepositorySchema(repoId: string): Promise<DatabaseSchema> {
+  const res = await fetch(`${API_URL}/repository/${repoId}/schema`, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  const result = await res.json();
+
+  if (!res.ok) {
+    const errorMsg = Array.isArray(result.message)
+      ? result.message.join(", ")
+      : result.message || "Failed to fetch repository schema";
     throw new Error(errorMsg);
   }
 
