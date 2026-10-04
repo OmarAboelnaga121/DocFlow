@@ -76,6 +76,7 @@ export default function ChatWorkspacePage() {
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>("chat");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Chat conversation state
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -398,6 +399,7 @@ export default function ChatWorkspacePage() {
   const handleNewChat = useCallback(() => {
     const targetRepoId = repo?.id || chat?.repoId;
     if (!targetRepoId) return;
+    setIsSidebarOpen(false);
     setChat(null);
     setMessages([]);
     setInputMessage("");
@@ -426,27 +428,53 @@ export default function ChatWorkspacePage() {
   }
 
   return (
-    <div className="h-screen w-full flex bg-background text-on-background overflow-hidden font-sans">
+    <div className="h-screen w-full flex bg-background text-on-background overflow-hidden font-sans relative">
+      {/* Mobile Sidebar Backdrop */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 backdrop-blur-xs md:hidden transition-opacity"
+          onClick={() => setIsSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* ───────────────────────────────────────────────────────────
           1. LEFT SECTION (Sidebar)
           ─────────────────────────────────────────────────────────── */}
-      <aside className="w-64 md:w-72 shrink-0 bg-surface-container-lowest border-r border-border-hairline flex flex-col h-full select-none overflow-hidden shadow-[1px_0_8px_rgba(0,0,0,0.03)]">
+      <aside
+        className={`fixed md:relative inset-y-0 left-0 z-50 w-72 shrink-0 bg-surface-container-lowest border-r border-border-hairline flex flex-col h-full select-none overflow-hidden shadow-2xl md:shadow-none transition-transform duration-200 ease-in-out ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        }`}
+      >
         <div className="flex flex-col flex-1 min-h-0">
           {/* Brand Header */}
-          <div className="h-16 shrink-0 flex items-center gap-2 px-4">
-            <Link
-              href="/dashboard"
-              className="text-lg font-semibold text-text-primary tracking-tight hover:text-primary transition-colors"
+          <div className="h-16 shrink-0 flex items-center justify-between gap-2 px-4 border-b border-border-hairline md:border-b-0">
+            <div className="flex items-center gap-2">
+              <Link
+                href="/dashboard"
+                onClick={() => setIsSidebarOpen(false)}
+                className="text-lg font-semibold text-text-primary tracking-tight hover:text-primary transition-colors"
+              >
+                DocFlow
+              </Link>
+              <span className="px-1.5 py-0.5 rounded bg-surface-container-high text-[10px] font-mono text-text-secondary">
+                v2.0
+              </span>
+            </div>
+
+            {/* Mobile Close Button */}
+            <button
+              type="button"
+              onClick={() => setIsSidebarOpen(false)}
+              className="md:hidden p-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface-container-low transition-colors"
+              aria-label="Close sidebar"
             >
-              DocFlow
-            </Link>
-            <span className="ml-auto px-1.5 py-0.5 rounded bg-surface-container-high text-[10px] font-mono text-text-secondary">
-              v2.0
-            </span>
+              <span className="material-symbols-outlined text-[20px]">close</span>
+            </button>
           </div>
 
           {/* New Chat Action */}
-          <div className="px-4 pb-4">
+          <div className="px-4 py-3 md:pt-0 md:pb-4">
             <button
               type="button"
               onClick={handleNewChat}
@@ -472,16 +500,19 @@ export default function ChatWorkspacePage() {
                     <Link
                       key={c.id}
                       href={`/dashboard/chats/chat/${c.id}`}
-                      className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-mono transition-all group ${isCurrentChat
+                      onClick={() => setIsSidebarOpen(false)}
+                      className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-mono transition-all group ${
+                        isCurrentChat
                           ? "bg-surface-container-low text-primary font-medium border border-surface-container"
                           : "text-text-secondary hover:text-on-surface hover:bg-surface-container-low"
-                        }`}
+                      }`}
                     >
                       <span
-                        className={`material-symbols-outlined text-[16px] shrink-0 transition-colors ${isCurrentChat
+                        className={`material-symbols-outlined text-[16px] shrink-0 transition-colors ${
+                          isCurrentChat
                             ? "text-primary"
                             : "text-text-secondary group-hover:text-primary"
-                          }`}
+                        }`}
                       >
                         chat_bubble_outline
                       </span>
@@ -502,6 +533,7 @@ export default function ChatWorkspacePage() {
         <div className="p-4 pt-3 border-t border-border-hairline shrink-0 flex flex-col bg-surface">
           <Link
             href="/dashboard/user"
+            onClick={() => setIsSidebarOpen(false)}
             className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-mono text-text-secondary hover:text-on-surface hover:bg-surface-container-low transition-all"
           >
             <span className="material-symbols-outlined text-[17px] text-text-secondary">
@@ -525,35 +557,46 @@ export default function ChatWorkspacePage() {
       {/* ───────────────────────────────────────────────────────────
           2. RIGHT SECTION (Workspace & Tabs)
           ─────────────────────────────────────────────────────────── */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden bg-background">
+      <main className="flex-1 flex flex-col h-full min-w-0 overflow-hidden bg-background">
         {/* Top Header: Breadcrumbs & System Status */}
-        <header className="h-13 shrink-0 bg-surface border-b border-border-hairline px-4 sm:px-6 flex items-center justify-between gap-3">
-          {/* Breadcrumb Hierarchy */}
+        <header className="h-13 shrink-0 bg-surface border-b border-border-hairline px-3 sm:px-6 flex items-center justify-between gap-2 sm:gap-3">
+          {/* Left: Mobile Menu Toggle & Breadcrumbs */}
           <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+            {/* Hamburger Button (Mobile only) */}
+            <button
+              type="button"
+              onClick={() => setIsSidebarOpen(true)}
+              className="md:hidden p-1.5 -ml-1 text-text-secondary hover:text-text-primary rounded-lg hover:bg-surface-container-low transition-colors shrink-0"
+              aria-label="Open sidebar navigation"
+            >
+              <span className="material-symbols-outlined text-[22px]">menu</span>
+            </button>
+
             <Link
               href="/dashboard"
-              className="flex items-center gap-2 text-text-secondary hover:text-primary transition-colors shrink-0 group"
+              className="flex items-center gap-1.5 text-text-secondary hover:text-primary transition-colors shrink-0 group max-w-[110px] sm:max-w-[180px]"
               title="Return to repository discussions"
             >
-              <FontAwesomeIcon icon={faFolder} className="text-text-secondary group-hover:text-primary text-xs transition-colors" />
-              <span className="text-xs font-medium tracking-tight">
+              <FontAwesomeIcon icon={faFolder} className="text-text-secondary group-hover:text-primary text-xs transition-colors shrink-0" />
+              <span className="text-xs font-medium tracking-tight truncate">
                 {repo?.name || chat?.repo?.name || "Codebase"}
               </span>
             </Link>
 
             <FontAwesomeIcon icon={faChevronRight} className="text-[9px] text-text-secondary/40 shrink-0" />
 
-            <span className="text-xs font-semibold text-text-primary truncate">
+            <span className="text-xs font-semibold text-text-primary truncate max-w-[120px] sm:max-w-[220px]">
               {chat?.title || "Discussion"}
             </span>
           </div>
 
-          {/* Right Action & Status (Search, Notifications & Share explicitly omitted) */}
-          <div className="flex items-center gap-3 shrink-0">
+          {/* Right Action & Status */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {/* Active Status Badge */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-[11px] font-mono font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Cluster: Active</span>
+            <div className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-[11px] font-mono font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+              <span className="hidden sm:inline">Cluster: </span>
+              <span>Active</span>
             </div>
 
             {/* User Profile Avatar / Dropdown */}
@@ -562,9 +605,9 @@ export default function ChatWorkspacePage() {
         </header>
 
         {/* Sub-Navigation: Tabs & Repository Info */}
-        <div className="h-11 shrink-0 bg-surface border-b border-border-hairline px-4 sm:px-6 flex items-center justify-between">
+        <div className="h-11 shrink-0 bg-surface border-b border-border-hairline px-3 sm:px-6 flex items-center justify-between gap-2 overflow-hidden">
           {/* Navigation Tabs */}
-          <nav className="flex items-center gap-1 sm:gap-2 h-full -mb-px">
+          <nav className="flex items-center gap-1 sm:gap-2 h-full -mb-px overflow-x-auto no-scrollbar scroll-smooth">
             {TABS.map((tab) => {
               const isActive = activeTab === tab.id;
               const count =
@@ -579,19 +622,21 @@ export default function ChatWorkspacePage() {
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id)}
-                  className={`h-full flex items-center gap-2 px-3.5 text-xs font-medium border-b-2 transition-all cursor-pointer ${isActive
+                  className={`h-full flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 text-xs font-medium border-b-2 whitespace-nowrap transition-all cursor-pointer ${
+                    isActive
                       ? "border-primary text-primary font-semibold"
                       : "border-transparent text-text-secondary hover:text-on-surface hover:border-surface-container-high"
-                    }`}
+                  }`}
                 >
-                  <FontAwesomeIcon icon={tab.icon} className="text-[13px]" />
+                  <FontAwesomeIcon icon={tab.icon} className="text-[12px] sm:text-[13px]" />
                   <span>{tab.label}</span>
                   {count !== null && count > 0 && (
                     <span
-                      className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-medium transition-colors ${isActive
+                      className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-medium transition-colors ${
+                        isActive
                           ? "bg-primary/10 text-primary"
                           : "bg-surface-container text-text-secondary"
-                        }`}
+                      }`}
                     >
                       {count}
                     </span>
@@ -602,11 +647,11 @@ export default function ChatWorkspacePage() {
           </nav>
 
           {/* Repository Branch / Spec Meta */}
-          <div className="flex items-center gap-2 text-xs font-mono">
+          <div className="hidden sm:flex items-center gap-2 text-xs font-mono shrink-0">
             {/* Active Spec / Sync Status */}
             <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono text-text-secondary bg-surface-container-low/60 border border-border-hairline">
               <FontAwesomeIcon icon={faCircleCheck} className="text-emerald-500 text-[11px]" />
-              <span className="truncate max-w-36 text-text-primary font-medium">
+              <span className="truncate max-w-32 lg:max-w-40 text-text-primary font-medium">
                 {repo?.name ? `${repo.name}.spec` : "workspace"}
               </span>
               <span className="text-[10px] text-emerald-600 font-semibold">• Synced</span>
@@ -615,7 +660,7 @@ export default function ChatWorkspacePage() {
             {/* Git Branch Badge */}
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono text-text-secondary bg-surface-container-low/60 border border-border-hairline">
               <FontAwesomeIcon icon={faCodeBranch} className="text-text-secondary text-[11px]" />
-              <span className="text-text-primary font-medium">
+              <span className="text-text-primary font-medium truncate max-w-24">
                 {repo?.branch || "main"}
               </span>
             </div>
@@ -677,29 +722,32 @@ export default function ChatWorkspacePage() {
                     return (
                       <div
                         key={`msg-${msg.id || idx}-${idx}`}
-                        className={`flex gap-3 max-w-4xl ${isUser ? "ml-auto flex-row-reverse" : "mr-auto"
-                          }`}
+                        className={`flex gap-2.5 sm:gap-3 max-w-4xl ${
+                          isUser ? "ml-auto flex-row-reverse" : "mr-auto"
+                        }`}
                       >
                         {/* Avatar */}
                         <div
-                          className={`w-8 h-8 rounded-lg shrink-0 flex items-center justify-center text-xs font-bold ${isUser
+                          className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg shrink-0 flex items-center justify-center text-xs font-bold ${
+                            isUser
                               ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
                               : "bg-primary-container/20 text-primary border border-primary-container/30"
-                            }`}
+                          }`}
                         >
                           {isUser ? (
-                            <span className="material-symbols-outlined text-base">person</span>
+                            <span className="material-symbols-outlined text-[15px] sm:text-base">person</span>
                           ) : (
-                            <span className="material-symbols-outlined text-base">smart_toy</span>
+                            <span className="material-symbols-outlined text-[15px] sm:text-base">smart_toy</span>
                           )}
                         </div>
 
                         {/* Content Box */}
                         <div
-                          className={`flex flex-col gap-2 max-w-[85%] md:max-w-[78%] rounded-2xl p-4 text-xs shadow-xs ${isUser
+                          className={`flex flex-col gap-2 max-w-[88%] sm:max-w-[85%] md:max-w-[78%] rounded-2xl p-3 sm:p-4 text-xs shadow-xs ${
+                            isUser
                               ? "bg-primary/10 text-text-primary border border-primary/25 rounded-tr-xs"
                               : "bg-white text-on-background border border-surface-container rounded-tl-xs shadow-xs"
-                            }`}
+                          }`}
                         >
                           {/* Role Tag & Timestamp */}
                           <div className="flex items-center justify-between gap-3 text-[10px] font-mono text-text-secondary pb-1 border-b border-surface-container">
@@ -810,7 +858,7 @@ export default function ChatWorkspacePage() {
               </div>
 
               {/* Chat Input Box (Sticky at bottom) */}
-              <div className="p-4 bg-surface border-t border-border-hairline shrink-0">
+              <div className="p-3 sm:p-4 bg-surface border-t border-border-hairline shrink-0">
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
@@ -848,7 +896,7 @@ export default function ChatWorkspacePage() {
                         <div
                           role="listbox"
                           aria-label="Choose AI model"
-                          className="absolute bottom-full left-0 z-20 mb-2 w-72 overflow-hidden rounded-xl border border-surface-container bg-white p-1.5 shadow-xl"
+                          className="absolute bottom-full left-0 z-20 mb-2 w-64 sm:w-72 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-surface-container bg-white p-1.5 shadow-xl"
                         >
                           <div className="px-2.5 py-2 text-[10px] font-mono uppercase tracking-wider text-text-secondary">
                             Choose model
@@ -866,10 +914,11 @@ export default function ChatWorkspacePage() {
                                   setSelectedModel(model.value);
                                   setIsModelMenuOpen(false);
                                 }}
-                                className={`w-full rounded-lg px-2.5 py-2 text-left transition-colors ${isSelected
+                                className={`w-full rounded-lg px-2.5 py-2 text-left transition-colors ${
+                                  isSelected
                                     ? "bg-primary/10 text-primary"
                                     : "text-text-primary hover:bg-surface-container-low"
-                                  }`}
+                                }`}
                               >
                                 <span className="flex items-center gap-2.5">
                                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-container-low text-primary">
@@ -928,7 +977,7 @@ export default function ChatWorkspacePage() {
                     </button>
                   </div>
 
-                  <div className="flex items-center justify-between text-[11px] font-mono text-text-secondary px-1">
+                  <div className="flex flex-wrap items-center justify-between gap-1 text-[10px] sm:text-[11px] font-mono text-text-secondary px-1">
                     <span className="flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary-container animate-pulse" />
                       RAG Vector Search Active
@@ -942,9 +991,9 @@ export default function ChatWorkspacePage() {
 
           {/* ── APIS TAB ── */}
           {activeTab === "apis" && (
-            <div id="tab-content-apis" className="flex-1 min-h-0 flex flex-col overflow-y-auto p-6">
+            <div id="tab-content-apis" className="flex-1 min-h-0 flex flex-col overflow-y-auto p-4 sm:p-6">
               {/* Header Controls */}
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-border-hairline mb-6">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-border-hairline mb-6">
                 <div>
                   <h2 className="text-lg font-bold text-text-primary tracking-tight flex items-center gap-2">
                     <span className="material-symbols-outlined text-secondary text-xl">
@@ -961,9 +1010,9 @@ export default function ChatWorkspacePage() {
                 </div>
 
                 {/* Filter controls */}
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
                   {/* Search input */}
-                  <div className="bg-white border border-surface-container rounded-lg px-3 py-1.5 flex items-center gap-2 text-xs shadow-xs">
+                  <div className="bg-white border border-surface-container rounded-lg px-3 py-1.5 flex items-center gap-2 text-xs shadow-xs w-full sm:w-auto">
                     <span className="material-symbols-outlined text-sm text-text-secondary">
                       search
                     </span>
@@ -972,7 +1021,7 @@ export default function ChatWorkspacePage() {
                       value={apiSearch}
                       onChange={(e) => setApiSearch(e.target.value)}
                       placeholder="Filter endpoints, files..."
-                      className="bg-transparent text-text-primary placeholder-[#94a3b8] outline-none font-mono text-xs w-40 sm:w-52"
+                      className="bg-transparent text-text-primary placeholder-[#94a3b8] outline-none font-mono text-xs w-full sm:w-52"
                     />
                     {apiSearch && (
                       <button
@@ -985,16 +1034,17 @@ export default function ChatWorkspacePage() {
                   </div>
 
                   {/* Method Pills */}
-                  <div className="flex items-center bg-white border border-surface-container rounded-lg p-1 gap-1 text-[11px] font-mono shadow-xs">
+                  <div className="flex items-center overflow-x-auto no-scrollbar bg-white border border-surface-container rounded-lg p-1 gap-1 text-[11px] font-mono shadow-xs max-w-full">
                     {["ALL", "GET", "POST", "PUT", "PATCH", "DELETE"].map((m) => (
                       <button
                         key={m}
                         type="button"
                         onClick={() => setApiMethodFilter(m)}
-                        className={`px-2 py-0.5 rounded transition-all cursor-pointer ${apiMethodFilter === m
+                        className={`px-2 py-0.5 rounded transition-all cursor-pointer whitespace-nowrap ${
+                          apiMethodFilter === m
                             ? "bg-surface-container-high text-primary font-bold shadow-xs"
                             : "text-text-secondary hover:text-on-background"
-                          }`}
+                        }`}
                       >
                         {m}
                       </button>
@@ -1075,9 +1125,9 @@ export default function ChatWorkspacePage() {
 
           {/* ── PAGES TAB ── */}
           {activeTab === "pages" && (
-            <div id="tab-content-pages" className="flex-1 min-h-0 flex flex-col overflow-y-auto p-6">
+            <div id="tab-content-pages" className="flex-1 min-h-0 flex flex-col overflow-y-auto p-4 sm:p-6">
               {/* Header Controls */}
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-border-hairline mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-border-hairline mb-6">
                 <div>
                   <h2 className="text-lg font-bold text-text-primary tracking-tight flex items-center gap-2">
                     <span className="material-symbols-outlined text-error text-xl">
@@ -1094,7 +1144,7 @@ export default function ChatWorkspacePage() {
                 </div>
 
                 {/* Search input */}
-                <div className="bg-white border border-surface-container rounded-lg px-3 py-1.5 flex items-center gap-2 text-xs shadow-xs">
+                <div className="bg-white border border-surface-container rounded-lg px-3 py-1.5 flex items-center gap-2 text-xs shadow-xs w-full sm:w-auto">
                   <span className="material-symbols-outlined text-sm text-text-secondary">
                     search
                   </span>
@@ -1103,7 +1153,7 @@ export default function ChatWorkspacePage() {
                     value={pageSearch}
                     onChange={(e) => setPageSearch(e.target.value)}
                     placeholder="Filter routes, files..."
-                    className="bg-transparent text-text-primary placeholder-[#94a3b8] outline-none font-mono text-xs w-48 sm:w-64"
+                    className="bg-transparent text-text-primary placeholder-[#94a3b8] outline-none font-mono text-xs w-full sm:w-64"
                   />
                   {pageSearch && (
                     <button
@@ -1118,7 +1168,7 @@ export default function ChatWorkspacePage() {
 
               {/* Pages List / Empty state */}
               {repo?.status === "ANALYZING" || repo?.status === "PENDING" ? (
-                <div className="flex-1 flex flex-col items-center justify-center p-12 text-center rounded-xl bg-white border border-surface-container border-dashed">
+                <div className="flex-1 flex flex-col items-center justify-center p-8 sm:p-12 text-center rounded-xl bg-white border border-surface-container border-dashed">
                   <div className="w-10 h-10 border-2 border-error border-t-transparent rounded-full animate-spin mb-4" />
                   <h3 className="text-sm font-semibold text-text-primary font-mono">
                     Codebase Analysis in Progress
@@ -1128,7 +1178,7 @@ export default function ChatWorkspacePage() {
                   </p>
                 </div>
               ) : pages.length === 0 ? (
-                <div className="flex-1 flex flex-col items-center justify-center p-12 text-center rounded-xl bg-white border border-surface-container border-dashed">
+                <div className="flex-1 flex flex-col items-center justify-center p-8 sm:p-12 text-center rounded-xl bg-white border border-surface-container border-dashed">
                   <span className="material-symbols-outlined text-4xl text-text-secondary mb-3">
                     auto_stories
                   </span>
@@ -1155,7 +1205,7 @@ export default function ChatWorkspacePage() {
                           <span className="material-symbols-outlined text-error text-[18px]">
                             auto_stories
                           </span>
-                          <span className="font-mono text-sm font-bold text-text-primary tracking-wide truncate">
+                          <span className="font-mono text-sm font-bold text-text-primary tracking-wide break-all">
                             {page.route}
                           </span>
                         </div>
@@ -1184,10 +1234,10 @@ export default function ChatWorkspacePage() {
 
           {/* ── DATABASES TAB ── */}
           {activeTab === "databases" && (
-            <div id="tab-content-databases" className="flex-1 min-h-0 flex flex-col p-6 overflow-hidden">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-border-hairline mb-4 shrink-0">
+            <div id="tab-content-databases" className="flex-1 min-h-0 flex flex-col p-4 sm:p-6 overflow-hidden">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-border-hairline mb-4 shrink-0">
                 <div>
-                  <h2 className="text-lg font-bold text-text-primary tracking-tight flex items-center gap-2">
+                  <h2 className="text-lg font-bold text-text-primary tracking-tight flex items-center gap-2 flex-wrap">
                     <FontAwesomeIcon icon={faDatabase} className="text-primary text-base" />
                     <span>Database Schema</span>
                     {databaseSchema?.tables && databaseSchema.tables.length > 0 && (
