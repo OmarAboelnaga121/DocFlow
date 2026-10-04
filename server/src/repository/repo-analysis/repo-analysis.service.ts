@@ -34,8 +34,14 @@ export class RepoAnalysisService {
           { path: { contains: 'route' } },
           { path: { contains: 'api' } },
           { path: { contains: 'page' } },
+          { path: { contains: 'handler' } },
+          { path: { contains: 'endpoint' } },
+          { path: { contains: 'router' } },
           { path: { contains: 'app/' } }, // Next.js app router
           { path: { contains: 'pages/' } }, // Next.js pages router
+          { path: { endsWith: '.go' } }, // Go handlers / endpoints
+          { path: { endsWith: 'main.go' } },
+          { path: { endsWith: 'server.go' } },
         ],
       },
       include: {
@@ -116,7 +122,7 @@ export class RepoAnalysisService {
         {
           role: 'system',
           content:
-            'You are a senior software architect. Analyze the provided codebase files and extract all API endpoints and frontend page routes. Return ONLY valid JSON matching the schema.',
+            'You are a senior software architect. Analyze the provided codebase files and extract ONLY real API endpoints and frontend page routes explicitly declared and implemented in the code. CRITICAL: Do NOT invent, assume, simulate, or hallucinate dummy, fake, or example endpoints. If the codebase contains no real API endpoints, return an empty array for "apis". If no frontend routes exist, return an empty array for "pages". Return ONLY valid JSON matching the schema.',
         },
         {
           role: 'user',
@@ -196,7 +202,7 @@ export class RepoAnalysisService {
         'Failed to extract repository architecture: OpenAI returned an empty response.',
       );
     }
-    return JSON.parse(result); // Strongly typed by OpenAI strict schema
+    return JSON.parse(result);
   }
 
   private async syncEndpointsAndRoutesFromAnalysis(
@@ -210,7 +216,8 @@ export class RepoAnalysisService {
     // Fetch all files in the repo to map the AI's file path to database fileIds
     const files = await this.prisma.file.findMany({ where: { repoId } });
 
-    const findFileId = (filePath: string): string => {
+    const findFileId = (filePath?: string): string => {
+      if (!filePath) return files[0]?.id || '';
       const normalizedPath = filePath.replace(/\\/g, '/').replace(/^\.?\//, '');
 
       let matchedFile = files.find((f) => f.path === normalizedPath);
@@ -355,7 +362,7 @@ export class RepoAnalysisService {
         {
           role: 'system',
           content:
-            'You are a principal database architect. Analyze the provided schema definitions, migrations, and entities. Extract the complete relational database schema: all tables with columns (primary keys, foreign keys, types, nullable, unique, default values) and inter-table relationships. Return ONLY valid JSON adhering strictly to the schema.',
+            'You are a principal database architect. Analyze the provided schema definitions, migrations, and entities. Extract ONLY the real relational database tables and foreign key relationships explicitly defined in the provided code. CRITICAL: Do NOT invent, assume, simulate, or hallucinate dummy, placeholder, or example tables or relations. If no database models exist in the code, return empty arrays for "tables" and "relations". Return ONLY valid JSON adhering strictly to the schema.',
         },
         {
           role: 'user',

@@ -592,12 +592,29 @@ export default function ChatWorkspacePage() {
 
           {/* Right Action & Status */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            {/* Active Status Badge */}
-            <div className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-[11px] font-mono font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-              <span className="hidden sm:inline">Cluster: </span>
-              <span>Active</span>
-            </div>
+            {/* Repository Status Badge */}
+            {repo && (
+              <div
+                className={`flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-full text-[11px] font-mono font-medium border ${
+                  ["PENDING", "CLONING", "EMBEDDING", "ANALYZING"].includes(repo.status)
+                    ? "bg-amber-500/10 border-amber-500/20 text-amber-600"
+                    : repo.status === "FAILED"
+                    ? "bg-rose-500/10 border-rose-500/20 text-rose-600"
+                    : "bg-emerald-500/10 border-emerald-500/20 text-emerald-600"
+                }`}
+              >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                    ["PENDING", "CLONING", "EMBEDDING", "ANALYZING"].includes(repo.status)
+                      ? "bg-amber-500 animate-pulse"
+                      : repo.status === "FAILED"
+                      ? "bg-rose-500"
+                      : "bg-emerald-500"
+                  }`}
+                />
+                <span>{repo.status}</span>
+              </div>
+            )}
 
             {/* User Profile Avatar / Dropdown */}
             {user && <UserNavDropdown user={user} />}
@@ -648,22 +665,23 @@ export default function ChatWorkspacePage() {
 
           {/* Repository Branch / Spec Meta */}
           <div className="hidden sm:flex items-center gap-2 text-xs font-mono shrink-0">
-            {/* Active Spec / Sync Status */}
-            <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono text-text-secondary bg-surface-container-low/60 border border-border-hairline">
-              <FontAwesomeIcon icon={faCircleCheck} className="text-emerald-500 text-[11px]" />
-              <span className="truncate max-w-32 lg:max-w-40 text-text-primary font-medium">
-                {repo?.name ? `${repo.name}.spec` : "workspace"}
-              </span>
-              <span className="text-[10px] text-emerald-600 font-semibold">• Synced</span>
-            </div>
+            {repo && (
+              <>
+                <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono text-text-secondary bg-surface-container-low/60 border border-border-hairline">
+                  <FontAwesomeIcon icon={faCircleCheck} className="text-emerald-500 text-[11px]" />
+                  <span className="truncate max-w-36 text-text-primary font-medium">
+                    {repo.name}
+                  </span>
+                </div>
 
-            {/* Git Branch Badge */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono text-text-secondary bg-surface-container-low/60 border border-border-hairline">
-              <FontAwesomeIcon icon={faCodeBranch} className="text-text-secondary text-[11px]" />
-              <span className="text-text-primary font-medium truncate max-w-24">
-                {repo?.branch || "main"}
-              </span>
-            </div>
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono text-text-secondary bg-surface-container-low/60 border border-border-hairline">
+                  <FontAwesomeIcon icon={faCodeBranch} className="text-text-secondary text-[11px]" />
+                  <span className="text-text-primary font-medium truncate max-w-28">
+                    {repo.branch}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
