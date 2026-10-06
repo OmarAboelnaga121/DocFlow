@@ -22,9 +22,10 @@ async function bootstrap() {
     throw new Error('FRONTEND_URL environment variable is required.');
   }
 
-  const allowedOrigins = frontendUrl.includes(',')
-    ? frontendUrl.split(',').map((url) => url.trim())
-    : [frontendUrl];
+  const allowedOrigins = frontendUrl
+    .split(',')
+    .map((url) => url.trim())
+    .filter(Boolean);
 
   // Enable CORS only for the configured frontend origin(s)
   app.enableCors({

@@ -7,6 +7,7 @@ import {
   UseInterceptors,
   UploadedFile,
   Res,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { AuthGuard } from '@nestjs/passport';
@@ -21,6 +22,7 @@ import {
   AuthCookieInterceptor,
   ClearCookieInterceptor,
 } from './interceptors/auth-cookie.interceptor';
+import { getAuthCookieOptions } from './constants/cookie.config';
 import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('Auth')
@@ -68,15 +70,18 @@ export class AuthController {
   async githubAuthCallback(@CurrentUser() user: any, @Res() res: Response) {
     const authData = await this.authService.validateGithubUser(user);
 
-    res.cookie('token', authData.accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
+    res.cookie('token', authData.accessToken, getAuthCookieOptions());
 
-    const frontendUrl =
-      this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3001';
+    const rawFrontendUrl =
+      this.configService.get<string>('FRONTEND_URL');
+
+    if (!rawFrontendUrl) {
+      throw new InternalServerErrorException(
+        'FRONTEND_URL environment variable is not configured',
+      );
+    }
+
+    const frontendUrl = rawFrontendUrl.split(',')[0].trim();
 
     return res.redirect(`${frontendUrl}/dashboard`);
   }

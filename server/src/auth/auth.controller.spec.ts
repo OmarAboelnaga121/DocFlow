@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
@@ -152,6 +153,7 @@ describe('AuthController', () => {
           secure: false,
           sameSite: 'lax',
           maxAge: 7 * 24 * 60 * 60 * 1000,
+          path: '/',
         },
       );
       expect(mockResponse.redirect).toHaveBeenCalledWith(
@@ -159,7 +161,46 @@ describe('AuthController', () => {
       );
     });
 
-    it('should fallback to default frontend url if FRONTEND_URL is not configured', async () => {
+    it('should set secure: true and sameSite: none in production environment', async () => {
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'production';
+
+      const githubUser: GithubUserData = {
+        providerId: 'github-123',
+        username: 'gh-johndoe',
+        name: 'John GitHub',
+        email: 'john@github.com',
+        avatar: 'https://avatars.githubusercontent.com/u/1',
+        accessToken: 'github-access-token',
+      };
+      mockAuthService.validateGithubUser.mockResolvedValue(mockAuthResponse);
+      mockConfigService.get.mockReturnValue('https://docflow.software');
+
+      const mockResponse: any = {
+        cookie: jest.fn(),
+        redirect: jest.fn(),
+      };
+
+      try {
+        await controller.githubAuthCallback(githubUser, mockResponse);
+
+        expect(mockResponse.cookie).toHaveBeenCalledWith(
+          'token',
+          mockAuthResponse.accessToken,
+          {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none',
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            path: '/',
+          },
+        );
+      } finally {
+        process.env.NODE_ENV = originalEnv;
+      }
+    });
+
+    it('should throw InternalServerErrorException if FRONTEND_URL is not configured', async () => {
       const githubUser: GithubUserData = {
         providerId: 'github-123',
         username: 'gh-johndoe',
@@ -176,11 +217,9 @@ describe('AuthController', () => {
         redirect: jest.fn(),
       };
 
-      await controller.githubAuthCallback(githubUser, mockResponse);
-
-      expect(mockResponse.redirect).toHaveBeenCalledWith(
-        'http://localhost:3001/dashboard',
-      );
+      await expect(
+        controller.githubAuthCallback(githubUser, mockResponse),
+      ).rejects.toThrow(InternalServerErrorException);
     });
   });
 

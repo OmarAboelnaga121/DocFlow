@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { activateSubscription } from "@/lib/api";
 
-export default function BillingSuccessPage() {
+function BillingSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
@@ -94,5 +94,21 @@ export default function BillingSuccessPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function BillingSuccessPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.12),transparent_35%),linear-gradient(180deg,#f9f9f9_0%,#ffffff_100%)] px-6 py-12 text-on-background">
+          <div className="w-full max-w-xl rounded-[28px] border border-surface-container bg-white p-8 shadow-[0_20px_60px_rgba(15,23,42,0.06)] text-center font-medium">
+            Loading billing status...
+          </div>
+        </main>
+      }
+    >
+      <BillingSuccessContent />
+    </Suspense>
   );
 }

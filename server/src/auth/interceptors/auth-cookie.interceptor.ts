@@ -7,6 +7,10 @@ import {
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import type { Response } from 'express';
+import {
+  getAuthCookieOptions,
+  getClearCookieOptions,
+} from '../constants/cookie.config';
 
 @Injectable()
 export class AuthCookieInterceptor implements NestInterceptor {
@@ -15,12 +19,7 @@ export class AuthCookieInterceptor implements NestInterceptor {
       tap((data) => {
         if (data && data.accessToken) {
           const res = context.switchToHttp().getResponse<Response>();
-          res.cookie('token', data.accessToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-          });
+          res.cookie('token', data.accessToken, getAuthCookieOptions());
         }
       }),
     );
@@ -33,8 +32,9 @@ export class ClearCookieInterceptor implements NestInterceptor {
     return next.handle().pipe(
       tap(() => {
         const res = context.switchToHttp().getResponse<Response>();
-        res.clearCookie('token');
+        res.clearCookie('token', getClearCookieOptions());
       }),
     );
   }
 }
+
