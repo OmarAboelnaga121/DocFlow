@@ -81,7 +81,20 @@ export class AuthController {
       );
     }
 
-    const frontendUrl = rawFrontendUrl.split(',')[0].trim();
+    const allowedOrigins = rawFrontendUrl
+      .split(',')
+      .map((url) => url.trim())
+      .filter(Boolean);
+
+    const frontendUrl =
+      allowedOrigins.find((origin) => !origin.includes('api.')) ||
+      allowedOrigins[0];
+
+    if (frontendUrl.includes('api.')) {
+      throw new InternalServerErrorException(
+        'FRONTEND_URL is misconfigured: points to the backend API instead of the frontend client',
+      );
+    }
 
     return res.redirect(`${frontendUrl}/dashboard`);
   }
