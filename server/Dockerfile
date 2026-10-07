@@ -15,11 +15,12 @@ RUN npm run build
 FROM node:20-bookworm-slim AS runtime
 
 ENV NODE_ENV=production
+ENV GIT_TERMINAL_PROMPT=0
 WORKDIR /app
 
-# Git is required by the repository ingestion service at runtime.
+# Git and CA certificates are required by the repository ingestion service at runtime.
 RUN apt-get update \
-  && apt-get install --no-install-recommends -y git openssl \
+  && apt-get install --no-install-recommends -y git openssl ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /app/package*.json ./
