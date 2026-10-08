@@ -3,7 +3,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faGithub, faLinkedin } from "@fortawesome/free-brands-svg-icons";
+import {
+  faGithub,
+  faLinkedin,
+  faXTwitter,
+  faFacebook,
+  faInstagram,
+} from "@fortawesome/free-brands-svg-icons";
 
 const PRODUCT_LINKS: { label: string; href: string }[] = [
   { label: "Features", href: "/features" },
@@ -16,6 +22,29 @@ const COMPANY_LINKS: { label: string; href: string }[] = [
   { label: "Careers", href: "/careers" },
   { label: "Legal", href: "/legal" },
   { label: "Contact", href: "/contact" },
+];
+
+const SOCIAL_LINKS = [
+  {
+    href: "https://x.com/Docflow_Ai",
+    label: "X",
+    icon: faXTwitter,
+  },
+  {
+    href: "https://www.linkedin.com/company/docflow-software",
+    label: "LinkedIn",
+    icon: faLinkedin,
+  },
+  {
+    href: "https://www.facebook.com/profile.php?id=61594930990733",
+    label: "Facebook",
+    icon: faFacebook,
+  },
+  {
+    href: "https://www.instagram.com/docflow.software/",
+    label: "Instagram",
+    icon: faInstagram,
+  },
 ];
 
 export default function Footer() {
@@ -39,24 +68,18 @@ export default function Footer() {
           </p>
           {/* Social icons */}
           <div className="flex items-center gap-4 mt-2">
-            <a
-              href="https://github.com/OmarAboelnaga121"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="GitHub"
-              className="text-text-secondary hover:text-primary transition-colors"
-            >
-              <FontAwesomeIcon icon={faGithub} style={{ width: 20, height: 20 }} />
-            </a>
-            <a
-              href="https://www.linkedin.com/in/omar-aboelnaga-66522a343/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="LinkedIn"
-              className="text-text-secondary hover:text-primary transition-colors"
-            >
-              <FontAwesomeIcon icon={faLinkedin} style={{ width: 20, height: 20 }} />
-            </a>
+            {SOCIAL_LINKS.map(({ href, label, icon }) => (
+              <a
+                key={label}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={label}
+                className="text-text-secondary hover:text-primary transition-colors"
+              >
+                <FontAwesomeIcon icon={icon} style={{ width: 20, height: 20 }} />
+              </a>
+            ))}
           </div>
         </div>
 
