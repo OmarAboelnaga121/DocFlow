@@ -16,7 +16,7 @@ import { ActivateSubscriptionDto } from './dto/activate-subscription.dto';
 import { CancelSubscriptionDto } from './dto/cancel-subscription.dto';
 
 const TIER_CREDIT_ALLOCATIONS: Record<planTier, number> = {
-  [planTier.FREE]: 50,
+  [planTier.FREE]: 100,
   [planTier.PRO]: 1000,
   [planTier.PREMIUM]: 5000,
 };

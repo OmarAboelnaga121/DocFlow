@@ -63,12 +63,14 @@ export class RepositoryService {
       }, 0);
 
       const sizeMb = sizeBytes / (1024 * 1024);
+      const scaledCost = Math.ceil(sizeMb * 0.2);
+      const requiredCredits = Math.max(1, Math.min(25, scaledCost));
 
       return {
         repoUrl,
         sizeBytes,
         sizeMb: Number(sizeMb.toFixed(2)),
-        requiredCredits: Math.max(1, Math.ceil(sizeMb)),
+        requiredCredits,
       };
     } catch (error) {
       this.logger.error('Repository credit calculation failed:', error);

@@ -16,7 +16,7 @@ const plans = [
     highlight: "Best for trying it out",
     features: [
       "2 repositories included",
-      "50 AI credits/month",
+      "100 AI credits/month",
       "Git repo ingestion",
       "Context-aware chat over one repo",
       "JWT + GitHub auth",
@@ -61,7 +61,7 @@ const comparisonRows = [
   },
   {
     label: "AI credits",
-    values: ["50/month", "1,000/month", "5,000/month"],
+    values: ["100/month", "1,000/month", "5,000/month"],
   },
   {
     label: "Repo ingestion",

@@ -62,7 +62,7 @@ model User {
   subscriptions Subscription[]
   ledgers       CreditLedger[]
   providerId    String?
-  creditBalance Int            @default(50)
+  creditBalance Int            @default(100)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 }

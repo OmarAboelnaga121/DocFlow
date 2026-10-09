@@ -847,4 +847,31 @@ describe('RepositoryService', () => {
       expect(result).toEqual(mockRepo);
     });
   });
+
+  // =========================================================================
+  // calculateCredits()
+  // =========================================================================
+
+  describe('calculateCredits()', () => {
+    it('should scale sizeMb with 0.2x multiplier and clamp between 1 and 25 credits', async () => {
+      (service.calculateCredits as any).mockRestore?.();
+      jest.spyOn(service as any, 'getAllFiles').mockReturnValue(['/mock/file']);
+
+      // 0 MB -> 1 credit (min)
+      mockFsStatSync.mockReturnValue({ size: 100 });
+      let result = await service.calculateCredits('https://github.com/octocat/repo1.git');
+      expect(result.requiredCredits).toBe(1);
+
+      // 50 MB -> 50 * 0.2 = 10 credits
+      mockFsStatSync.mockReturnValue({ size: 50 * 1024 * 1024 });
+      result = await service.calculateCredits('https://github.com/octocat/repo2.git');
+      expect(result.requiredCredits).toBe(10);
+
+      // 200 MB -> 200 * 0.2 = 40 credits, capped at 25 credits
+      mockFsStatSync.mockReturnValue({ size: 200 * 1024 * 1024 });
+      result = await service.calculateCredits('https://github.com/octocat/repo3.git');
+      expect(result.requiredCredits).toBe(25);
+    });
+  });
 });
+
